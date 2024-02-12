@@ -1,5 +1,5 @@
+import * as assertImpl from 'assert';
 import { FailedTestResult } from './testCases';
-import assertImpl from 'assert';
 
 export class AssertionError extends Error {
   constructor(expected: unknown, actual: unknown) {

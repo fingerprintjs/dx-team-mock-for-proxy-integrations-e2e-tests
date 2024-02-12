@@ -1,6 +1,8 @@
-import { AssertionError, assert } from './assert';
-import { TestCase, TestCaseApi, TestResult, testCases } from './testCases';
+import { ProxyRequestType, removeProxyRequestListener } from '../../proxy-receiver/service/proxyRequestHandler';
+import { TestCase, TestResult, testCases } from './testCases';
 import { TestSession, finalizeTestSession } from './session';
+import { AssertionError } from './assert';
+import { TestCaseApi } from './TestCaseApi';
 import { withTimeout } from '../../../utils/timeout';
 
 const TEST_TIMEOUT_MS = 10_000;
@@ -30,35 +32,7 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
   const ingressProxyUrl = new URL(testSession.host);
   ingressProxyUrl.pathname = testSession.ingressProxyPath;
 
-  const api: TestCaseApi = {
-    sendRequestToCdn: async (query, headers) => {
-      /**
-       * 1. Send request to proxy CDN endpoint.
-       * 2. App awaits CDN request from proxy.
-       * 3. Test runs necessary assertions.
-       * */
-      return {
-        sendResponse: () => {
-          throw new Error('Not implemented');
-        },
-        requestFromProxy: {} as any,
-      };
-    },
-    sendRequestToIngress: async () => {
-      /**
-       * 1. Send request to proxy ingress endpoint.
-       * 2. App awaits ingress request from proxy.
-       * 3. Test runs necessary assertions.
-       * */
-      return {
-        sendResponse: () => {
-          throw new Error('Not implemented');
-        },
-        requestFromProxy: {} as any,
-      };
-    },
-    assert,
-  };
+  const api = new TestCaseApi(ingressProxyUrl, cdnProxyUrl, testSession);
 
   let result: TestResult;
 
@@ -78,6 +52,11 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
       };
     }
   }
+
+  // In case if test failed without removing listeners
+  Object.values(ProxyRequestType).forEach((type) => {
+    removeProxyRequestListener(type, testSession.host);
+  });
 
   const requestDurationMs = Date.now() - startTime;
 

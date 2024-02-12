@@ -1,15 +1,10 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
+import { TestCaseApi } from './TestCaseApi';
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest;
   // TODO: Not sure if this will be needed
   sendResponse: (response: ExpressResponse) => void;
-};
-
-export type TestCaseApi = {
-  sendRequestToCdn: (query?: URLSearchParams, headers?: Headers) => Promise<SendRequestResult>;
-  sendRequestToIngress: (request: Request) => Promise<SendRequestResult>;
-  assert: <T>(expected: T, actual: T) => void;
 };
 
 export type FailedTestResult = {
@@ -35,13 +30,15 @@ export const testCases: TestCase[] = [
       const query = new URLSearchParams();
       query.set('apiKey', 'test');
       query.set('version', '3');
-      query.set('loaderVersion', '1');
+      query.set('loaderVersion', '3.6.5');
 
       const { requestFromProxy } = await api.sendRequestToCdn(query);
 
-      api.assert(requestFromProxy.query['apiKey'], query.get('apiKey'));
-      api.assert(requestFromProxy.query['version'], query.get('version'));
-      api.assert(requestFromProxy.query['loaderVersion'], query.get('loaderVersion'));
+      const params = requestFromProxy.params as Record<string, string | undefined>;
+
+      api.assert(params.apiKey, query.get('apiKey'));
+      api.assert(params.version, 'v3');
+      api.assert(params.loader, 'loader_v3.6.5.js');
     },
   },
 ];
