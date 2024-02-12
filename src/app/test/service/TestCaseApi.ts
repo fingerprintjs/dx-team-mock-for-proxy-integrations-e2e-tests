@@ -1,12 +1,14 @@
 import { ProxyRequestType, addProxyRequestListener } from '../../proxy-receiver/service/proxyRequestHandler';
 import { SendRequestResult } from './testCases';
 import { TEST_CASE_HOST_HEADER } from './const';
+import { TestSession } from './session';
 import { assert } from './assert';
 
 export class TestCaseApi {
   constructor(
     private readonly ingressProxyUrl: URL,
     private readonly cdnProxyUrl: URL,
+    private readonly testSession: TestSession,
   ) {}
 
   public assert = assert;
@@ -19,7 +21,7 @@ export class TestCaseApi {
         url.search = query.toString();
       }
 
-      addProxyRequestListener(ProxyRequestType.Cdn, this.cdnProxyUrl.host, (request) => {
+      addProxyRequestListener(ProxyRequestType.Cdn, this.testSession.host, (request) => {
         resolve({
           requestFromProxy: request,
           sendResponse: this.makeSendResponse(),
@@ -31,7 +33,7 @@ export class TestCaseApi {
       fetch(url.toString(), {
         headers: {
           ...headers,
-          [TEST_CASE_HOST_HEADER]: this.cdnProxyUrl.host,
+          [TEST_CASE_HOST_HEADER]: this.testSession.host,
         },
       })
         .then((response) => {

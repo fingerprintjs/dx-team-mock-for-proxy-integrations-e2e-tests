@@ -32,7 +32,7 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
   const ingressProxyUrl = new URL(testSession.host);
   ingressProxyUrl.pathname = testSession.ingressProxyPath;
 
-  const api = new TestCaseApi(ingressProxyUrl, cdnProxyUrl);
+  const api = new TestCaseApi(ingressProxyUrl, cdnProxyUrl, testSession);
 
   let result: TestResult;
 
