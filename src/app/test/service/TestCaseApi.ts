@@ -1,5 +1,6 @@
 import { ProxyRequestType, addProxyRequestListener } from '../../proxy-receiver/service/proxyRequestHandler';
 import { SendRequestResult } from './testCases';
+import { TEST_CASE_HOST_HEADER } from './const';
 import { assert } from './assert';
 
 export class TestCaseApi {
@@ -28,7 +29,10 @@ export class TestCaseApi {
       console.info(`Sending request to CDN at ${url.toString()}`);
 
       fetch(url.toString(), {
-        headers,
+        headers: {
+          ...headers,
+          [TEST_CASE_HOST_HEADER]: this.cdnProxyUrl.host,
+        },
       })
         .then((response) => {
           console.info(`CDN responded with ${response.status} at ${url.toString()}`);
