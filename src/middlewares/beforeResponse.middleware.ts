@@ -17,10 +17,10 @@ const beforeResponseMiddleware = (logger: ApplicationLogger) => (req: Request, r
   req.on('end', () => {
     requestResolve({
       path: req.path,
-      headerHost: req.headers.host,
+      headers: req.headers as unknown as { [key: string]: string },
       method: req.method,
       queryParams: req.query as unknown as { [key: string]: string },
-      urlHost: req.host,
+      urlHost: req.get('host'),
     });
   });
   req.on('error', (err) => {

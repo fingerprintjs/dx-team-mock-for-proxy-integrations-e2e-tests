@@ -1,8 +1,8 @@
 export interface RequestPayload {
   urlHost: string;
-  headerHost: string;
   path: string;
   queryParams: { [key: string]: string };
+  headers: { [key: string]: string };
   method: string;
 }
 
