@@ -6,7 +6,7 @@ import beforeResponseMiddleware from './middlewares/beforeResponse.middleware';
 import router from './router';
 
 const app: Express = express();
-const port = Number(process.env.APP_PORT) || 3000;
+const port = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 app.use(beforeResponseMiddleware(console.info));
