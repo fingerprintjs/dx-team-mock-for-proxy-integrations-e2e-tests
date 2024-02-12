@@ -26,7 +26,7 @@ export function hasProxyRequestListener(type: ProxyRequestType, hostname: string
   return getStoreByType(type).has(hostname);
 }
 
-export function notifyProxyRequestListeners(type: ProxyRequestType, hostname: string, request: Request) {
+export function notifyProxyRequestListener(type: ProxyRequestType, hostname: string, request: Request) {
   const listener = getStoreByType(type).get(hostname);
 
   if (listener) {

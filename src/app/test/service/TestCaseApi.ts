@@ -12,7 +12,7 @@ export class TestCaseApi {
   public assert = assert;
 
   async sendRequestToCdn(query?: URLSearchParams, headers?: Headers): Promise<SendRequestResult> {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       const url = new URL(this.cdnProxyUrl);
 
       if (query) {
