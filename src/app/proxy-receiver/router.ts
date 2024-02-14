@@ -1,16 +1,27 @@
-import * as express from 'express';
-import { ProxyRequestType, notifyProxyRequestListener } from './service/proxyRequestHandler';
+import * as express from 'express'
+import { ProxyRequestType, notifyProxyRequestListener } from './service/proxyRequestHandler'
 
-import { TEST_CASE_HOST_HEADER } from '../test/service/const';
+import { TEST_CASE_HOST_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from '../test/service/const'
+import { z } from 'zod'
+
+const proxyRequestTypeSchema = z.nativeEnum(ProxyRequestType)
 
 export function proxyReceiverRouter() {
-  const router = express.Router();
+  const router = express.Router()
 
-  router.get('/:version/:apiKey/:loader', async (req, res) => {
-    notifyProxyRequestListener(ProxyRequestType.Cdn, req.get(TEST_CASE_HOST_HEADER), req);
+  router.all('*', (req, res, next) => {
+    const testType = proxyRequestTypeSchema.safeParse(req.get(TEST_CASE_PROXY_TYPE_HEADER))
 
-    res.send();
-  });
+    if (testType.success) {
+      notifyProxyRequestListener(testType.data, req.get(TEST_CASE_HOST_HEADER), req)
 
-  return router;
+      res.send()
+
+      return
+    }
+
+    next()
+  })
+
+  return router
 }

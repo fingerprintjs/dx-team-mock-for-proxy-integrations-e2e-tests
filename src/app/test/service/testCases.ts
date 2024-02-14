@@ -1,44 +1,99 @@
-import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
-import { TestCaseApi } from './TestCaseApi';
+import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
+import { TestCaseApi } from './TestCaseApi'
 
 export type SendRequestResult = {
-  requestFromProxy: ExpressRequest;
+  requestFromProxy: ExpressRequest
   // TODO: Not sure if this will be needed
-  sendResponse: (response: ExpressResponse) => void;
-};
+  sendResponse: (response: ExpressResponse) => void
+}
 
 export type FailedTestResult = {
-  passed: false;
-  reason: string;
-};
+  passed: false
+  reason: string
+}
 
 export type PassedTestResult = {
-  passed: true;
-};
+  passed: true
+}
 
-export type TestResult = FailedTestResult | PassedTestResult;
+export type TestResult = FailedTestResult | PassedTestResult
 
 export type TestCase = {
-  name: string;
-  test: (api: TestCaseApi) => Promise<void>;
-};
+  name: string
+  test: (api: TestCaseApi) => Promise<void>
+}
 
 export const testCases: TestCase[] = [
   {
     name: 'agent request query params',
     test: async (api) => {
-      const query = new URLSearchParams();
-      query.set('apiKey', 'test');
-      query.set('version', '3');
-      query.set('loaderVersion', '3.6.5');
+      const query = new URLSearchParams()
+      query.set('apiKey', 'test')
+      query.set('version', '3')
+      query.set('loaderVersion', '3.6.7')
 
-      const { requestFromProxy } = await api.sendRequestToCdn(query);
+      const { requestFromProxy } = await api.sendRequestToCdn(query)
 
-      const params = requestFromProxy.params as Record<string, string | undefined>;
+      const splitPath = requestFromProxy.path.split('/').slice(1)
 
-      api.assert(params.apiKey, query.get('apiKey'));
-      api.assert(params.version, 'v3');
-      api.assert(params.loader, 'loader_v3.6.5.js');
+      api.assert(splitPath.length, 3)
+
+      const [version, apiKey, loader] = splitPath
+
+      api.assert(apiKey, query.get('apiKey'))
+      api.assert(version, 'v3')
+      api.assert(loader, 'loader_v3.6.7.js')
     },
   },
-];
+
+  {
+    name: 'ingress request headers',
+    test: async (api) => {
+      const BLACK_LISTED_HEADERS = new Set([
+        'content-length',
+        'via',
+        'connection',
+        'expect',
+        'keep-alive',
+        'proxy-authenticate',
+        'proxy-authorization',
+        'proxy-connection',
+        'trailer',
+        'upgrade',
+        'x-accel-buffering',
+        'x-accel-charset',
+        'x-accel-limit-rate',
+        'x-accel-redirect',
+        'x-amzn-auth',
+        'x-amzn-cf-billing',
+        'x-amzn-cf-id',
+        'x-amzn-cf-xff',
+        'x-amzn-errortype',
+        'x-amzn-fle-profile',
+        'x-amzn-header-count',
+        'x-amzn-header-order',
+        'x-amzn-lambda-integration-tag',
+        'x-amzn-requestid',
+        'x-cache',
+        'x-real-ip',
+        'strict-transport-security',
+      ])
+
+      const { requestFromProxy } = await api.sendRequestToIngress({
+        headers: {
+          cookie: '_iidt=123;test=123',
+          'fpjs-proxy-secret': 'secret',
+        },
+      })
+
+      api.assert(requestFromProxy.get('cookie'), '_iidt=123')
+      api.assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
+
+      BLACK_LISTED_HEADERS.forEach((header) => {
+        api.assert(requestFromProxy.get(header), undefined)
+      })
+
+      api.assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
+    },
+  },
+]
