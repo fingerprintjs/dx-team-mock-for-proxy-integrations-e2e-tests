@@ -1,24 +1,24 @@
-import * as assertImpl from 'assert';
-import { FailedTestResult } from './testCases';
+import * as assertImpl from 'assert'
+import { FailedTestResult } from './testCases'
 
 export class AssertionError extends Error {
-  constructor(expected: unknown, actual: unknown) {
-    super(`Expected "${expected}" but got "${actual}"`);
-    this.name = 'AssertionError';
+  constructor(actual: unknown, expected: unknown) {
+    super(`Expected "${expected}" but got "${actual}"`)
+    this.name = 'AssertionError'
   }
 
   toTestResult(): FailedTestResult {
     return {
       passed: false,
       reason: this.message,
-    };
+    }
   }
 }
 
-export function assert<T>(expected: T, actual: T) {
+export function assert<T>(actual: T, expected: T) {
   try {
-    assertImpl.deepStrictEqual(expected, actual);
+    assertImpl.deepStrictEqual(actual, expected)
   } catch {
-    throw new AssertionError(expected, actual);
+    throw new AssertionError(actual, expected)
   }
 }
