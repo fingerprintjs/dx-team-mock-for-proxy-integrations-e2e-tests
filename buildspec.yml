@@ -2,12 +2,11 @@ version: 0.2
 phases:
   install:
     commands:
-      - npm install -g pnpm
-      - pnpm install
+      - npm install
   build:
     commands:
       - echo Start build ...
-      - pnpm build
+      - npm run build
 artifacts:
   files:
     - '**/*'
