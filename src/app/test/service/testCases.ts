@@ -1,6 +1,6 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
 import { TestCaseApi } from './TestCaseApi'
-import { assert, assertVariants } from './assert'
+import { assert } from './assert'
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
@@ -98,7 +98,11 @@ export const testCases: TestCase[] = [
       assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
 
       BLACK_LISTED_HEADERS.forEach((header) => {
-        assertVariants(requestFromProxy.get(header), [undefined, '0'], `Header ${header} should be empty`)
+        try {
+          assert(requestFromProxy.get(header), undefined)
+        } catch {
+          assert(requestFromProxy.get(header), '0', `${header} should be either undefined or '0'`)
+        }
       })
 
       assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
