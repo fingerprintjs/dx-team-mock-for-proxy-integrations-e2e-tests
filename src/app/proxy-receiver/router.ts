@@ -12,6 +12,13 @@ export function proxyReceiverRouter() {
   router.all('*', (req, res, next) => {
     const testType = proxyRequestTypeSchema.safeParse(req.get(TEST_CASE_PROXY_TYPE_HEADER))
 
+    console.info('Received potential proxy request', {
+      headers: req.headers,
+      url: req.url,
+      path: req.path,
+      isProxyRequest: testType.success,
+    })
+
     if (testType.success) {
       notifyProxyRequestListener(testType.data, req.get(TEST_CASE_HOST_HEADER), req)
 

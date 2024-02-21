@@ -13,7 +13,7 @@ app.use(beforeResponseMiddleware(console.info))
 app.use(proxyReceiverRouter())
 app.use('/api/test', testRouter())
 
-app.get('/health', (req, res) => {
+app.all('/health', (req, res) => {
   res.send('It works!')
 })
 
