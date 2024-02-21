@@ -28,7 +28,7 @@ export const testCases: TestCase[] = [
     name: 'agent request query params',
     test: async (api) => {
       const query = new URLSearchParams()
-      query.set('apiKey', 'test')
+      query.set('apiKey', Math.random().toString(36).substring(7))
       query.set('version', '3')
       query.set('loaderVersion', '3.6.7')
 
