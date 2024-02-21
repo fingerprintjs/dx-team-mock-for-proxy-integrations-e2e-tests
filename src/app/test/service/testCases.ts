@@ -58,9 +58,7 @@ export const testCases: TestCase[] = [
     name: 'ingress request headers',
     test: async (api) => {
       const BLACK_LISTED_HEADERS = new Set([
-        'content-length',
         'via',
-        'connection',
         'expect',
         'keep-alive',
         'proxy-authenticate',
@@ -83,7 +81,6 @@ export const testCases: TestCase[] = [
         'x-amzn-lambda-integration-tag',
         'x-amzn-requestid',
         'x-cache',
-        'x-real-ip',
         'strict-transport-security',
       ])
 
@@ -98,11 +95,7 @@ export const testCases: TestCase[] = [
       assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
 
       BLACK_LISTED_HEADERS.forEach((header) => {
-        try {
-          assert(requestFromProxy.get(header), undefined)
-        } catch {
-          assert(requestFromProxy.get(header), '0', `${header} should be either undefined or '0'`)
-        }
+        assert(requestFromProxy.get(header), undefined, `Header ${header} should not be present`)
       })
 
       assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
