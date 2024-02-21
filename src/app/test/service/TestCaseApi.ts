@@ -2,7 +2,6 @@ import { ProxyRequestType, addProxyRequestListener } from '../../proxy-receiver/
 import { SendRequestResult } from './testCases'
 import { TEST_CASE_HOST_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from './const'
 import { TestSession } from './session'
-import { assert } from './assert'
 
 export class TestCaseApi {
   constructor(
@@ -10,8 +9,6 @@ export class TestCaseApi {
     private readonly cdnProxyUrl: URL,
     public readonly testSession: TestSession
   ) {}
-
-  public assert = assert
 
   async sendRequestToCdn(query?: URLSearchParams, requestInit?: Partial<RequestInit>): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {

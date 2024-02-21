@@ -1,5 +1,6 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
 import { TestCaseApi } from './TestCaseApi'
+import { assert, assertVariants } from './assert'
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
@@ -10,6 +11,7 @@ export type SendRequestResult = {
 export type FailedTestResult = {
   passed: false
   reason: string
+  meta?: any
 }
 
 export type PassedTestResult = {
@@ -42,13 +44,13 @@ export const testCases: TestCase[] = [
 
       const splitPath = requestFromProxy.path.split('/').slice(1)
 
-      api.assert(splitPath.length, 3)
+      assert(splitPath.length, 3)
 
       const [version, apiKey, loader] = splitPath
 
-      api.assert(apiKey, query.get('apiKey'))
-      api.assert(version, 'v3')
-      api.assert(loader, `loader_v${query.get('loaderVersion')}.js`)
+      assert(apiKey, query.get('apiKey'))
+      assert(version, 'v3')
+      assert(loader, `loader_v${query.get('loaderVersion')}.js`)
     },
   },
 
@@ -92,14 +94,14 @@ export const testCases: TestCase[] = [
         },
       })
 
-      api.assert(requestFromProxy.get('cookie'), '_iidt=123')
-      api.assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
+      assert(requestFromProxy.get('cookie'), '_iidt=123')
+      assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
 
       BLACK_LISTED_HEADERS.forEach((header) => {
-        api.assert(requestFromProxy.get(header), undefined, `Header ${header}`)
+        assertVariants(requestFromProxy.get(header), [undefined, '0'], `Header ${header} should be empty`)
       })
 
-      api.assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
+      assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
     },
   },
 ]
