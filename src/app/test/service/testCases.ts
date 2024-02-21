@@ -90,7 +90,7 @@ export const testCases: TestCase[] = [
       api.assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
 
       BLACK_LISTED_HEADERS.forEach((header) => {
-        api.assert(requestFromProxy.get(header), undefined)
+        api.assert(requestFromProxy.get(header), undefined, `Header ${header}`)
       })
 
       api.assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
