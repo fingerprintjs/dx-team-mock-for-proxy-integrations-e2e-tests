@@ -1,19 +1,4 @@
 import * as assertImpl from 'assert'
-import { FailedTestResult } from './testCases'
-
-export class TestError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'AssertionError'
-  }
-
-  toTestResult(): FailedTestResult {
-    return {
-      passed: false,
-      reason: this.message,
-    }
-  }
-}
 
 /**
  * Asserts that at least one of the variants is equal to the actual value.
