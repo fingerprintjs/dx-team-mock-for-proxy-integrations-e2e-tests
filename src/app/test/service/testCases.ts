@@ -32,7 +32,12 @@ export const testCases: TestCase[] = [
       query.set('version', '3')
       query.set('loaderVersion', '3.6.7')
 
-      const { requestFromProxy } = await api.sendRequestToCdn(query)
+      const { requestFromProxy } = await api.sendRequestToCdn(query, {
+        headers: {
+          // Disable cache
+          'cache-control': 'no-cache',
+        },
+      })
 
       const splitPath = requestFromProxy.path.split('/').slice(1)
 
