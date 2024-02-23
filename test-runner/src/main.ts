@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { argumentParser } from 'zodcli'
 import { RunTestsRequestSchema } from '../../src/app/test/request.types'
 import { TestResponse } from '../../src/app/test/service/session'

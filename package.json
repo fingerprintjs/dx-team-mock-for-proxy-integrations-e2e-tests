@@ -1,11 +1,15 @@
 {
-  "name": "mock-warden",
+  "name": "mock-for-e2e",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "workspaces": [
     "test-runner"
   ],
+  "bin": {
+    "mock-warden": "./test-runner/dist/main.js",
+    "mock-for-e2e": "./test-runner/dist/main.js"
+  },
   "scripts": {
     "build": "tsc",
     "start:dev": "nodemon",
