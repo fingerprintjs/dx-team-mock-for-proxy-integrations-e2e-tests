@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
 import { TestCaseApi } from './TestCaseApi'
 import { assert } from './assert'
+import { RequestsFromProxyRecord } from './requestFromProxy'
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
@@ -8,10 +9,15 @@ export type SendRequestResult = {
   sendResponse: (response: ExpressResponse) => void
 }
 
+export type FailedTestCaseMetadata = {
+  error: Error
+  requestsFromProxy: RequestsFromProxyRecord
+}
+
 export type FailedTestResult = {
   passed: false
   reason: string
-  meta?: any
+  meta: FailedTestCaseMetadata
 }
 
 export type PassedTestResult = {
