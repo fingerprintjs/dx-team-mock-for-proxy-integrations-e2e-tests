@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "workspaces": [
+    "test-runner"
+  ],
   "scripts": {
     "build": "tsc",
     "start:dev": "nodemon",

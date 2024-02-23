@@ -1,0 +1,20 @@
+{
+  "name": "test-runner",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/main.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "consola": "^3.2.3",
+    "zodcli": "^0.0.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.1"
+  }
+}
