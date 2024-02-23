@@ -13,4 +13,8 @@ app.use(beforeResponseMiddleware(console.info))
 app.use(proxyReceiverRouter())
 app.use('/api/test', testRouter())
 
+app.all('/health', (req, res) => {
+  res.send('It works!')
+})
+
 app.listen(port, () => console.log(`Application started on port ${port}`))

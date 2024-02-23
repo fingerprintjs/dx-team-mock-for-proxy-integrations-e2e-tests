@@ -30,7 +30,11 @@ export function notifyProxyRequestListener(type: ProxyRequestType, hostname: str
   const listener = getStoreByType(type).get(hostname)
 
   if (listener) {
+    console.info('Notifying proxy request listener', { type, hostname })
+
     listener(request)
+  } else {
+    console.warn('No listener found for proxy request', { type, hostname })
   }
 
   removeProxyRequestListener(type, hostname)
