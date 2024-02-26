@@ -4,22 +4,6 @@ import commonjs from '@rollup/plugin-commonjs';
 
 const outputDirectory = 'dist';
 
-function getEnv(key, defaultValue) {
-  const value = process.env[key];
-
-  if (!value && !defaultValue) {
-    throw new Error(`Missing environment variable ${key}`);
-  }
-
-  if (!value) {
-    console.warn(`Missing environment variable "${key}". Using default value: ${defaultValue}`);
-
-    return defaultValue;
-  }
-
-  return value;
-}
-
 function makeConfig(entryFile, artifactName) {
   /**
    * @type {import('rollup').RollupOptions}
