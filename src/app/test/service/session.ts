@@ -1,5 +1,5 @@
-import { RunTestsRequest } from '../request.types';
-import { TestResult } from './testCases';
+import { RunTestsRequest } from '../request.types'
+import { TestResult } from './testCases'
 
 export enum TestSessionStatus {
   Created = 'created',
@@ -13,19 +13,19 @@ export class TestSession implements RunTestsRequest {
     public ingressProxyPath: string,
     public cdnProxyPath: string,
     public status: TestSessionStatus,
-    public results: TestResult[],
+    public results: TestResult[]
   ) {}
 
   start() {
-    this.status = TestSessionStatus.Running;
+    this.status = TestSessionStatus.Running
   }
 
   finish() {
-    this.status = TestSessionStatus.Finished;
+    this.status = TestSessionStatus.Finished
   }
 
   addResult(result: TestResult) {
-    this.results.push(result);
+    this.results.push(result)
   }
 
   toJSON() {
@@ -33,15 +33,15 @@ export class TestSession implements RunTestsRequest {
       host: this.host,
       status: this.status,
       results: this.results,
-    };
+    }
   }
 }
 
-const testSessions = new Map<string, TestSession>();
+const testSessions = new Map<string, TestSession>()
 
 export function createTestSession(request: RunTestsRequest) {
   if (testSessions.has(request.host)) {
-    throw new Error('Test session already exists');
+    throw new Error('Test session already exists')
   }
 
   const session = new TestSession(
@@ -49,28 +49,28 @@ export function createTestSession(request: RunTestsRequest) {
     request.ingressProxyPath,
     request.cdnProxyPath,
     TestSessionStatus.Created,
-    [],
-  );
+    []
+  )
 
-  testSessions.set(request.host, session);
+  testSessions.set(request.host, session)
 
-  return session;
+  return session
 }
 
 export function getTestSession(host: string) {
-  const testSession = testSessions.get(host);
+  const testSession = testSessions.get(host)
 
   if (!testSession) {
-    throw new Error('Test session not found');
+    throw new Error('Test session not found')
   }
 
-  return testSession;
+  return testSession
 }
 
 export function finalizeTestSession(testSession: TestSession) {
-  testSession.finish();
+  testSession.finish()
 
-  testSessions.delete(testSession.host);
+  testSessions.delete(testSession.host)
 
-  return testSession;
+  return testSession
 }
