@@ -16,7 +16,7 @@ export function testRouter() {
 
     const result = await runTests(testSession)
 
-    return res.json(result.toJSON())
+    return res.json(result.toTestResponse())
   })
 
   return router

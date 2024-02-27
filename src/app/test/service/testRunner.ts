@@ -45,7 +45,10 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
     result = {
       passed: false,
       reason: error instanceof Error ? error.message : String(error),
-      meta: { error },
+      meta: {
+        error,
+        requestsFromProxy: api.requestsFromProxy,
+      },
     }
   }
 

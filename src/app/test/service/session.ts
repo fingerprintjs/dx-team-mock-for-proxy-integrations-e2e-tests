@@ -1,10 +1,16 @@
 import { RunTestsRequest } from '../request.types'
-import { TestResult } from './testCases'
+import { DetailedTestResult } from './testRunner'
 
 export enum TestSessionStatus {
   Created = 'created',
   Running = 'running',
   Finished = 'finished',
+}
+
+export interface TestResponse {
+  status: TestSessionStatus
+  host: string
+  results: DetailedTestResult[]
 }
 
 export class TestSession implements RunTestsRequest {
@@ -13,7 +19,7 @@ export class TestSession implements RunTestsRequest {
     public ingressProxyPath: string,
     public cdnProxyPath: string,
     public status: TestSessionStatus,
-    public results: TestResult[]
+    public results: DetailedTestResult[] = []
   ) {}
 
   start() {
@@ -24,11 +30,11 @@ export class TestSession implements RunTestsRequest {
     this.status = TestSessionStatus.Finished
   }
 
-  addResult(result: TestResult) {
+  addResult(result: DetailedTestResult) {
     this.results.push(result)
   }
 
-  toJSON() {
+  toTestResponse(): TestResponse {
     return {
       host: this.host,
       status: this.status,
@@ -48,8 +54,7 @@ export function createTestSession(request: RunTestsRequest) {
     request.host,
     request.ingressProxyPath,
     request.cdnProxyPath,
-    TestSessionStatus.Created,
-    []
+    TestSessionStatus.Created
   )
 
   testSessions.set(request.host, session)

@@ -1,9 +1,15 @@
-import { ProxyRequestType, addProxyRequestListener } from '../../proxy-receiver/service/proxyRequestHandler'
+import { addProxyRequestListener, ProxyRequestType } from '../../proxy-receiver/service/proxyRequestHandler'
 import { SendRequestResult } from './testCases'
 import { TEST_CASE_HOST_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from './const'
 import { TestSession } from './session'
+import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromProxy'
 
 export class TestCaseApi {
+  readonly requestsFromProxy: RequestsFromProxyRecord = {
+    [ProxyRequestType.Cdn]: [],
+    [ProxyRequestType.Ingress]: [],
+  }
+
   constructor(
     private readonly ingressProxyUrl: URL,
     private readonly cdnProxyUrl: URL,
@@ -19,6 +25,8 @@ export class TestCaseApi {
       }
 
       addProxyRequestListener(ProxyRequestType.Cdn, this.testSession.host, (request) => {
+        this.requestsFromProxy[ProxyRequestType.Cdn].push(createRequestFromProxy(request))
+
         resolve({
           requestFromProxy: request,
           sendResponse: this.makeSendResponse(),
@@ -49,6 +57,8 @@ export class TestCaseApi {
       const url = new URL(this.ingressProxyUrl)
 
       addProxyRequestListener(ProxyRequestType.Ingress, this.testSession.host, (request) => {
+        this.requestsFromProxy[ProxyRequestType.Ingress].push(createRequestFromProxy(request))
+
         resolve({
           requestFromProxy: request,
           sendResponse: this.makeSendResponse(),
