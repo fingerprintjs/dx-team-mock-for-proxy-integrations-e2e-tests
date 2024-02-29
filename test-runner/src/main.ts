@@ -6,13 +6,17 @@ import { TestResponse } from '../../src/app/test/service/session'
 import { createConsola } from 'consola'
 import { FailedTestResult } from '../../src/app/test/service/testCases'
 import { DetailedTestResult } from '../../src/app/test/service/testRunner'
+import { ExponentialBackoff, handleAll, retry } from 'cockatiel'
+import { z } from 'zod'
 
 const logger = createConsola()
 
 const API_URL = process.env.API_URL ?? 'https://mock-warden.fpjs.sh'
 
 const args = argumentParser({
-  options: RunTestsRequestSchema.strict(),
+  options: RunTestsRequestSchema.extend({
+    attempts: z.number().default(3),
+  }).strict(),
 }).parse(process.argv.slice(2))
 
 async function main() {
@@ -22,36 +26,45 @@ async function main() {
   logger.info(`Using ${url} as API url`)
   logger.start(`Sending request...`)
 
-  const response = await fetch(url, {
-    method: 'POST',
-    mode: 'cors',
-    body: JSON.stringify(args),
-    headers: {
-      'content-type': 'application/json',
-    },
+  const policy = retry(handleAll, {
+    maxAttempts: args.attempts,
+    backoff: new ExponentialBackoff(),
   })
 
-  logger.ready(`API replied with status code ${response.status}`)
+  await policy.execute(async (context) => {
+    logger.info(`Attempt ${context.attempt}...`)
 
-  const json = (await response.json()) as TestResponse
+    const response = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      body: JSON.stringify(args),
+      headers: {
+        'content-type': 'application/json',
+      },
+    })
 
-  logger.debug(`Response`, json)
+    logger.ready(`API replied with status code ${response.status}`)
 
-  const hasFailedTests = json.results.some((result) => !result.passed)
+    const json = (await response.json()) as TestResponse
 
-  const results = json.results.map((result) => {
-    return result.passed
-      ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
-      : getFailedTestMessage(result as DetailedTestResult & FailedTestResult)
+    logger.debug(`Response`, json)
+
+    const hasFailedTests = json.results.some((result) => !result.passed)
+
+    const results = json.results.map((result) => {
+      return result.passed
+        ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
+        : getFailedTestMessage(result as DetailedTestResult & FailedTestResult)
+    })
+
+    results.unshift(`Test results (${results.length}):`)
+
+    logger.box(results.join('\n'))
+
+    if (hasFailedTests) {
+      throw new Error('Tests failed')
+    }
   })
-
-  results.unshift(`Test results (${results.length}):`)
-
-  logger.box(results.join('\n'))
-
-  if (hasFailedTests) {
-    process.exit(1)
-  }
 }
 
 function getFailedTestMessage(result: DetailedTestResult & FailedTestResult): string {
