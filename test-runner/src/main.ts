@@ -37,6 +37,8 @@ async function main() {
 
   logger.debug(`Response`, json)
 
+  const hasFailedTests = json.results.some((result) => !result.passed)
+
   const results = json.results.map((result) => {
     return result.passed
       ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
@@ -46,6 +48,10 @@ async function main() {
   results.unshift(`Test results (${results.length}):`)
 
   logger.box(results.join('\n'))
+
+  if (hasFailedTests) {
+    process.exit(1)
+  }
 }
 
 function getFailedTestMessage(result: DetailedTestResult & FailedTestResult): string {
