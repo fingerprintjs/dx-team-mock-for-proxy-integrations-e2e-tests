@@ -64,7 +64,6 @@ export const testCases: TestCase[] = [
     name: 'ingress request headers',
     test: async (api) => {
       const BLACK_LISTED_HEADERS = new Set([
-        'via',
         'expect',
         'keep-alive',
         'proxy-authenticate',
