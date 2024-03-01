@@ -11,16 +11,15 @@ import { z } from 'zod'
 
 const logger = createConsola()
 
-const API_URL = process.env.API_URL ?? 'https://mock-warden.fpjs.sh'
-
 const args = argumentParser({
   options: RunTestsRequestSchema.extend({
     attempts: z.number().default(3),
+    apiUrl: z.string().url(),
   }).strict(),
 }).parse(process.argv.slice(2))
 
 async function main() {
-  const url = new URL(API_URL)
+  const url = new URL(args.apiUrl)
   url.pathname = '/api/test/run-tests'
 
   logger.info(`Using ${url} as API url`)
