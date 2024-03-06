@@ -43,8 +43,11 @@ export class TestCaseApi {
           [TEST_CASE_PROXY_TYPE_HEADER]: ProxyRequestType.Cdn,
         },
       })
-        .then((response) => {
-          console.info(`CDN responded with ${response.status} at ${url.toString()}`)
+        .then(async (response) => {
+          console.info(`CDN responded with ${response.status} at ${url.toString()}`, {
+            body: await response.text().catch(() => ''),
+            headers: response.headers,
+          })
         })
         .catch((error) => {
           console.error(`Failed to send request to CDN at ${url.toString()}`, error)
@@ -77,8 +80,11 @@ export class TestCaseApi {
           [TEST_CASE_PROXY_TYPE_HEADER]: ProxyRequestType.Ingress,
         },
       })
-        .then((response) => {
-          console.info(`Ingress responded with ${response.status} at ${url.toString()}`)
+        .then(async (response) => {
+          console.info(`Ingress responded with ${response.status} at ${url.toString()}`, {
+            body: await response.text().catch(() => ''),
+            headers: response.headers,
+          })
         })
         .catch((error) => {
           console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
