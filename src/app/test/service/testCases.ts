@@ -96,7 +96,16 @@ export const testCases: TestCase[] = [
         },
       })
 
-      assert(requestFromProxy.get('cookie'), '_iidt=123')
+      const cookieArray = requestFromProxy
+        .get('cookie')
+        .split(';')
+        .map((v) => v.trim())
+
+      // Some proxy integrations, e.g Akamai send duplicated cookies. It doesn't impact identification accuracy, but we need to make sure that all cookies are the same.
+      cookieArray.forEach((cookie) => {
+        assert(cookie, '_iidt=123')
+      })
+
       assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
 
       BLACK_LISTED_HEADERS.forEach((header) => {
