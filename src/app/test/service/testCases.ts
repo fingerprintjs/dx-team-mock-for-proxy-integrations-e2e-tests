@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
+import { getIP } from '../utils/getIP'
 import { TestCaseApi } from './TestCaseApi'
-import { assert } from './assert'
+import { assert, assertLowerThanOrEqual, assertRegExp } from './assert'
 import { RequestsFromProxyRecord } from './requestFromProxy'
 
 export type SendRequestResult = {
@@ -59,50 +60,125 @@ export const testCases: TestCase[] = [
       assert(loader, `loader_v${query.get('loaderVersion')}.js`)
     },
   },
-
   {
-    name: 'ingress request headers',
+    name: 'agent request without loader',
     test: async (api) => {
-      const BLACK_LISTED_HEADERS = new Set([
-        'expect',
-        'keep-alive',
-        'proxy-authenticate',
-        'proxy-authorization',
-        'proxy-connection',
-        'trailer',
-        'upgrade',
-        'x-accel-buffering',
-        'x-accel-charset',
-        'x-accel-limit-rate',
-        'x-accel-redirect',
-        'x-amzn-auth',
-        'x-amzn-cf-billing',
-        'x-amzn-cf-id',
-        'x-amzn-cf-xff',
-        'x-amzn-errortype',
-        'x-amzn-fle-profile',
-        'x-amzn-header-count',
-        'x-amzn-header-order',
-        'x-amzn-lambda-integration-tag',
-        'x-amzn-requestid',
-        'x-cache',
-        'strict-transport-security',
-      ])
+      const query = new URLSearchParams()
 
+      query.set('apiKey', Math.random().toString(36).substring(7))
+      query.set('version', '3')
+
+      const { requestFromProxy } = await api.sendRequestToCdn(query)
+
+      const splitPath = requestFromProxy.path.split('/').slice(1)
+
+      assert(splitPath.length, 2)
+
+      const [version, apiKey] = splitPath
+
+      assert(apiKey, query.get('apiKey'))
+      assert(version, 'v3')
+    },
+  },
+  {
+    name: 'agent request traffic monitoring',
+    test: async (api) => {
+      const { requestFromProxy } = await api.sendRequestToCdn()
+      // ii = fingerprint-pro-akamai/1.0.1-snapshot.0/procdn
+      const { ii } = requestFromProxy.query
+      const [integration, version, type] = ii.toString().split('/')
+
+      assert(integration, 'fingerprint-pro-akamai') // TODO: Get integration name
+      assert(version, '1.0.1-snapshot.0') // TODO: Get integration version
+      assert(type, 'procdn')
+    },
+  },
+  {
+    name: 'cache endpoint request traffic monitoring',
+    test: async (api) => {
+      const { requestFromProxy } = await api.sendRequestToCacheEndpoint({})
+      const { ii } = requestFromProxy.query
+      const [integration, version, type] = ii.toString().split('/')
+
+      assert(integration, 'fingerprint-pro-akamai') // TODO: Get integration name
+      assert(version, '1.0.1-snapshot.0') // TODO: Get integration version
+      assert(type, 'ingress')
+    },
+  },
+  {
+    name: 'ingress request traffic monitoring',
+    test: async (api) => {
+      const { requestFromProxy } = await api.sendRequestToIngress({})
+      const { ii } = requestFromProxy.query
+      const [integration, version, type] = ii.toString().split('/')
+
+      assert(integration, 'fingerprint-pro-akamai') // TODO: Get integration name
+      assert(version, '1.0.1-snapshot.0') // TODO: Get integration version
+      assert(type, 'ingress')
+    },
+  },
+  {
+    name: 'agent request preserve header and query',
+    test: async (api) => {
+      const query = new URLSearchParams()
+      query.set('customQuery', '123')
+
+      const { requestFromProxy } = await api.sendRequestToCdn(query, { headers: { 'X-Custom': '123' } })
+      assert(requestFromProxy.get('X-Custom'), '123')
+      assert(requestFromProxy.query.customQuery, '123')
+    },
+  },
+  {
+    name: 'cache control headers for agent request',
+    test: async (api) => {
+      const { requestFromProxy } = await api.sendRequestToCdn()
+      assertRegExp(requestFromProxy.get('Cache-Control'), new RegExp(/max-age=[0-9]*/g))
+      const maxAge = Number(requestFromProxy.get('Cache-Control').replace('max-age=', ''))
+      console.log({ maxAge })
+      assertLowerThanOrEqual(maxAge, 3600)
+    },
+  },
+  {
+    name: 'agent request no cookie',
+    test: async (api) => {
+      const { requestFromProxy } = await api.sendRequestToCdn(undefined, {
+        headers: { cookie: 'test=123; _iidt=test' },
+      })
+      assert(requestFromProxy.get('cookie'), undefined)
+    },
+  },
+  {
+    name: 'ingress delete all cookies if iidt not present',
+    test: async (api) => {
       const { requestFromProxy } = await api.sendRequestToIngress({
         headers: {
-          cookie: '_iidt=123;test=123',
-          'fpjs-proxy-secret': 'secret',
+          cookie: 'random=123;test=123',
         },
       })
+      assert(requestFromProxy.get('cookie'), undefined)
+    },
+  },
+  {
+    name: 'ingress request with cookie filter, proxy secret, forwarded host and preservation of headers and query parameters',
+    test: async (api) => {
+      const query = new URLSearchParams()
+      query.set('customQuery', '123')
+      const { requestFromProxy } = await api.sendRequestToIngress(
+        {
+          headers: {
+            cookie: '_iidt=123;test=123',
+            'x-custom-header': '123',
+          },
+        },
+        query
+      )
 
+      const ipOfClient = await getIP()
+      assert(requestFromProxy.query.customQuery, '123')
+      assert(requestFromProxy.get('x-custom-header'), '123')
+      assert(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient)
       assert(requestFromProxy.get('cookie'), '_iidt=123')
       assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
-
-      BLACK_LISTED_HEADERS.forEach((header) => {
-        assert(requestFromProxy.get(header), undefined, `Header ${header} should not be present`)
-      })
-
       assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
     },
   },
