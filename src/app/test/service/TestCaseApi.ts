@@ -30,7 +30,6 @@ export class TestCaseApi {
 
         resolve({
           requestFromProxy: request,
-          sendResponse: this.makeSendResponse(),
         })
       })
 
@@ -66,7 +65,6 @@ export class TestCaseApi {
 
         resolve({
           requestFromProxy: request,
-          sendResponse: this.makeSendResponse(),
         })
       })
 
@@ -104,7 +102,6 @@ export class TestCaseApi {
 
         resolve({
           requestFromProxy: request,
-          sendResponse: this.makeSendResponse(),
         })
       })
 
@@ -127,11 +124,5 @@ export class TestCaseApi {
           console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
         })
     })
-  }
-
-  private makeSendResponse() {
-    return () => {
-      throw new Error('Not implemented')
-    }
   }
 }

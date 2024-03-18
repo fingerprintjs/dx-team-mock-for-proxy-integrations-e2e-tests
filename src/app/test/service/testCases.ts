@@ -1,4 +1,4 @@
-import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
+import { Request as ExpressRequest } from 'express'
 import { getIP } from '../utils/getIP'
 import { TestCaseApi } from './TestCaseApi'
 import { assert, assertLowerThanOrEqual, assertRegExp } from './assert'
@@ -6,8 +6,6 @@ import { RequestsFromProxyRecord } from './requestFromProxy'
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
-  // TODO: Not sure if this will be needed
-  sendResponse: (response: ExpressResponse) => void
 }
 
 export type FailedTestCaseMetadata = {
@@ -84,12 +82,11 @@ export const testCases: TestCase[] = [
     name: 'agent request traffic monitoring',
     test: async (api) => {
       const { requestFromProxy } = await api.sendRequestToCdn()
-      // ii = fingerprint-pro-akamai/1.0.1-snapshot.0/procdn
       const { ii } = requestFromProxy.query
       const [integration, version, type] = ii.toString().split('/')
 
-      assert(integration, 'fingerprint-pro-akamai') // TODO: Get integration name
-      assert(version, '1.0.1-snapshot.0') // TODO: Get integration version
+      assert(integration, api.testSession.trafficName)
+      assert(version, api.testSession.integrationVersion)
       assert(type, 'procdn')
     },
   },
@@ -100,8 +97,8 @@ export const testCases: TestCase[] = [
       const { ii } = requestFromProxy.query
       const [integration, version, type] = ii.toString().split('/')
 
-      assert(integration, 'fingerprint-pro-akamai') // TODO: Get integration name
-      assert(version, '1.0.1-snapshot.0') // TODO: Get integration version
+      assert(integration, api.testSession.trafficName)
+      assert(version, api.testSession.integrationVersion)
       assert(type, 'ingress')
     },
   },
@@ -112,8 +109,8 @@ export const testCases: TestCase[] = [
       const { ii } = requestFromProxy.query
       const [integration, version, type] = ii.toString().split('/')
 
-      assert(integration, 'fingerprint-pro-akamai') // TODO: Get integration name
-      assert(version, '1.0.1-snapshot.0') // TODO: Get integration version
+      assert(integration, api.testSession.trafficName)
+      assert(version, api.testSession.integrationVersion)
       assert(type, 'ingress')
     },
   },
@@ -174,12 +171,19 @@ export const testCases: TestCase[] = [
       )
 
       const ipOfClient = await getIP()
+      const { ii } = requestFromProxy.query
+      const [integration, version, type] = ii.toString().split('/')
+
       assert(requestFromProxy.query.customQuery, '123')
       assert(requestFromProxy.get('x-custom-header'), '123')
       assert(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient)
       assert(requestFromProxy.get('cookie'), '_iidt=123')
       assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
       assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
+
+      assert(integration, api.testSession.trafficName)
+      assert(version, api.testSession.integrationVersion)
+      assert(type, 'ingress')
     },
   },
 ]
