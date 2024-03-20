@@ -1,4 +1,5 @@
 import { Request as ExpressRequest } from 'express'
+import { string } from 'zod'
 import { getIP } from '../utils/getIP'
 import { TestCaseApi } from './TestCaseApi'
 import { assert, assertLowerThanOrEqual, assertRegExp } from './assert'
@@ -81,13 +82,17 @@ export const testCases: TestCase[] = [
   {
     name: 'agent request traffic monitoring',
     test: async (api) => {
-      const { requestFromProxy } = await api.sendRequestToCdn()
-      const { ii } = requestFromProxy.query
+      const query = new URLSearchParams()
+      query.set('customQuery', '123')
+
+      const { requestFromProxy } = await api.sendRequestToCdn(query)
+      const { ii, customQuery } = requestFromProxy.query
       const [integration, version, type] = ii.toString().split('/')
 
       assert(integration, api.testSession.trafficName)
       assert(version, api.testSession.integrationVersion)
       assert(type, 'procdn')
+      assert(customQuery, '123')
     },
   },
   {
@@ -156,34 +161,51 @@ export const testCases: TestCase[] = [
     },
   },
   {
-    name: 'ingress request with cookie filter, proxy secret, forwarded host and preservation of headers and query parameters',
+    name: 'ingress request with single ii query parameter',
     test: async (api) => {
       const query = new URLSearchParams()
       query.set('customQuery', '123')
-      const { requestFromProxy } = await api.sendRequestToIngress(
-        {
-          headers: {
-            cookie: '_iidt=123;test=123',
-            'x-custom-header': '123',
-          },
+      const { requestFromProxy } = await api.sendRequestToIngress({}, query)
+      const { ii, customQuery } = requestFromProxy.query
+      const [integration, version, type] = ii.toString().split('/')
+      assert(integration, api.testSession.trafficName)
+      assert(version, api.testSession.integrationVersion)
+      assert(type, 'ingress')
+      assert(customQuery, '123')
+    },
+  },
+  {
+    name: 'ingress request with multiple ii query parameter',
+    test: async (api) => {
+      const query = new URLSearchParams()
+      const reactTrafficMonitoring = 'fingerprintjs-pro-react/2.6.2/next/14.1.0'
+      query.set('ii', reactTrafficMonitoring)
+      query.set('customQuery', '123')
+      const { requestFromProxy } = await api.sendRequestToIngress({}, query)
+      const { ii, customQuery } = requestFromProxy.query
+      const proxyIntegrationInfo = `${api.testSession.trafficName}/${api.testSession.integrationVersion}/ingress`
+      assert((ii as string[]).includes(proxyIntegrationInfo), true)
+      assert((ii as string[]).includes(reactTrafficMonitoring), true)
+      assert(customQuery, '123')
+    },
+  },
+  {
+    name: 'ingress request with cookie filter, proxy secret, forwarded host and preservation of headers',
+    test: async (api) => {
+      const { requestFromProxy } = await api.sendRequestToIngress({
+        headers: {
+          cookie: '_iidt=123;test=123',
+          'x-custom-header': '123',
         },
-        query
-      )
+      })
 
       const ipOfClient = await getIP()
-      const { ii } = requestFromProxy.query
-      const [integration, version, type] = ii.toString().split('/')
 
-      assert(requestFromProxy.query.customQuery, '123')
       assert(requestFromProxy.get('x-custom-header'), '123')
       assert(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient)
       assert(requestFromProxy.get('cookie'), '_iidt=123')
       assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
       assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
-
-      assert(integration, api.testSession.trafficName)
-      assert(version, api.testSession.integrationVersion)
-      assert(type, 'ingress')
     },
   },
 ]
