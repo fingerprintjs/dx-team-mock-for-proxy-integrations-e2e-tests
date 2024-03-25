@@ -3,6 +3,7 @@ import { Request } from 'express'
 export enum ProxyRequestType {
   Ingress = 'Ingress',
   Cdn = 'Cdn',
+  Cache = 'Cache',
 }
 
 export type RequestListener = (request: Request) => void
