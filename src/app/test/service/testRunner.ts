@@ -1,5 +1,6 @@
+import { glob } from 'glob'
 import { ProxyRequestType, removeProxyRequestListener } from '../../proxy-receiver/service/proxyRequestHandler'
-import { TestCase, testCases, TestResult } from './testCases'
+import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
@@ -11,11 +12,18 @@ export type DetailedTestResult = TestResult & {
   requestDurationMs: number
 }
 
+export async function loadTestCases() {
+  const caseFiles = await glob('../**/*.case.ts', { absolute: true })
+  return caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase))
+}
+
 export async function runTests(testSession: TestSession) {
   testSession.start()
 
-  for (const test of testCases) {
-    const result = await runTest(testSession, test)
+  const testCases = await loadTestCases()
+
+  for (const testCase of testCases) {
+    const result = await runTest(testSession, await testCase)
     testSession.addResult(result)
   }
 

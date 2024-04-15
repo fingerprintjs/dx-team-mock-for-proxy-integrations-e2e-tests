@@ -1,8 +1,8 @@
 import { addProxyRequestListener, ProxyRequestType } from '../../proxy-receiver/service/proxyRequestHandler'
+import { SendRequestResult } from '../types/testCase'
 import { TEST_CASE_HOST_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from './const'
 import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromProxy'
 import { TestSession } from './session'
-import { SendRequestResult } from './testCases'
 
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {

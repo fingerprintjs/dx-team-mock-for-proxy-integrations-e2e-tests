@@ -4,10 +4,10 @@ import { argumentParser } from 'zodcli'
 import { RunTestsRequestSchema } from '../../src/app/test/request.types'
 import { TestResponse } from '../../src/app/test/service/session'
 import { createConsola } from 'consola'
-import { FailedTestResult } from '../../src/app/test/service/testCases'
 import { DetailedTestResult } from '../../src/app/test/service/testRunner'
 import { ExponentialBackoff, handleAll, retry } from 'cockatiel'
 import { z } from 'zod'
+import { FailedTestResult } from '../../src/app/test/types/testCase'
 
 const logger = createConsola()
 
