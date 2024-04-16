@@ -1,4 +1,4 @@
-import { assert } from '../../service/assert'
+import { assert, assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
@@ -10,6 +10,10 @@ const testCase: TestCase = {
     query.set('customQuery', '123')
     const { requestFromProxy } = await api.sendRequestToIngress({}, query)
     const { ii, customQuery } = requestFromProxy.query
+
+    assertToBeTruthy(ii)
+    assertToBeTruthy(customQuery)
+
     const proxyIntegrationInfo = `${api.testSession.trafficName}/${api.testSession.integrationVersion}/ingress`
     assert((ii as string[]).includes(proxyIntegrationInfo), true)
     assert((ii as string[]).includes(reactTrafficMonitoring), true)

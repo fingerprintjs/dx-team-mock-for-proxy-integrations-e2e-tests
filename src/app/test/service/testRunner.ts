@@ -12,7 +12,7 @@ export type DetailedTestResult = TestResult & {
   requestDurationMs: number
 }
 
-export async function loadTestCases() {
+export async function loadTestCaseModules() {
   const caseFiles = await glob('../**/*.case.ts', { absolute: true })
   return caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase))
 }
@@ -20,10 +20,11 @@ export async function loadTestCases() {
 export async function runTests(testSession: TestSession) {
   testSession.start()
 
-  const testCases = await loadTestCases()
+  const testCaseModules = await loadTestCaseModules()
 
-  for (const testCase of testCases) {
-    const result = await runTest(testSession, await testCase)
+  for (const testCaseModule of testCaseModules) {
+    const testCase = await testCaseModule
+    const result = await runTest(testSession, testCase)
     testSession.addResult(result)
   }
 

@@ -1,4 +1,4 @@
-import { assert } from '../../service/assert'
+import { assert, assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
@@ -6,6 +6,9 @@ const testCase: TestCase = {
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToIngress({})
     const { ii } = requestFromProxy.query
+
+    assertToBeTruthy(ii.toString())
+
     const [integration, version, type] = ii.toString().split('/')
 
     assert(integration, api.testSession.trafficName)

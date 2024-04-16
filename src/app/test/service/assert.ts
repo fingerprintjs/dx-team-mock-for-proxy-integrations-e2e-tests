@@ -15,3 +15,9 @@ export function assertRegExp(actual: string, regExp: RegExp, message?: string | 
     assertImpl.fail(message)
   }
 }
+
+export function assertToBeTruthy(actual: any, message?: string | Error) {
+  if (!actual) {
+    assertImpl.fail(message)
+  }
+}
