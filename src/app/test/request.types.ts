@@ -4,6 +4,8 @@ export const RunTestsRequestSchema = z.object({
   host: z.string().url(),
   ingressProxyPath: z.string(),
   cdnProxyPath: z.string(),
+  trafficName: z.string(),
+  integrationVersion: z.string(),
 })
 
 export type RunTestsRequest = z.infer<typeof RunTestsRequestSchema>

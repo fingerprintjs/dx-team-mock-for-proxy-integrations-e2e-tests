@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
   "workspaces": [
     "test-runner"
   ],
@@ -34,6 +37,7 @@
     "@fingerprintjs/eslint-config-dx-team": "^0.1.0",
     "@fingerprintjs/prettier-config-dx-team": "^0.1.0",
     "express": "^4.18.2",
+    "glob": "^10.3.12",
     "zod": "^3.22.4",
     "zod-express-middleware": "^1.4.0"
   }

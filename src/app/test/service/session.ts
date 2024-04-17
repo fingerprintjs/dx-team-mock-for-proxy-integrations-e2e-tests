@@ -18,6 +18,8 @@ export class TestSession implements RunTestsRequest {
     public host: string,
     public ingressProxyPath: string,
     public cdnProxyPath: string,
+    public trafficName: string,
+    public integrationVersion: string,
     public status: TestSessionStatus,
     public results: DetailedTestResult[] = []
   ) {}
@@ -54,6 +56,8 @@ export function createTestSession(request: RunTestsRequest) {
     request.host,
     request.ingressProxyPath,
     request.cdnProxyPath,
+    request.trafficName,
+    request.integrationVersion,
     TestSessionStatus.Created
   )
 
