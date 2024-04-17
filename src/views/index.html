@@ -12,6 +12,11 @@
 </head>
 <body>
 <div id='app' class='container p-4'>
+  <div class='alert alert-info mb-2'>
+    Please check out <a
+    href='https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/blob/main/README.md' target='_blank'>this
+    README link</a> for documentation
+  </div>
   <form @submit.prevent='handleSubmit'>
     <div class='mb-3'>
       <label class='form-label' for='host'>Host</label>
@@ -19,7 +24,8 @@
     </div>
     <div class='mb-3'>
       <label for='ingressProxyPath'>Ingress Proxy Path</label>
-      <input type='text' name='ingressProxyPath' id='ingressProxyPath' v-model='formData.ingressProxyPath' class='form-control' />
+      <input type='text' name='ingressProxyPath' id='ingressProxyPath' v-model='formData.ingressProxyPath'
+             class='form-control' />
     </div>
     <div class='mb-3'>
       <label for='cdnProxyPath'>CDN Proxy Path</label>
@@ -31,7 +37,8 @@
     </div>
     <div class='mb-3'>
       <label for='integrationVersion'>Integration Version</label>
-      <input type='text' name='integrationVersion' id='integrationVersion' v-model='formData.integrationVersion' class='form-control' />
+      <input type='text' name='integrationVersion' id='integrationVersion' v-model='formData.integrationVersion'
+             class='form-control' />
     </div>
     <div class='mb-3'>
       <button type='submit' class='btn btn-primary' :disabled='testResult.status === "pending"'>Submit</button>
@@ -61,65 +68,65 @@
                 aria-expanded='true' :aria-controls='result.id'>
           <div class='d-flex flex-row justify-content-between flex-grow-1'>
             <span>{{ result.testName }}</span>
-            <span class="badge text-bg-success" v-if='result.passed'>Success</span>
-            <span class="badge text-bg-danger" v-if='!result.passed'>Fail</span>
+            <span class='badge text-bg-success' v-if='result.passed'>Success</span>
+            <span class='badge text-bg-danger' v-if='!result.passed'>Fail</span>
           </div>
         </button>
       </div>
       <div :id='result.id' class='accordion-collapse collapse' data-bs-parent='#resultAccordion'>
         <div class='accordion-body' v-if='result.passed'>
-          Took: {{result.requestDurationMs}}ms
+          Took: {{ result.requestDurationMs }}ms
         </div>
         <div class='accordion-body' v-if='!result.passed && result.meta.error.operator === "assert"'>
           <div class='mb-2'>
             <strong>Field:</strong>
-            <span>{{result.reason}}</span>
+            <span>{{ result.reason }}</span>
           </div>
           <div class='mb-2'>
             <strong>Expected:</strong>
-            <span>{{result.meta.error.expected}}</span>
+            <span>{{ result.meta.error.expected }}</span>
           </div>
           <div class='mb-2'>
             <strong>Received:</strong>
-            <span>{{result.meta.error.actual}}</span>
+            <span>{{ result.meta.error.actual }}</span>
           </div>
         </div>
         <div class='accordion-body' v-if='!result.passed && result.meta.error.operator === "assertLowerThanOrEqual"'>
           <div class='mb-2'>
             <strong>Field:</strong>
-            <span>{{result.reason}}</span>
+            <span>{{ result.reason }}</span>
           </div>
           <div class='mb-2'>
             <strong>Expected Lower Than Or Equal:</strong>
-            <span>{{result.meta.error.expected}}</span>
+            <span>{{ result.meta.error.expected }}</span>
           </div>
           <div class='mb-2'>
             <strong>Received:</strong>
-            <span>{{result.meta.error.actual}}</span>
+            <span>{{ result.meta.error.actual }}</span>
           </div>
         </div>
         <div class='accordion-body' v-if='!result.passed && result.meta.error.operator === "assertRegExp"'>
           <div class='mb-2'>
             <strong>Field:</strong>
-            <span>{{result.reason}}</span>
+            <span>{{ result.reason }}</span>
           </div>
           <div class='mb-2'>
             <strong>Expected Pattern:</strong>
-            <span>{{result.meta.error.expected}}</span>
+            <span>{{ result.meta.error.expected }}</span>
           </div>
           <div class='mb-2'>
             <strong>Received:</strong>
-            <span>{{result.meta.error.actual}}</span>
+            <span>{{ result.meta.error.actual }}</span>
           </div>
         </div>
         <div class='accordion-body' v-if='!result.passed && result.meta.error.operator === "assertToBeTruthy"'>
           <div class='mb-2'>
             <strong>Field:</strong>
-            <span>{{result.reason}}</span>
+            <span>{{ result.reason }}</span>
           </div>
           <div class='mb-2'>
             <strong>Field Expected to be Truthy:</strong>
-            <span>{{result.meta.error.expected}}</span>
+            <span>{{ result.meta.error.expected }}</span>
           </div>
         </div>
       </div>
