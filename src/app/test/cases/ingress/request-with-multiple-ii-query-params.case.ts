@@ -11,13 +11,13 @@ const testCase: TestCase = {
     const { requestFromProxy } = await api.sendRequestToIngress({}, query)
     const { ii, customQuery } = requestFromProxy.query
 
-    assertToBeTruthy(ii)
-    assertToBeTruthy(customQuery)
+    assertToBeTruthy('ii', ii)
+    assertToBeTruthy('customQuery', customQuery)
 
     const proxyIntegrationInfo = `${api.testSession.trafficName}/${api.testSession.integrationVersion}/ingress`
-    assert((ii as string[]).includes(proxyIntegrationInfo), true)
-    assert((ii as string[]).includes(reactTrafficMonitoring), true)
-    assert(customQuery, '123')
+    assert((ii as string[]).includes(proxyIntegrationInfo), true, 'proxyIntegrationInfo')
+    assert((ii as string[]).includes(reactTrafficMonitoring), true, 'reactTrafficMonitoring')
+    assert(customQuery, '123', 'customQuery')
   },
 }
 

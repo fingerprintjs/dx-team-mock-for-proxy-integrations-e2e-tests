@@ -14,11 +14,15 @@ const testCase: TestCase = {
 
     const ipOfClient = await getIP()
 
-    assert(requestFromProxy.get('x-custom-header'), '123')
-    assert(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient)
-    assert(requestFromProxy.get('cookie'), '_iidt=123')
-    assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret')
-    assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host)
+    assert(requestFromProxy.get('x-custom-header'), '123', 'x-custom-header')
+    assert(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient, 'fpjs-proxy-client-ip')
+    assert(requestFromProxy.get('cookie'), '_iidt=123', 'cookie')
+    assert(requestFromProxy.get('fpjs-proxy-secret'), 'secret', 'fpjs-proxy-secret')
+    assert(
+      `https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`,
+      api.testSession.host,
+      'fpjs-proxy-forwarded-host'
+    )
   },
 }
 

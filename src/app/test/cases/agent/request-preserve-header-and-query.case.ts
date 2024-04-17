@@ -10,16 +10,16 @@ const testCase: TestCase = {
     const { requestFromProxy } = await api.sendRequestToCdn(query, { headers: { 'X-Custom': '123' } })
     const { ii, customQuery } = requestFromProxy.query
 
-    assertToBeTruthy(ii.toString())
-    assertToBeTruthy(customQuery.toString())
+    assertToBeTruthy('ii', ii)
+    assertToBeTruthy('customQuery', customQuery)
 
     const [integration, version, type] = ii.toString().split('/')
 
-    assert(requestFromProxy.get('X-Custom'), '123')
-    assert(customQuery, '123')
-    assert(integration, api.testSession.trafficName)
-    assert(version, api.testSession.integrationVersion)
-    assert(type, 'procdn')
+    assert(requestFromProxy.get('X-Custom'), '123', 'X-Custom')
+    assert(customQuery, '123', 'customQuery')
+    assert(integration, api.testSession.trafficName, 'trafficName')
+    assert(version, api.testSession.integrationVersion, 'integrationVersion')
+    assert(type, 'procdn', 'integrationType')
   },
 }
 

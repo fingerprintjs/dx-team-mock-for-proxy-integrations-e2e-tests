@@ -7,7 +7,7 @@ const testCase: TestCase = {
     const { requestFromProxy } = await api.sendRequestToCdn(new URLSearchParams(), {
       headers: { cookie: 'test=123; _iidt=test' },
     })
-    assert(requestFromProxy.get('cookie'), undefined)
+    assert(requestFromProxy.get('cookie'), undefined, 'cookie')
   },
 }
 

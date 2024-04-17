@@ -9,7 +9,7 @@ const testCase: TestCase = {
         cookie: 'random=123;test=123',
       },
     })
-    assert(requestFromProxy.get('cookie'), undefined)
+    assert(requestFromProxy.get('cookie'), undefined, 'cookie')
   },
 }
 
