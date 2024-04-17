@@ -159,6 +159,7 @@
     methods: {
       handleSubmit() {
         this.testResult.status = 'pending';
+        this.testResult.results = [];
         const vm = this;
         fetch('/api/test/run-tests', {
           method: 'POST',
