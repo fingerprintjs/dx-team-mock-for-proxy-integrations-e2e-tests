@@ -18,7 +18,7 @@ app.all('/health', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-  res.sendFile('views/index.html', { root: __dirname })
+  res.sendFile('views/index.html', { root: process.cwd() })
 })
 
 app.listen(port, () => console.log(`Application started on port ${port}`))
