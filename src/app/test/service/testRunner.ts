@@ -13,7 +13,9 @@ export type DetailedTestResult = TestResult & {
 }
 
 export async function loadTestCases() {
-  const caseFiles = await glob('../**/*.case.ts', { absolute: true })
+  const ext = process.env.TEST_CASE_EXT ?? '.js'
+
+  const caseFiles = await glob(`../**/*.case${ext}`, { absolute: true })
   return await Promise.all(caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase)))
 }
 
