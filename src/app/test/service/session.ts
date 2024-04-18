@@ -76,6 +76,10 @@ export function getTestSession(host: string) {
   return testSession
 }
 
+export function cleanupTestSession(host: string) {
+  testSessions.delete(host)
+}
+
 export function finalizeTestSession(testSession: TestSession) {
   testSession.finish()
 

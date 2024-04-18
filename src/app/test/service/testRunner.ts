@@ -1,5 +1,9 @@
 import { glob } from 'glob'
-import { ProxyRequestType, removeProxyRequestListener } from '../../proxy-receiver/service/proxyRequestHandler'
+import {
+  createProxyRequestHandlerKey,
+  ProxyRequestType,
+  removeProxyRequestListener,
+} from '../../proxy-receiver/service/proxyRequestHandler'
 import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
@@ -24,10 +28,13 @@ export async function runTests(testSession: TestSession) {
 
   const testCases = await loadTestCases()
 
-  for (const testCase of testCases) {
-    const result = await runTest(testSession, testCase)
-    testSession.addResult(result)
-  }
+  await Promise.all(
+    testCases.map(async (testCase) => {
+      const result = await runTest(testSession, testCase)
+
+      testSession.addResult(result)
+    })
+  )
 
   return finalizeTestSession(testSession)
 }
@@ -41,7 +48,7 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
   const ingressProxyUrl = new URL(testSession.host)
   ingressProxyUrl.pathname = testSession.ingressProxyPath
 
-  const api = new TestCaseApi(ingressProxyUrl, cdnProxyUrl, testSession)
+  const api = new TestCaseApi(test.name, ingressProxyUrl, cdnProxyUrl, testSession)
 
   let result: TestResult
 
@@ -62,9 +69,11 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
     }
   }
 
+  const key = createProxyRequestHandlerKey(testSession.host, test.name)
+
   // In case if test failed without removing listeners
   Object.values(ProxyRequestType).forEach((type) => {
-    removeProxyRequestListener(type, testSession.host)
+    removeProxyRequestListener(type, key)
   })
 
   const requestDurationMs = Date.now() - startTime
