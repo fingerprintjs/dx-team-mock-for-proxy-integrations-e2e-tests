@@ -21,4 +21,10 @@ app.get('/', (req, res) => {
   res.sendFile('views/index.html', { root: process.cwd() })
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).send('Internal server error')
+})
+
 app.listen(port, () => console.log(`Application started on port ${port}`))
