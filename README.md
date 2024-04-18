@@ -138,8 +138,8 @@ const testCase: TestCase = {
       .sendRequestToCdn(query, { headers: { 'X-Custom': '123' } })
     const { ii, customQuery } = requestFromProxy.query
 
-    assertToBeTruthy(ii.toString())
-    assertToBeTruthy(customQuery.toString())
+    assertToBeTruthy(ii)
+    assertToBeTruthy(customQuery)
 
     // More assertions
   },
