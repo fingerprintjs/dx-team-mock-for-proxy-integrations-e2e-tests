@@ -23,6 +23,14 @@ Refer to specific integration README for more details.
 
 ## How to use it
 
+### UI
+
+If you navigate to the mock app URL, you will see a simple UI that allows you to run the tests.
+![ui.png](assets/ui.png)
+
+
+### REST API
+
 This app exposes REST API that can be used to run the tests.
 
 To run tests, send `POST` request to: `/api/test/run-tests` with following payload:
@@ -62,12 +70,15 @@ You will receive following response:
       "testName": "ingress request headers",
       // Duration of the request in milliseconds
       "requestDurationMs": 23,
-      // Reason why the test failed
-      "reason": "Expected header 'X-Forwarded-For' to be undefined",
+      // Assertion that failed
+      "reason": "customQuery",
       "meta": {
         "error": {
-          // Error thrown by the test
-          // ...
+          "generatedMessage": false,
+          "code": "ERR_ASSERTION",
+          "actual": "123",
+          "expected": "1234",
+          "operator": "assert"
         },
         // Array of requests that we received from proxy for this test
         "requestsFromProxy": [
@@ -85,6 +96,8 @@ You will receive following response:
   ]
 }
 ```
+
+### CLI
 
 As an alternative, you can use our CLI client:
 ```bash
