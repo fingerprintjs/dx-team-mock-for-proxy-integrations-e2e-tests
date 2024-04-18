@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start:dev": "nodemon",
+    "start:dev": "TEST_CASE_EXT=.ts nodemon",
     "start": "node dist/index.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
