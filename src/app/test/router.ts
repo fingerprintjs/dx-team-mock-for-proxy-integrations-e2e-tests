@@ -12,11 +12,15 @@ export function testRouter() {
   const router = express.Router()
 
   router.post('/run-tests', RunTestsSchema, async (req, res) => {
-    const testSession = createTestSession(req.body)
+    try {
+      const testSession = createTestSession(req.body)
 
-    const result = await runTests(testSession)
+      const result = await runTests(testSession)
 
-    return res.json(result.toTestResponse())
+      return res.json(result.toTestResponse())
+    } catch (e) {
+      res.status(500).send({ reason: e.message })
+    }
   })
 
   return router
