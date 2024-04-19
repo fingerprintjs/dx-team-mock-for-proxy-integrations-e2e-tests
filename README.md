@@ -16,6 +16,8 @@ In most cases, this can be done by setting these two ENV variables when building
 FPCDN=<API_URL> INGRESS_API=<API_URL> pnpm build
 ```
 
+You also need to set `secret` as your proxy secret key.
+
 Refer to specific integration README for more details.
 
 > **Note**
