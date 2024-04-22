@@ -164,8 +164,8 @@
     created: function() {
       const url = new URL(window.location);
       this.formData.host = url.searchParams.get('host');
-      this.formData.ingressProxyPath = url.searchParams.get('ingressProxyPath');
-      this.formData.cdnProxyPath = url.searchParams.get('cdnProxyPath');
+      this.formData.ingressProxyUrl = url.searchParams.get('ingressProxyUrl');
+      this.formData.cdnProxyUrl = url.searchParams.get('cdnProxyUrl');
       this.formData.trafficName = url.searchParams.get('trafficName');
       this.formData.integrationVersion = url.searchParams.get('integrationVersion');
     },

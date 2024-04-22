@@ -6,10 +6,7 @@ const testCase: TestCase = {
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToIngress({})
 
-    const testSessionHostURL = new URL(api.testSession.host)
-    const testSessionHost = `${testSessionHostURL.protocol}//${testSessionHostURL.host}`
-
-    assert(`https://${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, testSessionHost, 'fpjs-proxy-forwarded-host')
+    assert(`${requestFromProxy.get('fpjs-proxy-forwarded-host')}`, api.testSession.host, 'fpjs-proxy-forwarded-host')
   },
 }
 
