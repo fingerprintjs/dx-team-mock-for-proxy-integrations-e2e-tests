@@ -4119,14 +4119,10 @@ const argumentParser = ({ options, aliases, }) => {
 };
 
 const RunTestsRequestSchema = z.object({
-    host: z.string().url(),
-    ingressProxyPath: z.string(),
-    cdnProxyPath: z.string(),
+    ingressProxyUrl: z.string().url(),
+    cdnProxyUrl: z.string().url(),
     trafficName: z.string(),
     integrationVersion: z.string(),
-});
-z.object({
-    host: z.string().url(),
 });
 
 const LogLevels = {
