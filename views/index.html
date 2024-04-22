@@ -19,7 +19,7 @@
   </div>
   <form @submit.prevent='handleSubmit'>
     <div class='mb-3'>
-      <label for='ingressProxyUrl'>Ingress Proxy Path</label>
+      <label for='ingressProxyUrl'>Ingress Proxy URL</label>
       <input type='text' name='ingressProxyUrl' id='ingressProxyUrl' v-model='formData.ingressProxyUrl'
              class='form-control' />
       <span class='text-secondary'>
@@ -27,7 +27,7 @@
       </span>
     </div>
     <div class='mb-3'>
-      <label for='cdnProxyUrl'>CDN Proxy Path</label>
+      <label for='cdnProxyUrl'>CDN Proxy URL</label>
       <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control' />
       <span class='text-secondary'>
         CDN endpoint in your proxy integration.
@@ -152,7 +152,6 @@
     el: '#app',
     data: {
       formData: {
-        host: '',
         ingressProxyUrl: '',
         cdnProxyUrl: '',
         trafficName: '',

@@ -38,12 +38,10 @@ This app exposes REST API that can be used to run the tests.
 To run tests, send `POST` request to: `/api/test/run-tests` with following payload:
 ```json
 {
-  // Your proxy host
-  "host": "https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com",
-  // CDN endpoint in your proxy integration
-  "cdnProxyPath": "worker/pxdownload",
-  // Ingress endpoint in your proxy integration
-  "ingressProxyPath": "worker/pxresult",
+  // CDN url in your proxy integration
+  "cdnProxyUrl": "https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/pxdownload",
+  // Ingress url in your proxy integration
+  "ingressProxyUrl": "https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/pxresult",
   // First part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
   "trafficName": "fingerprint-pro-akamai",
   // Second part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
@@ -106,12 +104,10 @@ As an alternative, you can use our CLI client:
 npm exec -y "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests.git" --
 # URL of the mock server 
 --api-url="<API_URL>" 
-# CDN endpoint in your proxy integration
---host="https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com"
-# CDN endpoint in your proxy integration 
---cdn-proxy-path="worker/pxdownload" 
-# Ingress endpoint in your proxy integration
---ingress-proxy-path="worker/pxresult"
+# CDN url in your proxy integration 
+--cdn-proxy-url="https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/pxdownload" 
+# Ingress url in your proxy integration
+--ingress-proxy-url="https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/pxresult"
 # First part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
 --traffic-name="fingerprint-pro-akamai"
 # Second part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
