@@ -175,36 +175,37 @@
       this.formData.integrationVersion = url.searchParams.get('integrationVersion');
     },
     methods: {
-      handleSubmit() {
+      async handleSubmit() {
         this.testResult.status = 'pending';
         this.testResult.results = [];
         this.genericError = null;
-        const vm = this;
-        fetch('/api/test/run-tests', {
+        const response = await fetch('/api/test/run-tests', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ ...this.formData }),
-        }).then(res => {
-          if (!res.ok && res.status === 500) {
-            return res.json().then((res) => {
-              throw new Error(res?.reason ?? 'Unknown Error');
-            });
-          }
-          if (!res.ok) {
-            throw new Error('Invalid Response');
-          }
-          return res.json();
-        }).then(res => {
-          vm.testResult.success = res.results.every(t => t.passed === true);
-          vm.testResult.results = res.results.map((item, index) => ({ ...item, id: `element${index}` }));
-        }).catch(err => {
-          console.log(err);
-          vm.genericError = err;
-        }).finally(() => {
-          vm.testResult.status = 'finished';
         });
+
+        if (!response.ok) {
+          if (response.status === 500) {
+            try {
+              const errorData = await response.json();
+              this.genericError = errorData?.reason ?? 'Unknown Error';
+            } catch (_) {
+              this.genericError = 'Invalid Response';
+            }
+          }
+
+          this.testResult.success = false;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          this.testResult.success = data.results.every(t => t.passed === true);
+          this.testResult.results = data.results.map((item, index) => ({ ...item, id: `element${index}` }));
+        }
+        this.testResult.status = 'finished';
       },
     },
   });
