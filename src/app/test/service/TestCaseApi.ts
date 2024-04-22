@@ -1,6 +1,10 @@
-import { addProxyRequestListener, ProxyRequestType } from '../../proxy-receiver/service/proxyRequestHandler'
+import {
+  addProxyRequestListener,
+  createProxyRequestHandlerKey,
+  ProxyRequestType,
+} from '../../proxy-receiver/service/proxyRequestHandler'
 import { SendRequestResult } from '../types/testCase'
-import { TEST_CASE_HOST_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from './const'
+import { TEST_CASE_HOST_HEADER, TEST_CASE_NAME_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from './const'
 import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromProxy'
 import { TestSession } from './session'
 
@@ -12,6 +16,7 @@ export class TestCaseApi {
   }
 
   constructor(
+    private readonly testName: string,
     private readonly ingressProxyUrl: URL,
     private readonly cdnProxyUrl: URL,
     public readonly testSession: TestSession
@@ -25,7 +30,9 @@ export class TestCaseApi {
         url.search = query.toString()
       }
 
-      addProxyRequestListener(ProxyRequestType.Cdn, this.testSession.host, (request) => {
+      const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
+
+      addProxyRequestListener(ProxyRequestType.Cdn, key, (request) => {
         this.requestsFromProxy[ProxyRequestType.Cdn].push(createRequestFromProxy(request))
 
         resolve({
@@ -39,8 +46,7 @@ export class TestCaseApi {
         ...requestInit,
         headers: {
           ...requestInit?.headers,
-          [TEST_CASE_HOST_HEADER]: this.testSession.host,
-          [TEST_CASE_PROXY_TYPE_HEADER]: ProxyRequestType.Cdn,
+          ...this.createTestHeaders(ProxyRequestType.Cdn),
         },
       })
         .then(async (response) => {
@@ -63,7 +69,9 @@ export class TestCaseApi {
         url.search = query.toString()
       }
 
-      addProxyRequestListener(ProxyRequestType.Cache, this.testSession.host, (request) => {
+      const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
+
+      addProxyRequestListener(ProxyRequestType.Cache, key, (request) => {
         this.requestsFromProxy[ProxyRequestType.Cache].push(createRequestFromProxy(request))
 
         resolve({
@@ -79,8 +87,7 @@ export class TestCaseApi {
         ...request,
         headers: {
           ...request.headers,
-          [TEST_CASE_HOST_HEADER]: this.testSession.host,
-          [TEST_CASE_PROXY_TYPE_HEADER]: ProxyRequestType.Cache,
+          ...this.createTestHeaders(ProxyRequestType.Cache),
         },
       })
         .then((response) => {
@@ -100,7 +107,9 @@ export class TestCaseApi {
         url.search = query.toString()
       }
 
-      addProxyRequestListener(ProxyRequestType.Ingress, this.testSession.host, (request) => {
+      const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
+
+      addProxyRequestListener(ProxyRequestType.Ingress, key, (request) => {
         this.requestsFromProxy[ProxyRequestType.Ingress].push(createRequestFromProxy(request))
 
         resolve({
@@ -116,8 +125,7 @@ export class TestCaseApi {
         ...request,
         headers: {
           ...request.headers,
-          [TEST_CASE_HOST_HEADER]: this.testSession.host,
-          [TEST_CASE_PROXY_TYPE_HEADER]: ProxyRequestType.Ingress,
+          ...this.createTestHeaders(ProxyRequestType.Ingress),
         },
       })
         .then(async (response) => {
@@ -130,5 +138,13 @@ export class TestCaseApi {
           console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
         })
     })
+  }
+
+  private createTestHeaders(requestType: ProxyRequestType) {
+    return {
+      [TEST_CASE_HOST_HEADER]: this.testSession.host,
+      [TEST_CASE_PROXY_TYPE_HEADER]: requestType,
+      [TEST_CASE_NAME_HEADER]: this.testName,
+    }
   }
 }

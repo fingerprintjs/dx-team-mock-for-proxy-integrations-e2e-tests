@@ -1,13 +1,14 @@
 import { assert } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 import { getLoaderVersion } from '../../utils/getLoaderVersion'
+import { getApiKey } from '../../utils/getApiKey'
 
 const testCase: TestCase = {
   name: 'agent request query params',
   test: async (api) => {
     const query = new URLSearchParams()
 
-    query.set('apiKey', Math.random().toString(36).substring(7))
+    query.set('apiKey', getApiKey())
     query.set('version', '3')
     query.set('loaderVersion', getLoaderVersion())
 

@@ -1,11 +1,13 @@
 import { assert, assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
+import { getApiKey } from '../../utils/getApiKey'
 
 const testCase: TestCase = {
   name: 'agent request preserve header and query',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('customQuery', '123')
+    query.set('apiKey', getApiKey())
 
     const { requestFromProxy } = await api.sendRequestToCdn(query, { headers: { 'X-Custom': '123' } })
     const { ii, customQuery } = requestFromProxy.query
