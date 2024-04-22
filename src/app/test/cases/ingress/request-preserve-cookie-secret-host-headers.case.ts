@@ -14,7 +14,7 @@ const testCase: TestCase = {
 
     const ipOfClient = await getIP()
 
-    const testSessionHostURL = new URL(api.testSession.host)
+    const testSessionHostURL = new URL(api.testSession.ingressProxyUrl)
     const testSessionHost = `${testSessionHostURL.protocol}//${testSessionHostURL.host}`
 
     assert(requestFromProxy.get('x-custom-header'), '123', 'x-custom-header')
