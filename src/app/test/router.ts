@@ -11,7 +11,7 @@ const RunTestsSchema = validateRequest({
 export function testRouter() {
   const router = express.Router()
 
-  router.post('/run-tests', RunTestsSchema, async (req, res) => {
+  router.post('/run-tests', RunTestsSchema, async (req, res, next) => {
     try {
       const testSession = createTestSession(req.body)
 
@@ -19,7 +19,7 @@ export function testRouter() {
 
       return res.json(result.toTestResponse())
     } catch (e) {
-      res.status(500).send({ reason: e.message })
+      next(e)
     }
   })
 
