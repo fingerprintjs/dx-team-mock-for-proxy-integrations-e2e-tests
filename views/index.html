@@ -20,17 +20,13 @@
   </div>
   <form @submit.prevent='handleSubmit'>
     <div class='mb-3'>
-      <label class='form-label' for='host'>Host</label>
-      <input type='text' name='host' id='host' v-model='formData.host' class='form-control' />
-    </div>
-    <div class='mb-3'>
-      <label for='ingressProxyPath'>Ingress Proxy Path</label>
-      <input type='text' name='ingressProxyPath' id='ingressProxyPath' v-model='formData.ingressProxyPath'
+      <label for='ingressProxyUrl'>Ingress Proxy URL</label>
+      <input type='text' name='ingressProxyUrl' id='ingressProxyUrl' v-model='formData.ingressProxyUrl'
              class='form-control' />
     </div>
     <div class='mb-3'>
-      <label for='cdnProxyPath'>CDN Proxy Path</label>
-      <input type='text' name='cdnProxyPath' id='cdnProxyPath' v-model='formData.cdnProxyPath' class='form-control' />
+      <label for='cdnProxyUrl'>CDN Proxy URL</label>
+      <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control' />
     </div>
     <div class='mb-3'>
       <label for='trafficName'>Traffic Name</label>
@@ -153,9 +149,8 @@
     el: '#app',
     data: {
       formData: {
-        host: '',
-        ingressProxyPath: '',
-        cdnProxyPath: '',
+        ingressProxyUrl: '',
+        cdnProxyUrl: '',
         trafficName: '',
         integrationVersion: '',
       },

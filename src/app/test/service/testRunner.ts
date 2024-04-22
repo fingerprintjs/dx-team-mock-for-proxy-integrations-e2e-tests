@@ -35,11 +35,8 @@ export async function runTests(testSession: TestSession) {
 export async function runTest(testSession: TestSession, test: TestCase): Promise<DetailedTestResult> {
   const startTime = Date.now()
 
-  const cdnProxyUrl = new URL(testSession.host)
-  cdnProxyUrl.pathname = testSession.cdnProxyPath
-
-  const ingressProxyUrl = new URL(testSession.host)
-  ingressProxyUrl.pathname = testSession.ingressProxyPath
+  const cdnProxyUrl = new URL(testSession.cdnProxyUrl)
+  const ingressProxyUrl = new URL(testSession.ingressProxyUrl)
 
   const api = new TestCaseApi(ingressProxyUrl, cdnProxyUrl, testSession)
 
