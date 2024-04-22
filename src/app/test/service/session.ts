@@ -16,8 +16,8 @@ export interface TestResponse {
 export class TestSession implements RunTestsRequest {
   constructor(
     public host: string,
-    public ingressProxyPath: string,
-    public cdnProxyPath: string,
+    public ingressProxyUrl: string,
+    public cdnProxyUrl: string,
     public trafficName: string,
     public integrationVersion: string,
     public status: TestSessionStatus,
@@ -47,21 +47,34 @@ export class TestSession implements RunTestsRequest {
 
 const testSessions = new Map<string, TestSession>()
 
+function getHost(request: RunTestsRequest) {
+  const cdnUrl = new URL(request.cdnProxyUrl)
+  const ingressUrl = new URL(request.ingressProxyUrl)
+
+  if (cdnUrl.hostname !== ingressUrl.hostname) {
+    throw new Error('CDN and Ingress URLs must have the same host')
+  }
+
+  return cdnUrl.hostname
+}
+
 export function createTestSession(request: RunTestsRequest) {
-  if (testSessions.has(request.host)) {
+  const host = getHost(request)
+
+  if (testSessions.has(host)) {
     throw new Error('Test session already exists')
   }
 
   const session = new TestSession(
-    request.host,
-    request.ingressProxyPath,
-    request.cdnProxyPath,
+    host,
+    request.ingressProxyUrl,
+    request.cdnProxyUrl,
     request.trafficName,
     request.integrationVersion,
     TestSessionStatus.Created
   )
 
-  testSessions.set(request.host, session)
+  testSessions.set(host, session)
 
   return session
 }
