@@ -22,19 +22,31 @@
       <label for='ingressProxyUrl'>Ingress Proxy URL</label>
       <input type='text' name='ingressProxyUrl' id='ingressProxyUrl' v-model='formData.ingressProxyUrl'
              class='form-control' />
+      <span class='text-secondary'>
+        Ingress endpoint in your proxy integration.
+      </span>
     </div>
     <div class='mb-3'>
       <label for='cdnProxyUrl'>CDN Proxy URL</label>
       <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control' />
+      <span class='text-secondary'>
+        CDN endpoint in your proxy integration.
+      </span>
     </div>
     <div class='mb-3'>
       <label for='trafficName'>Traffic Name</label>
       <input type='text' name='trafficName' id='trafficName' v-model='formData.trafficName' class='form-control' />
+      <span class='text-secondary'>
+        First part of ii parameter sent by our proxy integration: <strong>&lt;trafficName&gt;</strong>/&lt;integrationVersion&gt;/type
+      </span>
     </div>
     <div class='mb-3'>
       <label for='integrationVersion'>Integration Version</label>
       <input type='text' name='integrationVersion' id='integrationVersion' v-model='formData.integrationVersion'
              class='form-control' />
+      <span class='text-secondary'>
+        Second part of ii parameter sent by our proxy integration: &lt;trafficName&gt;/<strong>&lt;integrationVersion&gt;</strong>/type
+      </span>
     </div>
     <div class='mb-3'>
       <button type='submit' class='btn btn-primary' :disabled='testResult.status === "pending"'>Submit</button>
@@ -174,3 +186,4 @@
 </script>
 </body>
 </html>
+
