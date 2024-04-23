@@ -1,5 +1,5 @@
 import * as express from 'express'
-import { Express } from 'express'
+import { Express, NextFunction, Request, Response } from 'express'
 import beforeResponseMiddleware from './middlewares/beforeResponse.middleware'
 import { proxyReceiverRouter } from './app/proxy-receiver/router'
 import { testRouter } from './app/test/router'
@@ -20,5 +20,12 @@ app.all('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile('views/index.html', { root: process.cwd() })
 })
+
+function errorHandler(err: Error, req: Request, res: Response, _: NextFunction) {
+  console.error(err)
+  res.status(500).send({ reason: err.message })
+}
+
+app.use(errorHandler)
 
 app.listen(port, () => console.log(`Application started on port ${port}`))

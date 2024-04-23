@@ -14,7 +14,8 @@
 <div id='app' class='container p-4'>
   <div class='alert alert-info mb-2'>
     Please check out <a
-    href='https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/blob/main/README.md' target='_blank'>this
+    href='https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/blob/main/README.md'
+    target='_blank'>this
     README link</a> for documentation
   </div>
   <form @submit.prevent='handleSubmit'>
@@ -69,6 +70,9 @@
       </div>
     </div>
   </div>
+  <div class='alert alert-danger mb-2' v-if='genericError'>
+    {{ genericError }}
+  </div>
   <div class='accordion' id='resultAccordion'>
     <div class='accordion-item' v-for='result in testResult?.results ?? []'>
       <div class='accordion-header'>
@@ -84,6 +88,11 @@
       <div :id='result.id' class='accordion-collapse collapse' data-bs-parent='#resultAccordion'>
         <div class='accordion-body' v-if='result.passed'>
           Took: {{ result.requestDurationMs }}ms
+        </div>
+        <div class='accordion-body' v-if='!result.passed && result.meta.error.name === "TimeoutError"'>
+          <div class='mb-2'>
+            <strong>Timeout Error, please check your setup</strong>
+          </div>
         </div>
         <div class='accordion-body' v-if='!result.passed && result.meta.error.operator === "assert"'>
           <div class='mb-2'>
@@ -162,24 +171,48 @@
         success: false,
         results: [],
       },
+      genericError: null,
+    },
+    created: function() {
+      const url = new URL(window.location);
+      this.formData.host = url.searchParams.get('host');
+      this.formData.ingressProxyUrl = url.searchParams.get('ingressProxyUrl');
+      this.formData.cdnProxyUrl = url.searchParams.get('cdnProxyUrl');
+      this.formData.trafficName = url.searchParams.get('trafficName');
+      this.formData.integrationVersion = url.searchParams.get('integrationVersion');
     },
     methods: {
-      handleSubmit() {
+      async handleSubmit() {
         this.testResult.status = 'pending';
         this.testResult.results = [];
-        const vm = this;
-        fetch('/api/test/run-tests', {
+        this.genericError = null;
+        const response = await fetch('/api/test/run-tests', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ ...this.formData }),
-        }).then(res => res.json()).then(res => {
-          vm.testResult.success = res.results.every(t => t.passed === true);
-          vm.testResult.results = res.results.map((item, index) => ({ ...item, id: `element${index}` }));
-        }).finally(() => {
-          vm.testResult.status = 'finished';
         });
+
+        if (!response.ok) {
+          if (response.status === 500) {
+            try {
+              const errorData = await response.json();
+              this.genericError = errorData?.reason ?? 'Unknown Error';
+            } catch (_) {
+              this.genericError = 'Invalid Response';
+            }
+          }
+
+          this.testResult.success = false;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          this.testResult.success = data.results.every(t => t.passed === true);
+          this.testResult.results = data.results.map((item, index) => ({ ...item, id: `element${index}` }));
+        }
+        this.testResult.status = 'finished';
       },
     },
   });
