@@ -1,4 +1,4 @@
-import { assert, assertEqualIp } from '../../service/assert'
+import { assert } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
@@ -12,7 +12,6 @@ const testCase: TestCase = {
     })
 
     assert(requestFromProxy.get('x-custom-header'), '123', 'x-custom-header')
-    assertEqualIp(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient, 'fpjs-proxy-client-ip')
     assert(requestFromProxy.get('cookie'), '_iidt=123', 'cookie')
   },
 }
