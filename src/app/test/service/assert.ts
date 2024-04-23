@@ -11,6 +11,19 @@ export function assert<T>(actual: T, expected: T, message?: string) {
   }
 }
 
+/**
+ * Removes port from IP address. Sometimes IP address is returned with port, which is not needed.
+ * */
+function removePortFromIp(ip: string) {
+  const url = new URL(`http://${ip}`)
+
+  return url.hostname
+}
+
+export function assertEqualIp(actualIp: string, expectedIp: string, message?: string) {
+  assert(removePortFromIp(actualIp), removePortFromIp(expectedIp), message)
+}
+
 export function assertLowerThanOrEqual(actual: number, expected: number, message?: string) {
   if (!(actual <= expected)) {
     throw new AssertionError({
