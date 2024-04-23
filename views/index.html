@@ -20,23 +20,25 @@
   </div>
   <form @submit.prevent='handleSubmit'>
     <div class='mb-3'>
-      <label for='ingressProxyUrl'>Ingress Proxy URL</label>
+      <label for='ingressProxyUrl'>Ingress Proxy URL <small>(Required)</small></label>
       <input type='text' name='ingressProxyUrl' id='ingressProxyUrl' v-model='formData.ingressProxyUrl'
-             class='form-control' />
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('ingressProxyUrl')}" required placeholder='https://mydomain.tld/integration-path/ingress-path'/>
       <span class='text-secondary'>
         Ingress endpoint in your proxy integration.
       </span>
     </div>
     <div class='mb-3'>
-      <label for='cdnProxyUrl'>CDN Proxy URL</label>
-      <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control' />
+      <label for='cdnProxyUrl'>CDN Proxy URL <small>(Required)</small></label>
+      <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control'
+             :class="{'is-invalid': incorrectFields.includes('cdnProxyUrl')}" required placeholder='https://mydomain.tld/integration-path/cdn-path' />
       <span class='text-secondary'>
         CDN endpoint in your proxy integration.
       </span>
     </div>
     <div class='mb-3'>
       <label for='trafficName'>Traffic Name</label>
-      <input type='text' name='trafficName' id='trafficName' v-model='formData.trafficName' class='form-control' />
+      <input type='text' name='trafficName' id='trafficName' v-model='formData.trafficName' class='form-control'
+             :class="{'is-invalid': incorrectFields.includes('trafficName')}" placeholder='fingerprint-pro-acme-integration' />
       <span class='text-secondary'>
         First part of ii parameter sent by our proxy integration: <strong>&lt;trafficName&gt;</strong>/&lt;integrationVersion&gt;/type
       </span>
@@ -44,7 +46,7 @@
     <div class='mb-3'>
       <label for='integrationVersion'>Integration Version</label>
       <input type='text' name='integrationVersion' id='integrationVersion' v-model='formData.integrationVersion'
-             class='form-control' />
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('integrationVersion')}" placeholder='1.14.8' />
       <span class='text-secondary'>
         Second part of ii parameter sent by our proxy integration: &lt;trafficName&gt;/<strong>&lt;integrationVersion&gt;</strong>/type
       </span>
@@ -171,6 +173,7 @@
         success: false,
         results: [],
       },
+      incorrectFields: [],
       genericError: null,
     },
     created: function() {
@@ -183,6 +186,7 @@
     },
     methods: {
       async handleSubmit() {
+        this.incorrectFields = [];
         this.testResult.status = 'pending';
         this.testResult.results = [];
         this.genericError = null;
@@ -202,6 +206,12 @@
             } catch (_) {
               this.genericError = 'Invalid Response';
             }
+          }
+
+          if (response.status === 400) {
+            const errorData = await response.json();
+            this.incorrectFields = errorData[0].errors.issues.reduce((acc, issue) => [...acc, ...issue.path], []);
+            this.genericError = `Form Error, please check these fields: ${this.incorrectFields.join(', ')}`;
           }
 
           this.testResult.success = false;
