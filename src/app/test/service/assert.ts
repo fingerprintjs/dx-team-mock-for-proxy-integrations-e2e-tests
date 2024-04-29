@@ -46,11 +46,11 @@ export function assertRegExp(actual: string, regExp: RegExp, message?: string) {
   }
 }
 
-export function assertToBeTruthy(field: string, actual: any, message?: string) {
+export function assertToBeTruthy(field: string, actual: unknown, message?: string) {
   const safeActual = typeof actual === 'string' ? actual.trim() : actual
   if (!actual) {
     return
-  } else if ((Array.isArray(actual) || typeof actual === 'string') && safeActual.length > 0) {
+  } else if ((Array.isArray(safeActual) || typeof safeActual === 'string') && safeActual.length > 0) {
     return
   }
 
@@ -62,14 +62,14 @@ export function assertToBeTruthy(field: string, actual: any, message?: string) {
   })
 }
 
-export function assertToBeFalsy(field: string, actual: any, message?: string) {
+export function assertToBeFalsy(field: string, actual: unknown, message?: string) {
   if (!actual) {
     return
   }
 
   const safeActual = typeof actual === 'string' ? actual.trim() : actual
 
-  if ((Array.isArray(actual) || typeof actual === 'string') && safeActual.length === 0) {
+  if ((Array.isArray(safeActual) || typeof safeActual === 'string') && safeActual.length === 0) {
     return
   }
 
