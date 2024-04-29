@@ -48,9 +48,9 @@ export function assertRegExp(actual: string, regExp: RegExp, message?: string) {
 
 export function assertToBeTruthy(field: string, actual: unknown, message?: string) {
   const safeActual = typeof actual === 'string' ? actual.trim() : actual
-  if (!actual) {
+  if ((Array.isArray(safeActual) || typeof safeActual === 'string') && safeActual.length > 0) {
     return
-  } else if ((Array.isArray(safeActual) || typeof safeActual === 'string') && safeActual.length > 0) {
+  } else if (actual) {
     return
   }
 
