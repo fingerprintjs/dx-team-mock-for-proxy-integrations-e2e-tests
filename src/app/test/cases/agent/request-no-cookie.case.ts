@@ -1,4 +1,4 @@
-import { assert } from '../../service/assert'
+import { assert, assertToBeFalsy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 
@@ -10,7 +10,7 @@ const testCase: TestCase = {
     const { requestFromProxy } = await api.sendRequestToCdn(query, {
       headers: { cookie: 'test=123; _iidt=test' },
     })
-    assert(requestFromProxy.get('cookie'), undefined, 'cookie')
+    assertToBeFalsy('cookie', requestFromProxy.get('cookie'))
   },
 }
 
