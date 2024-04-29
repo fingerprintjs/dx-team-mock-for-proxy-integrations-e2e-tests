@@ -1,4 +1,4 @@
-import { assert } from '../../service/assert'
+import { assertToBeFalsy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
@@ -9,7 +9,7 @@ const testCase: TestCase = {
         cookie: 'random=123;test=123',
       },
     })
-    assert(requestFromProxy.get('cookie'), undefined, 'cookie')
+    assertToBeFalsy('cookie', requestFromProxy.get('cookie'))
   },
 }
 
