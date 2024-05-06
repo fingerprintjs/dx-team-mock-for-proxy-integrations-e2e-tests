@@ -2,9 +2,16 @@ import { AssertionError } from 'assert'
 
 export function assert<T>(actual: T, expected: T, message?: string) {
   if (actual !== expected) {
+    let sanitizedActual = actual
+    if (
+      (message && message.toLowerCase().includes('secret')) ||
+      (typeof expected === 'string' && expected.includes('secret'))
+    ) {
+      sanitizedActual = actual?.toString()?.slice(0, 3).padEnd(20, '*') as T
+    }
     throw new AssertionError({
       operator: 'assert',
-      actual,
+      actual: sanitizedActual,
       expected,
       message,
     })
