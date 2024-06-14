@@ -15,7 +15,7 @@ export function testRouter() {
     let testSession: TestSession
     try {
       testSession = createTestSession(req.body)
-      const result = await runTests(testSession)
+      const result = await runTests(testSession, req.body.testsFilter)
 
       return res.json(result.toTestResponse())
     } catch (e) {
