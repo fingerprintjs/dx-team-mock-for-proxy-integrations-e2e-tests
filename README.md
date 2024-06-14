@@ -45,7 +45,9 @@ To run tests, send `POST` request to: `/api/test/run-tests` with following paylo
   // First part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
   "trafficName": "fingerprint-pro-akamai",
   // Second part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
-  "integrationVersion": "1.0.1-snapshot.0"
+  "integrationVersion": "1.0.1-snapshot.0",
+   // Optional parameter - you can use it to only run specific tests
+   "testsFilter": ["test1", "test2", "..."]
 }
 ```
 

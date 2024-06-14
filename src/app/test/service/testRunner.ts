@@ -23,10 +23,14 @@ export async function loadTestCases() {
   return await Promise.all(caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase)))
 }
 
-export async function runTests(testSession: TestSession) {
+export async function runTests(testSession: TestSession, filter?: string[]) {
   testSession.start()
 
-  const testCases = await loadTestCases()
+  let testCases = await loadTestCases()
+
+  if (filter) {
+    testCases = testCases.filter((t) => filter.includes(t.name))
+  }
 
   await Promise.all(
     testCases.map(async (testCase) => {
