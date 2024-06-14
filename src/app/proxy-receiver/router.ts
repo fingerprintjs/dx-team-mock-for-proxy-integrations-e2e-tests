@@ -30,6 +30,7 @@ export function proxyReceiverRouter() {
 
       notifyProxyRequestListener(testType.data, key, req)
 
+      res.setHeader('cache-control', 'no-cache')
       res.send()
 
       return
