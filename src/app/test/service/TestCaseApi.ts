@@ -145,6 +145,7 @@ export class TestCaseApi {
       [TEST_CASE_HOST_HEADER]: this.testSession.host,
       [TEST_CASE_PROXY_TYPE_HEADER]: requestType,
       [TEST_CASE_NAME_HEADER]: this.testName,
+      'cache-control': 'no-cache',
     }
   }
 }
