@@ -61,9 +61,17 @@ export class TestCaseApi {
     })
   }
 
-  async sendRequestToCacheEndpoint(request: Partial<RequestInit>, query?: URLSearchParams): Promise<SendRequestResult> {
+  async sendRequestToCacheEndpoint(
+    request: Partial<RequestInit>,
+    query?: URLSearchParams,
+    pathname?: string
+  ): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = new URL(this.ingressProxyUrl)
+
+      if (pathname) {
+        url.pathname = pathname
+      }
 
       if (query) {
         url.search = query.toString()
