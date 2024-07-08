@@ -17,13 +17,13 @@ const testCase: TestCase = {
 
     const splitPath = requestFromProxy.path.split('/').slice(1)
 
-    assert(splitPath.length, 2, 'splitPathLength')
+    assert(splitPath.length, 3, 'splitPathLength')
 
     const [version, apiKey, loader] = splitPath
 
     assert(apiKey, query.get('apiKey'), 'apiKey')
     assert(version, 'v3', 'apiVersion')
-    assert(loader, loaderVersion, 'loaderVersion')
+    assert(loader, `loader_v${loaderVersion}.js`, 'loaderVersion')
   },
 }
 

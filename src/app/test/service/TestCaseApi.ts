@@ -70,7 +70,7 @@ export class TestCaseApi {
       const url = new URL(this.ingressProxyUrl)
 
       if (pathname) {
-        url.pathname = pathname
+        url.pathname += pathname
       }
 
       if (query) {
