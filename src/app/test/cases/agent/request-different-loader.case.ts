@@ -10,7 +10,7 @@ const testCase: TestCase = {
     query.set('apiKey', getApiKey())
     query.set('version', '3')
 
-    const loaderVersion = '3.9.8_test_worker'
+    const loaderVersion = '3.9.8_e1_noworker'
     query.set('loaderVersion', loaderVersion)
 
     const { requestFromProxy } = await api.sendRequestToCdn(query)
