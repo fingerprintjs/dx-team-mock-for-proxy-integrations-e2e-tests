@@ -1,4 +1,5 @@
 import { glob } from 'glob'
+import { httpClient } from '../../../utils/httpClient'
 import {
   createProxyRequestHandlerKey,
   ProxyRequestType,
@@ -43,18 +44,19 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
   return finalizeTestSession(testSession)
 }
 
-export async function runTest(testSession: TestSession, test: TestCase): Promise<DetailedTestResult> {
+export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
+  httpClient.defaults.lookup = testCase.dnsLookup
   const startTime = Date.now()
 
   const cdnProxyUrl = new URL(testSession.cdnProxyUrl)
   const ingressProxyUrl = new URL(testSession.ingressProxyUrl)
 
-  const api = new TestCaseApi(test.name, ingressProxyUrl, cdnProxyUrl, testSession)
+  const api = new TestCaseApi(testCase.name, ingressProxyUrl, cdnProxyUrl, testSession)
 
   let result: TestResult
 
   try {
-    await withTimeout(() => test.test(api), TEST_TIMEOUT_MS)
+    await withTimeout(() => testCase.test(api), TEST_TIMEOUT_MS)
 
     result = {
       passed: true,
@@ -70,7 +72,7 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
     }
   }
 
-  const key = createProxyRequestHandlerKey(testSession.host, test.name)
+  const key = createProxyRequestHandlerKey(testSession.host, testCase.name)
 
   // In case if test failed without removing listeners
   Object.values(ProxyRequestType).forEach((type) => {
@@ -81,7 +83,7 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
 
   return {
     ...result,
-    testName: test.name,
+    testName: testCase.name,
     requestDurationMs,
   }
 }
