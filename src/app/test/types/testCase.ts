@@ -1,5 +1,4 @@
 import { Request as ExpressRequest } from 'express'
-import { AxiosDNSLookupFunction } from '../../../utils/httpClient'
 import { RequestsFromProxyRecord } from '../service/requestFromProxy'
 import { TestCaseApi } from '../service/TestCaseApi'
 
@@ -26,6 +25,7 @@ export type TestResult = FailedTestResult | PassedTestResult
 
 export type TestCase = {
   name: string
-  dnsLookup?: AxiosDNSLookupFunction
+  before?: () => Promise<void> | void
+  after?: () => Promise<void> | void
   test: (api: TestCaseApi) => Promise<void>
 }

@@ -34,7 +34,7 @@ async function main() {
   await policy.execute(async (context) => {
     logger.info(`Attempt ${context.attempt}...`)
 
-    const response = await httpClient().post<TestResponse>(url.toString(), JSON.stringify(args), {
+    const response = await httpClient.post<TestResponse>(url.toString(), JSON.stringify(args), {
       headers: {
         'content-type': 'application/json',
       },

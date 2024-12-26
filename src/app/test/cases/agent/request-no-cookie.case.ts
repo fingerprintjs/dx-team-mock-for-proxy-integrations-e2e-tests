@@ -1,4 +1,4 @@
-import { assert, assertToBeFalsy } from '../../service/assert'
+import { assertToBeFalsy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 

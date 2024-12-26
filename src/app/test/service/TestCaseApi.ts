@@ -1,4 +1,5 @@
-import { httpClient, sendAxiosRequestWithRequestInit } from '../../../utils/httpClient'
+import { AxiosRequestConfig } from 'axios'
+import { sendAxiosRequestWithRequestInit } from '../../../utils/httpClient'
 import {
   addProxyRequestListener,
   createProxyRequestHandlerKey,
@@ -23,7 +24,10 @@ export class TestCaseApi {
     public readonly testSession: TestSession
   ) {}
 
-  async sendRequestToCdn(query?: URLSearchParams, requestInit?: Partial<RequestInit>): Promise<SendRequestResult> {
+  async sendRequestToCdn(
+    query?: URLSearchParams,
+    requestInit?: Partial<AxiosRequestConfig>
+  ): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = new URL(this.cdnProxyUrl)
 
@@ -59,14 +63,12 @@ export class TestCaseApi {
         })
       } catch (error) {
         console.error(`Failed to send request to CDN at ${url.toString()}`, error)
-      } finally {
-        httpClient.defaults.lookup = undefined
       }
     })
   }
 
   async sendRequestToCacheEndpoint(
-    request: Partial<RequestInit>,
+    request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
     pathname?: string
   ): Promise<SendRequestResult> {
@@ -109,13 +111,14 @@ export class TestCaseApi {
         })
       } catch (error) {
         console.error(`Failed to send request to Cache endpoint at ${url.toString()}`, error)
-      } finally {
-        httpClient.defaults.lookup = undefined
       }
     })
   }
 
-  async sendRequestToIngress(request: Partial<RequestInit>, query?: URLSearchParams): Promise<SendRequestResult> {
+  async sendRequestToIngress(
+    request: Partial<AxiosRequestConfig>,
+    query?: URLSearchParams
+  ): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = new URL(this.ingressProxyUrl)
 
@@ -151,8 +154,6 @@ export class TestCaseApi {
         })
       } catch (error) {
         console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
-      } finally {
-        httpClient.defaults.lookup = undefined
       }
     })
   }

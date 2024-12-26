@@ -1,5 +1,4 @@
 import { glob } from 'glob'
-import { httpClient } from '../../../utils/httpClient'
 import {
   createProxyRequestHandlerKey,
   ProxyRequestType,
@@ -33,7 +32,7 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
     testCases = testCases.filter((t) => filter.includes(t.name))
   }
 
-  await Promise.all(
+  await Promise.allSettled(
     testCases.map(async (testCase) => {
       const result = await runTest(testSession, testCase)
 
@@ -45,7 +44,9 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
 }
 
 export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
-  httpClient.defaults.lookup = testCase.dnsLookup
+  if (testCase.before) {
+    await testCase.before()
+  }
   const startTime = Date.now()
 
   const cdnProxyUrl = new URL(testSession.cdnProxyUrl)
@@ -80,6 +81,10 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   })
 
   const requestDurationMs = Date.now() - startTime
+
+  if (testCase.after) {
+    await testCase.after()
+  }
 
   return {
     ...result,
