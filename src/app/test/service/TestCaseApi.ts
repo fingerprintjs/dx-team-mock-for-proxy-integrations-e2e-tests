@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios'
-import { sendAxiosRequestWithRequestInit } from '../../../utils/httpClient'
+import { sendAxiosRequestWithRequestConfig } from '../../../utils/httpClient'
 import {
   addProxyRequestListener,
   createProxyRequestHandlerKey,
@@ -26,7 +26,7 @@ export class TestCaseApi {
 
   async sendRequestToCdn(
     query?: URLSearchParams,
-    requestInit?: Partial<AxiosRequestConfig>
+    axiosRequestConfig?: Partial<AxiosRequestConfig>
   ): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = new URL(this.cdnProxyUrl)
@@ -48,11 +48,11 @@ export class TestCaseApi {
       console.info(`Sending request to CDN at ${url.toString()}`)
 
       try {
-        const response = await sendAxiosRequestWithRequestInit(url, {
-          ...requestInit,
+        const response = await sendAxiosRequestWithRequestConfig(url, {
+          ...axiosRequestConfig,
           method: 'GET',
           headers: {
-            ...requestInit?.headers,
+            ...axiosRequestConfig?.headers,
             ...this.createTestHeaders(ProxyRequestType.Cdn),
           },
         })
@@ -96,7 +96,7 @@ export class TestCaseApi {
       console.info(`Sending request to cache endpoint at ${url.toString()}`)
 
       try {
-        const response = await sendAxiosRequestWithRequestInit(url, {
+        const response = await sendAxiosRequestWithRequestConfig(url, {
           ...request,
           method: 'GET',
           headers: {
@@ -139,7 +139,7 @@ export class TestCaseApi {
       console.info(`Sending request to ingress at ${url.toString()}`)
 
       try {
-        const response = await sendAxiosRequestWithRequestInit(url, {
+        const response = await sendAxiosRequestWithRequestConfig(url, {
           ...request,
           method: 'POST',
           headers: {
