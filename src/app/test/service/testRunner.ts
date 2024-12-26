@@ -32,7 +32,7 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
     testCases = testCases.filter((t) => filter.includes(t.name))
   }
 
-  await Promise.all(
+  await Promise.allSettled(
     testCases.map(async (testCase) => {
       const result = await runTest(testSession, testCase)
 
@@ -43,18 +43,21 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
   return finalizeTestSession(testSession)
 }
 
-export async function runTest(testSession: TestSession, test: TestCase): Promise<DetailedTestResult> {
+export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
+  if (testCase.before) {
+    await testCase.before()
+  }
   const startTime = Date.now()
 
   const cdnProxyUrl = new URL(testSession.cdnProxyUrl)
   const ingressProxyUrl = new URL(testSession.ingressProxyUrl)
 
-  const api = new TestCaseApi(test.name, ingressProxyUrl, cdnProxyUrl, testSession)
+  const api = new TestCaseApi(testCase.name, ingressProxyUrl, cdnProxyUrl, testSession)
 
   let result: TestResult
 
   try {
-    await withTimeout(() => test.test(api), TEST_TIMEOUT_MS)
+    await withTimeout(() => testCase.test(api), TEST_TIMEOUT_MS)
 
     result = {
       passed: true,
@@ -70,7 +73,7 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
     }
   }
 
-  const key = createProxyRequestHandlerKey(testSession.host, test.name)
+  const key = createProxyRequestHandlerKey(testSession.host, testCase.name)
 
   // In case if test failed without removing listeners
   Object.values(ProxyRequestType).forEach((type) => {
@@ -79,9 +82,13 @@ export async function runTest(testSession: TestSession, test: TestCase): Promise
 
   const requestDurationMs = Date.now() - startTime
 
+  if (testCase.after) {
+    await testCase.after()
+  }
+
   return {
     ...result,
-    testName: test.name,
+    testName: testCase.name,
     requestDurationMs,
   }
 }

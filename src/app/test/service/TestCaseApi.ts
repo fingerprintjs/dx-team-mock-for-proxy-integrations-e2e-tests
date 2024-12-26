@@ -1,3 +1,5 @@
+import { AxiosRequestConfig } from 'axios'
+import { sendAxiosRequestWithRequestConfig } from '../../../utils/httpClient'
 import {
   addProxyRequestListener,
   createProxyRequestHandlerKey,
@@ -22,7 +24,10 @@ export class TestCaseApi {
     public readonly testSession: TestSession
   ) {}
 
-  async sendRequestToCdn(query?: URLSearchParams, requestInit?: Partial<RequestInit>): Promise<SendRequestResult> {
+  async sendRequestToCdn(
+    query?: URLSearchParams,
+    axiosRequestConfig?: Partial<AxiosRequestConfig>
+  ): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = new URL(this.cdnProxyUrl)
 
@@ -42,27 +47,28 @@ export class TestCaseApi {
 
       console.info(`Sending request to CDN at ${url.toString()}`)
 
-      fetch(url.toString(), {
-        ...requestInit,
-        headers: {
-          ...requestInit?.headers,
-          ...this.createTestHeaders(ProxyRequestType.Cdn),
-        },
-      })
-        .then(async (response) => {
-          console.info(`CDN responded with ${response.status} at ${url.toString()}`, {
-            body: await response.text().catch(() => ''),
-            headers: response.headers,
-          })
+      try {
+        const response = await sendAxiosRequestWithRequestConfig(url, {
+          ...axiosRequestConfig,
+          method: 'GET',
+          headers: {
+            ...axiosRequestConfig?.headers,
+            ...this.createTestHeaders(ProxyRequestType.Cdn),
+          },
         })
-        .catch((error) => {
-          console.error(`Failed to send request to CDN at ${url.toString()}`, error)
+
+        console.info(`CDN responded with ${response.status} at ${url.toString()}`, {
+          body: response.data,
+          headers: response.headers,
         })
+      } catch (error) {
+        console.error(`Failed to send request to CDN at ${url.toString()}`, error)
+      }
     })
   }
 
   async sendRequestToCacheEndpoint(
-    request: Partial<RequestInit>,
+    request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
     pathname?: string
   ): Promise<SendRequestResult> {
@@ -89,25 +95,30 @@ export class TestCaseApi {
 
       console.info(`Sending request to cache endpoint at ${url.toString()}`)
 
-      fetch(url.toString(), {
-        credentials: 'include',
-        method: 'GET',
-        ...request,
-        headers: {
-          ...request.headers,
-          ...this.createTestHeaders(ProxyRequestType.Cache),
-        },
-      })
-        .then((response) => {
-          console.info(`Cache endpoint responded with ${response.status} at ${url.toString()}`)
+      try {
+        const response = await sendAxiosRequestWithRequestConfig(url, {
+          ...request,
+          method: 'GET',
+          headers: {
+            ...request.headers,
+            ...this.createTestHeaders(ProxyRequestType.Cache),
+          },
         })
-        .catch((error) => {
-          console.error(`Failed to send request to Cache endpoint at ${url.toString()}`, error)
+
+        console.info(`Cache endpoint responded with ${response.status} at ${url.toString()}`, {
+          body: response.data,
+          headers: response.headers,
         })
+      } catch (error) {
+        console.error(`Failed to send request to Cache endpoint at ${url.toString()}`, error)
+      }
     })
   }
 
-  async sendRequestToIngress(request: Partial<RequestInit>, query?: URLSearchParams): Promise<SendRequestResult> {
+  async sendRequestToIngress(
+    request: Partial<AxiosRequestConfig>,
+    query?: URLSearchParams
+  ): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = new URL(this.ingressProxyUrl)
 
@@ -127,24 +138,23 @@ export class TestCaseApi {
 
       console.info(`Sending request to ingress at ${url.toString()}`)
 
-      fetch(url.toString(), {
-        credentials: 'include',
-        method: 'POST',
-        ...request,
-        headers: {
-          ...request.headers,
-          ...this.createTestHeaders(ProxyRequestType.Ingress),
-        },
-      })
-        .then(async (response) => {
-          console.info(`Ingress responded with ${response.status} at ${url.toString()}`, {
-            body: await response.text().catch(() => ''),
-            headers: response.headers,
-          })
+      try {
+        const response = await sendAxiosRequestWithRequestConfig(url, {
+          ...request,
+          method: 'POST',
+          headers: {
+            ...request.headers,
+            ...this.createTestHeaders(ProxyRequestType.Ingress),
+          },
         })
-        .catch((error) => {
-          console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
+
+        console.info(`Ingress responded with ${response.status} at ${url.toString()}`, {
+          body: response.data,
+          headers: response.headers,
         })
+      } catch (error) {
+        console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
+      }
     })
   }
 

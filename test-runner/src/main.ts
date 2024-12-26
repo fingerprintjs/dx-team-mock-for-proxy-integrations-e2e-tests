@@ -8,6 +8,7 @@ import { DetailedTestResult } from '../../src/app/test/service/testRunner'
 import { ExponentialBackoff, handleAll, retry } from 'cockatiel'
 import { z } from 'zod'
 import { FailedTestResult } from '../../src/app/test/types/testCase'
+import { httpClient } from '../../src/utils/httpClient'
 
 const logger = createConsola()
 
@@ -33,10 +34,7 @@ async function main() {
   await policy.execute(async (context) => {
     logger.info(`Attempt ${context.attempt}...`)
 
-    const response = await fetch(url, {
-      method: 'POST',
-      mode: 'cors',
-      body: JSON.stringify(args),
+    const response = await httpClient.post<TestResponse>(url.toString(), JSON.stringify(args), {
       headers: {
         'content-type': 'application/json',
       },
@@ -44,13 +42,11 @@ async function main() {
 
     logger.ready(`API replied with status code ${response.status}`)
 
-    const json = (await response.json()) as TestResponse
+    logger.debug(`Response`, response.data)
 
-    logger.debug(`Response`, json)
+    const hasFailedTests = response.data.results.some((result) => !result.passed)
 
-    const hasFailedTests = json.results.some((result) => !result.passed)
-
-    const results = json.results.map((result) => {
+    const results = response.data.results.map((result) => {
       return result.passed
         ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
         : getFailedTestMessage(result as DetailedTestResult & FailedTestResult)

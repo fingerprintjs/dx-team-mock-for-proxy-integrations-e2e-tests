@@ -25,5 +25,7 @@ export type TestResult = FailedTestResult | PassedTestResult
 
 export type TestCase = {
   name: string
+  before?: () => Promise<void> | void
+  after?: () => Promise<void> | void
   test: (api: TestCaseApi) => Promise<void>
 }
