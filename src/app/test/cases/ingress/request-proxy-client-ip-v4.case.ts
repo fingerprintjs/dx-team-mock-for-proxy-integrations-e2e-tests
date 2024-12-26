@@ -1,14 +1,15 @@
-import axios from 'axios'
 import * as dns from 'node:dns'
 import { assertEqualIp } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
-import { getIPv4 } from '../../utils/getIPv4'
+import { getIPv4 } from '../../utils/getIP'
 
 const testCase: TestCase = {
   name: 'ingress request get proxy client ipv4 and validity',
-  before: () => {
-    axios.defaults.lookup = (hostname, _, cb) => {
+  before: (testCaseApi) => {
+    testCaseApi.httpClientInstance.defaults.lookup = (hostname, _, cb) => {
+      console.log('[IP Validity v4] Lookup for: ', hostname)
       dns.lookup(hostname, 4, (_, addresses) => {
+        console.log('[IP Validity v4] Found IP: ', addresses)
         cb(null, { address: addresses, family: 4 })
       })
     }
@@ -22,9 +23,6 @@ const testCase: TestCase = {
     const ipOfClient = await getIPv4()
 
     assertEqualIp(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient, 'fpjs-proxy-client-ip')
-  },
-  after: () => {
-    axios.defaults.lookup = undefined
   },
 }
 
