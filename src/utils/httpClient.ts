@@ -1,11 +1,17 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, CreateAxiosDefaults } from 'axios'
 
-export const httpClient = axios.create({
-  withCredentials: true,
-})
+export const createNewHttpClient = (config: CreateAxiosDefaults = { withCredentials: true }) => {
+  return axios.create(config)
+}
 
-export const sendAxiosRequestWithRequestConfig = async (url: URL, axiosRequestConfig: AxiosRequestConfig) => {
-  return axios.request({
+export const httpClient = createNewHttpClient()
+
+export const sendAxiosRequestWithRequestConfig = async (
+  url: URL,
+  axiosRequestConfig: AxiosRequestConfig,
+  instance: AxiosInstance
+) => {
+  return instance.request({
     url: url.toString(),
     ...axiosRequestConfig,
   })

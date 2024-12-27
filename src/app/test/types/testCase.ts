@@ -1,5 +1,6 @@
 import { Request as ExpressRequest } from 'express'
 import { RequestsFromProxyRecord } from '../service/requestFromProxy'
+import { TestSession } from '../service/session'
 import { TestCaseApi } from '../service/TestCaseApi'
 
 export type SendRequestResult = {
@@ -25,7 +26,7 @@ export type TestResult = FailedTestResult | PassedTestResult
 
 export type TestCase = {
   name: string
-  before?: () => Promise<void> | void
-  after?: () => Promise<void> | void
-  test: (api: TestCaseApi) => Promise<void>
+  before?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
+  after?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
+  test: (testCaseApi: TestCaseApi) => Promise<void>
 }
