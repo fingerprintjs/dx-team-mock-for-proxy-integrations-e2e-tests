@@ -8,9 +8,9 @@ const testCase: TestCase = {
   before: (testCaseApi) => {
     testCaseApi.httpClientInstance.defaults.lookup = (hostname, _, cb) => {
       console.log('[IP Validity v4] Lookup for: ', hostname)
-      dns.lookup(hostname, 4, (_, addresses) => {
-        console.log('[IP Validity v4] Found IP: ', addresses)
-        cb(null, { address: addresses, family: 4 })
+      dns.lookup(hostname, 4, (_, address) => {
+        console.log('[IP Validity v4] Found IP: ', address)
+        cb(null, { address: address, family: 4 })
       })
     }
   },
