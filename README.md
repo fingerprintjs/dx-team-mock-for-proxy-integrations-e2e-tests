@@ -179,7 +179,7 @@ To run this project using Docker Compose, follow these steps:
    - Open a terminal in the project root directory
    - Run the following command to start the containers in detached mode:
      ```
-     docker-compose up -d --build
+     docker compose up -d --build
      ```
    - This will build the Docker image and start the containers for both the application and Ngrok in the background
 
@@ -191,14 +191,14 @@ To run this project using Docker Compose, follow these steps:
 4. **Viewing Logs**
    - If you need to view the logs while the containers are running in detached mode, use:
      ```
-     docker-compose logs -f
+     docker compose logs -f
      ```
    - This will display the logs and follow them in real-time. Use Ctrl+C to exit the log view.
 
 5. **Updating the Application**
    - After making changes to your application code, you need to rebuild and restart only the app service:
      ```
-     docker-compose up -d --build app
+     docker compose up -d --build app
      ```
    - This command will rebuild the app service with your changes and restart it, without affecting the ngrok service
 
