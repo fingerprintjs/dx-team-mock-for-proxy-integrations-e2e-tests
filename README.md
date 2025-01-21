@@ -196,7 +196,7 @@ To run this project using Docker Compose, follow these steps:
    - This will display the logs and follow them in real-time. Use Ctrl+C to exit the log view.
 
 5. **Updating the Application**
-   - After making changes to your application code, you need to rebuild and restart only the app service:
+   - If you make changes to the code, the hot module reload may not be sufficient. In such cases, you need to restart the app service using the following command:
      ```
      docker compose up -d --build app
      ```
