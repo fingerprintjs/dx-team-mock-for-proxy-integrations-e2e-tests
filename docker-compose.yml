@@ -6,11 +6,12 @@ services:
       context: .
       args:
         NODE_VERSION: ${NODE_VERSION:-18}
+        PORT: ${PORT:-3000}
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
-      - APP_PORT=${APP_PORT:-3000}
+      - PORT=${PORT:-3000}
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -18,7 +19,7 @@ services:
       - "4040:4040"
     command:
       - "http"
-      - "app:${APP_PORT:-3000}"
+      - "app:${PORT:-3000}"
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTH_TOKEN}
     depends_on:

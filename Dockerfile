@@ -1,6 +1,7 @@
 # Use ARG to define the node version
 ARG NODE_VERSION=18
 ARG NODE_ENV=production
+ARG PORT=3000
 
 # Use the Node.js version specified by NODE_VERSION
 FROM node:${NODE_VERSION}-alpine
@@ -21,7 +22,7 @@ COPY . .
 RUN npm run build
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE $PORT
 
 # Start the application
 CMD ["npm", "start"]
