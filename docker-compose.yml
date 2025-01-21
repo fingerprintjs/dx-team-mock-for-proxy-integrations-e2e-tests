@@ -6,12 +6,10 @@ services:
       context: .
       args:
         NODE_VERSION: ${NODE_VERSION:-18}
-        PORT: ${PORT:-3000}
     ports:
       - "${PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
-      - PORT=${PORT:-3000}
 
   ngrok:
     image: ngrok/ngrok:latest
