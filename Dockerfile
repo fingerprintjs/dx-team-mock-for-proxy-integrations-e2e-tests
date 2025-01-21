@@ -1,5 +1,6 @@
 # Use ARG to define the node version
-ARG NODE_VERSION
+ARG NODE_VERSION=18
+ARG NODE_ENV=production
 
 # Use the Node.js version specified by NODE_VERSION
 FROM node:${NODE_VERSION}-alpine
