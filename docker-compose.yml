@@ -7,7 +7,7 @@ services:
       args:
         NODE_VERSION: ${NODE_VERSION:-18}
     ports:
-      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
+      - "${APP_PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
       - APP_PORT=${APP_PORT:-3000}
