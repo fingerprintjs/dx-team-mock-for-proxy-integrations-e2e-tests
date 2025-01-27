@@ -161,3 +161,45 @@ It will be automatically picked up by the test runner.
     ngrok http 3000
     ```
 5. Use the URL provided by ngrok to run the tests. Refer to the [Preperation](#preperation) section for more details.
+
+## Using Docker Compose
+
+To run this project using Docker Compose, follow these steps:
+
+1. **Set up Ngrok Authentication**
+   - Visit https://dashboard.ngrok.com/get-started/your-authtoken
+   - Click the "Copy" button to copy your Ngrok auth token
+   - Create a `.env` file in the project root if it doesn't exist
+   - Add or update the NGROK_AUTH_TOKEN in the `.env` file:
+     ```
+     NGROK_AUTH_TOKEN=your_copied_auth_token
+     ```
+
+2. **Run Docker Compose**
+   - Open a terminal in the project root directory
+   - Run the following command to start the containers in detached mode:
+     ```
+     docker compose up -d --build
+     ```
+   - This will build the Docker image and start the containers for both the application and Ngrok in the background
+
+3. **Access the Ngrok Tunnel**
+   - Once the containers are running, visit https://dashboard.ngrok.com/endpoints
+   - You should see your active tunnel listed here, sorted by creation time (most recent first)
+   - Use the provided Ngrok URL to access your application through the secure tunnel
+
+4. **Viewing Logs**
+   - If you need to view the logs while the containers are running in detached mode, use:
+     ```
+     docker compose logs -f
+     ```
+   - This will display the logs and follow them in real-time. Use Ctrl+C to exit the log view.
+
+5. **Updating the Application**
+   - If you make changes to the code, the hot module reload may not be sufficient. In such cases, you need to restart the app service using the following command:
+     ```
+     docker compose up -d --build app
+     ```
+   - This command will rebuild the app service with your changes and restart it, without affecting the ngrok service
+
+
