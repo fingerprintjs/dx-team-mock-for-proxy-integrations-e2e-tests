@@ -1,5 +1,5 @@
 # Use ARG to define the node version
-ARG NODE_VERSION=20
+ARG NODE_VERSION=22
 ARG NODE_ENV=production
 
 # Use the Node.js version specified by NODE_VERSION
