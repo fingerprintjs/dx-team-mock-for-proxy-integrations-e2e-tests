@@ -1,0 +1,2 @@
+## Infrastructure related components
+Each time a deployment is triggered a new task definition version will be created including the release tag in the image and any changes in the environment variables
