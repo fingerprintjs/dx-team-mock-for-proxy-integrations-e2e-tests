@@ -1,0 +1,31 @@
+name: Get version
+description: Get version from git
+
+outputs:
+  tag:
+    description: "Tag to use as version"
+    value: ${{ steps.version.outputs.tag }}
+
+runs:
+    using: composite
+    steps:
+    - name: Get short form of sha commit
+      shell: bash
+      id: get-commit
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+    - name: Get Git tag of latest commit
+      shell: bash
+      id: get-git-tag
+      run: echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_OUTPUT
+    - name: Get version
+      shell: bash
+      id: version
+      env:
+        HEAD_TAG: ${{ steps.get-git-tag.outputs.head_tag }}
+        SHA_SHORT: ${{ steps.get-commit.outputs.sha_short }}
+      run: |
+        if [[ -z "${{ env.HEAD_TAG }}" ]]; then
+          echo "tag=${{ env.SHA_SHORT }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${{ env.HEAD_TAG }}" >> $GITHUB_OUTPUT
+        fi

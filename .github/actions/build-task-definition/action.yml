@@ -1,0 +1,69 @@
+name: Build task definition
+description: Build task definition
+
+inputs:
+  image_tag:
+    required: true
+    type: string
+  working_directory:
+    required: true
+    type: string
+  github_token:
+    required: true
+    type: string
+  github_user:
+    required: true
+    type: string
+  region:
+    required: true
+    type: string
+  tier:
+    required: true
+    type: string
+  environment:
+    required: true
+    type: string
+  aws_role_to_assume:
+    required: true
+    type: string
+
+outputs:
+  task_definition_version:
+    description: "Task definition version"
+    value: ${{ steps.get_task_definition_version.outputs.td_version }}
+
+runs:
+    using: composite
+    steps:
+    - name: Setup infra robot credentials
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.5.0"
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ inputs.aws_role_to_assume }}
+        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+        aws-region: ${{ inputs.region }}
+
+    - name: Setup infra robot credentials
+      shell: bash
+      run: |
+        git config --global url."https://${{ inputs.github_user }}:${{ inputs.github_token }}@github.com".insteadOf "ssh://git@github.com"
+
+    - name: Terraform apply - task definitions
+      shell: bash
+      env: 
+        TF_VAR_image_tag: ${{ inputs.image_tag }}
+      working-directory: ${{ inputs.working_directory }}
+      run: gmake ENV=${{ inputs.environment }} TIER=${{ inputs.tier }} REGION=${{ inputs.region }} plan && AWS_REGION=${{ inputs.region }} terraform apply -auto-approve --target 'aws_ecs_task_definition.service_task'  -var-file=environments/${{ inputs.environment }}/${{ inputs.environment }}-${{ inputs.tier }}.tfvars
+
+    - name: Get task definition version
+      shell: bash
+      id: get_task_definition_version
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+          output=$(terraform output task_revision_main | tr -d '"')
+          echo "main revision: $output"
+          echo td_version=$output >> $GITHUB_OUTPUT

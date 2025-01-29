@@ -1,9 +1,14 @@
 # Use ARG to define the node version
 ARG NODE_VERSION=22
 ARG NODE_ENV=production
+ARG BUILDPLATFORM
 
 # Use the Node.js version specified by NODE_VERSION
-FROM node:${NODE_VERSION}-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS builder
+
+ARG TARGETPLATFORM
+RUN echo "TARGETPLATFORM: $TARGETPLATFORM"
+RUN echo "BUILDPLATFORM: $BUILDPLATFORM"
 
 # Set working directory
 WORKDIR /app
