@@ -1,0 +1,55 @@
+name: Terraform check
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+env:
+  AWS_IAM_AUTH_REGION: "us-east-1"
+  AWS_IAM_AUTH_ROLE_DEV: "arn:aws:iam::708050157146:role/github_eb_ci_cd"
+  WORKING_DIR: .//infra
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: true
+
+    - name: Get version
+      id: version
+      uses: ./.github/actions/get-version
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.5.0"
+    - name: Configure AWS credentials from dev account
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{env.AWS_IAM_AUTH_ROLE_DEV}}
+        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+        aws-region: ${{ env.AWS_IAM_AUTH_REGION }}
+
+    # Setup the same GH credentials in use by Atlantis
+    - name: Setup infra robot credentials
+      env:
+        GIT_TOKEN: ${{ secrets.A_GH_TOKEN }}
+        GIT_USER: ${{ secrets.A_GH_USER }}
+      run: |
+        git config --global url."https://${{ env.GIT_USER }}:${{ env.GIT_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+
+    - name: STAGE Terraform plan
+      env:
+        TF_VAR_image_tag: ${{ steps.version.outputs.tag }}
+        ENVIRONMENT: stage
+        TIER: use1
+        REGION: us-east-1
+      working-directory: ${{ env.WORKING_DIR }}
+      run: gmake ENV=${{ env.ENVIRONMENT }} TIER=${{ env.TIER }} REGION=${{ env.REGION }} plan
+
