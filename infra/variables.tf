@@ -8,7 +8,7 @@ variable "env_vars" {
 variable "service_name" {
   type        = string
   default     = "ecs-service"
-  description = "Koala service name"
+  description = "Service name"
 }
 variable "image" {
   type        = string

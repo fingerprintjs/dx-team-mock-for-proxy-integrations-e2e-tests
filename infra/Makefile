@@ -29,8 +29,8 @@ RESET=$(shell tput -T xterm sgr0)
 PAR=200
 EXTRA_ARGS?=
 
-CURRENT_FOLDER=koala
-BUCKET_KEY=koala
+CURRENT_FOLDER=dx-mock-warden
+BUCKET_KEY=dx-mock-warden
 
 ifeq ($(ENV)$(REGION),produs-east-1)
 AWS_PROFILE?=fpjs_prod

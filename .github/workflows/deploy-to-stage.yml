@@ -40,7 +40,7 @@ jobs:
       id: build-task-definition
       with:
         working_directory: ./infra
-        image_tag: ${{ steps.get-version.outputs.tag }}
+        image_tag: ${{ steps.version.outputs.tag }}
         github_user: ${{ secrets.A_GH_USER }}
         github_token: ${{ secrets.A_GH_TOKEN }}
         environment: ${{ env.ENV }}
