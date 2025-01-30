@@ -57,7 +57,8 @@ runs:
       env: 
         TF_VAR_image_tag: ${{ inputs.image_tag }}
       working-directory: ${{ inputs.working_directory }}
-      run: gmake ENV=${{ inputs.environment }} TIER=${{ inputs.tier }} REGION=${{ inputs.region }} plan && AWS_REGION=${{ inputs.region }} terraform apply -auto-approve --target 'aws_ecs_task_definition.service_task'  -var-file=environments/${{ inputs.environment }}/${{ inputs.environment }}-${{ inputs.tier }}.tfvars
+      # --target 'aws_ecs_task_definition.service_task' -> in order to apply only task def changes
+      run: gmake ENV=${{ inputs.environment }} TIER=${{ inputs.tier }} REGION=${{ inputs.region }} plan && AWS_REGION=${{ inputs.region }} terraform apply -auto-approve -var-file=environments/${{ inputs.environment }}/${{ inputs.environment }}-${{ inputs.tier }}.tfvars
 
     - name: Get task definition version
       shell: bash
