@@ -48,13 +48,13 @@ jobs:
         region: ${{ env.REGION }}
         aws_role_to_assume: arn:aws:iam::708050157146:role/github_eb_ci_cd
 
-    # - name: Deploy to ECS
-    #   uses: ./.github/actions/deploy
-    #   with:
-    #     task_definition_version: ${{ steps.build-task-definition.outputs.task_definition_version }}
-    #     service_name: ${{ env.APP }}
-    #     region: ${{ env.REGION }}
-    #     environment: ${{ env.ENV }}
+    - name: Deploy to ECS
+      uses: ./.github/actions/deploy
+      with:
+        task_definition_version: ${{ steps.build-task-definition.outputs.task_definition_version }}
+        service_name: ${{ env.APP }}
+        region: ${{ env.REGION }}
+        environment: ${{ env.ENV }}
 
     # - name: Slack Notification
     #   if: ${{ !cancelled() }}
