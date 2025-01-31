@@ -1,0 +1,30 @@
+.DS_Store
+*.png
+*.jpg
+graph.png
+noteTOUPDATEINITwithLetsEncryptstuff
+
+#  Local .terraform directories
+**/.terraform/*
+.terraform/
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+./*.tfstate
+terraform.tfstate.d/*
+
+# .tfvars files
+*.tfvars
+./*.tfvars
+variables/*.tfvars
+!example_ENV-TIER.tfvars
+!/environments/*/*.tfvars
+
+# ignore git repos
+!/working_repos/placeholder
+/working_repos/*
+!/bare_repos/placeholder
+/bare_repos/*
+*.terraform.lock.hcl
+*.tool-versions

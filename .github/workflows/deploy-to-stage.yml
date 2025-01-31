@@ -6,7 +6,7 @@ env:
   AWS_IAM_AUTH_REGION : "us-east-1" 
   APP : "mock-warden"
   CHANNEL : "mock-warden-infra"
-  ENV : "dev"
+  ENV : "stage"
   TIER : "use1"
   REGION : "us-east-1"
   #ECS
@@ -34,34 +34,35 @@ jobs:
         image_tag: ${{ steps.version.outputs.tag }}
         server_name: ${{ env.APP }}
         dockerfile: ./Dockerfile
-    # - name: Build task definition
-    #   uses: ./.github/actions/build-task-definition
-    #   id: build-task-definition
-    #   with:
-    #     working_directory: ./infra
-    #     image_tag: ${{ steps.get-version.outputs.tag }}
-    #     github_user: ${{ secrets.A_GH_USER }}
-    #     github_token: ${{ secrets.A_GH_TOKEN }}
-    #     environment: ${{ env.ENV }}
-    #     tier: ${{ env.TIER }}
-    #     region: ${{ env.REGION }}
-    #     aws_role_to_assume: arn:aws:iam::708050157146:role/github_eb_ci_cd
 
-    # - name: Deploy to ECS
-    #   uses: ./.github/actions/deploy
-    #   with:
-    #     task_definition_version: ${{ steps.build-task-definition.outputs.task_definition_version }}
-    #     service_name: ${{ env.APP }}
-    #     region: ${{ env.REGION }}
-    #     environment: ${{ env.ENV }}
+    - name: Build task definition
+      uses: ./.github/actions/build-task-definition
+      id: build-task-definition
+      with:
+        working_directory: ./infra
+        image_tag: ${{ steps.version.outputs.tag }}
+        github_user: ${{ secrets.A_GH_USER }}
+        github_token: ${{ secrets.A_GH_TOKEN }}
+        environment: ${{ env.ENV }}
+        tier: ${{ env.TIER }}
+        region: ${{ env.REGION }}
+        aws_role_to_assume: arn:aws:iam::708050157146:role/github_eb_ci_cd
 
-    # - name: Slack Notification
-    #   if: ${{ !cancelled() }}
-    #   uses: rtCamp/action-slack-notify@v2
-    #   env:
-    #     SLACK_CHANNEL: ${{ env.CHANNEL }}
-    #     SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
-    #     SLACK_MESSAGE: '${{ vars.ENV }}  ${{ env.APP }}  Deployed to ${{ vars.NAME }} ${{ steps.get-version.outputs.tag }} : ${{ job.status }} '
-    #     SLACK_TITLE: Status
-    #     SLACK_USERNAME: Deployer
-    #     SLACK_WEBHOOK: ${{ secrets.CI_CD_WEBHOOK }}
+    - name: Deploy to ECS
+      uses: ./.github/actions/deploy
+      with:
+        task_definition_version: ${{ steps.build-task-definition.outputs.task_definition_version }}
+        service_name: ${{ env.APP }}
+        region: ${{ env.REGION }}
+        environment: ${{ env.ENV }}
+
+    - name: Slack Notification
+      if: ${{ !cancelled() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_CHANNEL: ${{ env.CHANNEL }}
+        SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
+        SLACK_MESSAGE: '${{ env.APP }} ${{ steps.version.outputs.tag }} deployed: ${{ job.status }} '
+        SLACK_TITLE: Status
+        SLACK_USERNAME: Deployer
+        SLACK_WEBHOOK: ${{ secrets.CI_CD_WEBHOOK }}

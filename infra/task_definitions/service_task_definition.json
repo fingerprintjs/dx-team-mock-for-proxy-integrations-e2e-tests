@@ -1,0 +1,177 @@
+[
+    {
+        "name": "${service_name}",
+        "image": "${image}",
+        "portMappings": [
+            {
+                "containerPort": 3000,
+                "hostPort": 3000
+            }
+        ],
+        "dockerLabels": {
+            "com.datadoghq.tags.env" : "${DATADOG_ENVIRONMENT}",
+            "com.datadoghq.tags.service" : "${service_name}",
+            "com.datadoghq.ad.tags" : "[\"region:${region}\",\"target:${TARGET}\"]"
+        },
+        "dependsOn": [
+            {
+                "containerName": "datadog-agent",
+                "condition": "HEALTHY"
+            }
+        ],
+        "environment": [
+            {
+                "name": "AWS_REGION",
+                "value": "${region}"
+            },
+            {
+                "name": "ENVIRONMENT",
+                "value": "${ENVIRONMENT}"
+            },
+            {
+                "name": "DATADOG",
+                "value": "true"
+            }
+        ],
+        "secrets": [],
+        "essential": true,
+        "logConfiguration": {
+            "logDriver":"awsfirelens",
+            "options": {
+                "Name": "datadog",
+                "Host": "http-intake.logs.datadoghq.com",
+                "TLS": "on",
+                "dd_service": "${service_name}",
+                "dd_source": "${service_name}",
+                "dd_tags": "service:${service_name}, env:${DATADOG_ENVIRONMENT}, region:${region}, target:${TARGET}",
+                "provider": "ecs",
+                "retry_limit": "2"
+            },
+            "secretOptions": [{
+                "name": "apikey",
+                "valueFrom": "${DATADOG_API_KEY_SECRET_ARN}"
+            }]
+        },
+        "linuxParameters": {
+            "initProcessEnabled": true
+        }
+    },
+    {
+        "name": "datadog-agent",
+        "image": "963800667800.dkr.ecr.${region}.amazonaws.com/datadog_agent:7.56.0",
+        "cpu": 256,
+        "memory": 512,
+        "mountPoints": [],
+        "volumesFrom": [],
+        "portMappings": [
+            {
+              "hostPort": 8126,
+              "protocol": "tcp",
+              "containerPort": 8126
+            }
+        ],
+        "essential": false,
+        "healthCheck": {
+            "retries": 3,
+            "command": [
+              "CMD-SHELL",
+              "agent health"
+            ],
+            "timeout": 5,
+            "interval": 30,
+            "startPeriod": 15
+        },
+        "secrets": [{
+            "name": "DD_API_KEY",
+            "valueFrom": "${DATADOG_API_KEY_SECRET_ARN}"
+          }],
+        "environment": [
+            {
+                "name": "ECS_FARGATE",
+                "value": "true"
+            },
+            {
+                "name": "DD_PROCESS_AGENT_ENABLED",
+                "value": "true"
+            },
+            {
+                "name": "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+                "value": "true"
+            },
+            {
+                "name": "DD_CMD_PORT",
+                "value": "5002"
+            },
+            {
+                "name": "DD_EXPVAR_PORT",
+                "value": "5003"
+            },
+            {
+                "name": "DD_LOGS_ENABLED",
+                "value": "true"
+            },
+            {
+                "name": "DD_APM_ENABLED",
+                "value": "true"
+            },
+            {
+                "name": "DD_ENV",
+                "value": "${DATADOG_ENVIRONMENT}"
+            },
+            {
+                "name": "DD_TAGS",
+                "value": "region:${region} target:${TARGET} env:${DATADOG_ENVIRONMENT} service:${service_name}"
+            },
+            {
+                "name": "DD_APM_IGNORE_RESOURCES",
+                "value": "GET /health"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awsfirelens",
+            "options": {
+              "Name": "datadog",
+              "dd_service": "datadog",
+              "dd_source": "datadog",
+              "dd_message_key": "log",
+              "dd_tags": "service:${service_name}, env:${DATADOG_ENVIRONMENT}, region:${region}, target:${TARGET}",
+              "TLS": "on",
+              "provider": "ecs",
+              "Host": "http-intake.logs.datadoghq.com"
+            },
+            "secretOptions": [
+              {
+                "name": "apikey",
+                "valueFrom": "${DATADOG_API_KEY_SECRET_ARN}"
+              }
+            ]
+          }
+    },
+    {
+        "essential": false,
+        "image": "963800667800.dkr.ecr.${region}.amazonaws.com/fluentbit:3.2.1",
+        "name": "log_router",
+        "user": "0",
+        "cpu": 0,
+        "environment": [],
+        "volumesFrom": [],
+        "mountPoints": [],
+        "portMappings": [],
+        "firelensConfiguration": {
+          "type": "fluentbit",
+          "options": {
+            "enable-ecs-log-metadata": "true"
+          }
+        },
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/${service_name}/fluentbit",
+            "awslogs-region": "${region}",
+            "awslogs-create-group": "true",
+            "awslogs-stream-prefix": "firelens"
+          }
+        },
+        "memoryReservation": 50
+      }
+]
