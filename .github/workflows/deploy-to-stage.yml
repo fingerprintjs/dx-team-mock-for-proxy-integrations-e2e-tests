@@ -62,7 +62,7 @@ jobs:
       env:
         SLACK_CHANNEL: ${{ env.CHANNEL }}
         SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
-        SLACK_MESSAGE: '${{ vars.ENV }}  ${{ env.APP }}  Deployed to ${{ vars.NAME }} ${{ steps.get-version.outputs.tag }} : ${{ job.status }} '
+        SLACK_MESSAGE: '${{ env.APP }} ${{ steps.version.outputs.tag }} deployed: ${{ job.status }} '
         SLACK_TITLE: Status
         SLACK_USERNAME: Deployer
         SLACK_WEBHOOK: ${{ secrets.CI_CD_WEBHOOK }}
