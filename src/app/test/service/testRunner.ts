@@ -44,15 +44,16 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
 }
 
 export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
-  if (testCase.before) {
-    await testCase.before()
-  }
   const startTime = Date.now()
 
   const cdnProxyUrl = new URL(testSession.cdnProxyUrl)
   const ingressProxyUrl = new URL(testSession.ingressProxyUrl)
 
   const api = new TestCaseApi(testCase.name, ingressProxyUrl, cdnProxyUrl, testSession)
+
+  if (testCase.before) {
+    await testCase.before(api, testSession)
+  }
 
   let result: TestResult
 
@@ -83,7 +84,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   const requestDurationMs = Date.now() - startTime
 
   if (testCase.after) {
-    await testCase.after()
+    await testCase.after(api, testSession)
   }
 
   return {
