@@ -1,6 +1,13 @@
 import axios, { AxiosInstance, AxiosRequestConfig, CreateAxiosDefaults } from 'axios'
+import * as http from 'http'
+import * as https from 'https'
 
-export const createNewHttpClient = (config: CreateAxiosDefaults = { withCredentials: true }) => {
+// https.globalAgent.options.rejectUnauthorized = false
+
+const httpAgent = new http.Agent({})
+const httpsAgent = new https.Agent({ rejectUnauthorized: false })
+
+export const createNewHttpClient = (config: CreateAxiosDefaults = { withCredentials: true, httpsAgent, httpAgent }) => {
   return axios.create(config)
 }
 

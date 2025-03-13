@@ -1,4 +1,5 @@
-import * as dns from 'node:dns'
+import * as https from 'node:https'
+import * as http from 'node:http'
 import { assertEqualIp } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 import { getIPv4 } from '../../utils/getIP'
@@ -6,13 +7,9 @@ import { getIPv4 } from '../../utils/getIP'
 const testCase: TestCase = {
   name: 'ingress request get proxy client ipv4 and validity',
   before: (testCaseApi) => {
-    testCaseApi.httpClientInstance.defaults.lookup = (hostname, _, cb) => {
-      console.log('[IP Validity v4] Lookup for: ', hostname)
-      dns.lookup(hostname, 4, (_, address) => {
-        console.log('[IP Validity v4] Found IP: ', address)
-        cb(null, { address: address, family: 4 })
-      })
-    }
+    testCaseApi.httpClientInstance.defaults.family = 4
+    testCaseApi.httpClientInstance.defaults.httpsAgent = new https.Agent({ family: 4, rejectUnauthorized: false })
+    testCaseApi.httpClientInstance.defaults.httpAgent = new http.Agent({ family: 4 })
   },
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToIngress({
