@@ -18,10 +18,8 @@ export function assert<T>(actual: T, expected: T, message?: string, sanitize: bo
 /**
  * Removes port from IP address. Sometimes IP address is returned with port, which is not needed.
  * */
-function removePortFromIp(ip: string) {
-  const url = new URL(`http://${ip}`)
-
-  return url.hostname
+function removePortFromIp(ip: string): string {
+  return ip.replace(/(^\[[a-fA-F0-9:]+]):\d+$/, '$1').replace(/(^[0-9.]+):\d+$/, '$1')
 }
 
 export function assertEqualIp(actualIp: string, expectedIp: string, message?: string) {
