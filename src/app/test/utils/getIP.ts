@@ -1,3 +1,5 @@
+import * as http from 'node:http'
+import * as https from 'node:https'
 import { httpClient } from '../../../utils/httpClient'
 
 const IPv4_ADDRESS_PROVIDER = 'https://ifconfig.me' // Local IP address of Amazon Public Services
@@ -6,6 +8,10 @@ const IMDS_TOKEN_PROVIDER = 'http://169.254.169.254/latest/api/token' // The end
 // See here for more information: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 
 export const getIPv4 = async () => {
+  httpClient.defaults.httpAgent = new http.Agent({ family: 4 })
+  httpClient.defaults.httpsAgent = new https.Agent({ family: 4 })
+  httpClient.defaults.family = 4
+
   return (await httpClient.get<string>(IPv4_ADDRESS_PROVIDER).then((res) => res.data)).trim()
 }
 
