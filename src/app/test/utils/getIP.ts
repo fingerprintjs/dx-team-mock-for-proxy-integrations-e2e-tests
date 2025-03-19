@@ -86,17 +86,22 @@ const configureHttpFamily = (family: 4 | 6): void => {
 /**
  * Sends an HTTP GET request to the specified address.
  *
- * @param address - The URL to request.
+ * @param url - The URL to request.
  * @param headers - Optional headers for the request.
+ * @param method - Optional HTTP method
  * @returns The trimmed response data.
  * @throws If the response data is empty or missing.
  */
-const fetchData = async (address: string, headers?: Record<string, string>): Promise<string> => {
-  const response = await httpClient.get<string>(address, { headers })
+const fetchData = async (
+  url: string,
+  headers: Record<string, string> = {},
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' = 'GET'
+): Promise<string> => {
+  const response = await httpClient.request<string>({ url, method, headers })
   const data = response.data?.trim()
 
   if (!data || data.length === 0) {
-    throw new Error(`fetchData failed: ${JSON.stringify({ address, headers })}`)
+    throw new Error(`fetchData failed: ${JSON.stringify({ url, headers, method })}`)
   }
 
   return data
@@ -159,9 +164,13 @@ const retrievePublicIP = async (family: 4 | 6): Promise<string> => {
  * The token is cached and automatically refreshed before expiration.
  */
 const ensureValidIMDSToken = async (): Promise<void> => {
-  const token = await fetchData(networkConfig.imdsTokenProvider, {
-    'X-aws-ec2-metadata-token-ttl-seconds': '21600',
-  })
+  const token = await fetchData(
+    networkConfig.imdsTokenProvider,
+    {
+      'X-aws-ec2-metadata-token-ttl-seconds': '21600',
+    },
+    'PUT'
+  )
 
   imdsAuthTokenCache = {
     value: token,
