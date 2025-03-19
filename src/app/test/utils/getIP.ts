@@ -1,35 +1,180 @@
-import * as http from 'node:http'
-import * as https from 'node:https'
+import { Agent as HttpAgent } from 'node:http'
+import { Agent as HttpsAgent } from 'node:https'
 import { httpClient } from '../../../utils/httpClient'
 
-const IPv4_ADDRESS_PROVIDER = 'https://ifconfig.me' // Local IP address of Amazon Public Services
-const IPv6_ADDRESS_PROVIDER = 'http://169.254.169.254/latest/meta-data/ipv6' // Local IP address of Amazon Public Services
-const IMDS_TOKEN_PROVIDER = 'http://169.254.169.254/latest/api/token' // The endpoint for returns the IMDS token required for authentication
-// See here for more information: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
+/**
+ * Defines the structure for network metadata configuration, including environment variables
+ * and metadata service providers (IMDS or external providers).
+ */
+interface NetworkMetadataConfig {
+  /**
+   * Predefined public IPv4 address of the server, if available.
+   * If set, no network request will be made to fetch the address.
+   */
+  publicIPv4?: string
 
-export const getIPv4 = async () => {
-  httpClient.defaults.httpAgent = new http.Agent({ family: 4 })
-  httpClient.defaults.httpsAgent = new https.Agent({ family: 4 })
-  httpClient.defaults.family = 4
+  /**
+   * Predefined public IPv6 address of the server, if available.
+   * If set, no network request will be made to fetch the address.
+   */
+  publicIPv6?: string
 
-  return (await httpClient.get<string>(IPv4_ADDRESS_PROVIDER).then((res) => res.data)).trim()
+  /**
+   * Custom IPv4 address provider endpoint (if specified by environment variables).
+   * If set, this will be queried instead of the default metadata provider.
+   */
+  ipv4Provider?: string
+
+  /**
+   * Custom IPv6 address provider endpoint (if specified by environment variables).
+   * If set, this will be queried instead of the default metadata provider.
+   */
+  ipv6Provider?: string
+
+  /**
+   * Default metadata service provider for retrieving the public IPv4 address.
+   * Can be changed to an external service.
+   */
+  defaultIPv4Provider: string
+
+  /**
+   * Default metadata service provider for retrieving the public IPv6 address.
+   * Can be changed to an external service.
+   */
+  defaultIPv6Provider: string
+
+  /**
+   * Endpoint for retrieving an authentication token required for some metadata services.
+   * Not used if an external provider is configured.
+   */
+  imdsTokenProvider: string
 }
 
-export const getIPv6 = async () => {
-  const token = await getTokenForIMDS()
-  return (
-    await httpClient
-      .get<string>(IPv6_ADDRESS_PROVIDER, { headers: { 'X-aws-ec2-metadata-token': token } })
-      .then((res) => res.data)
-  ).trim()
+/**
+ * Configuration object storing network-related metadata and providers.
+ * Supports both IMDS and external metadata providers.
+ */
+const networkConfig: NetworkMetadataConfig = Object.freeze({
+  publicIPv4: process.env.PUBLIC_IPV4_ADDRESS,
+  publicIPv6: process.env.PUBLIC_IPV6_ADDRESS,
+  ipv4Provider: process.env.IPV4_ADDRESS_PROVIDER,
+  ipv6Provider: process.env.IPV6_ADDRESS_PROVIDER,
+  defaultIPv4Provider: process.env.IPV4_ADDRESS_PROVIDER ?? 'http://169.254.169.254/latest/meta-data/public-ipv4',
+  defaultIPv6Provider: process.env.IPV6_ADDRESS_PROVIDER ?? 'http://169.254.169.254/latest/meta-data/ipv6',
+  imdsTokenProvider: 'http://169.254.169.254/latest/api/token',
+})
+
+/**
+ * Cached IMDS token and its expiration timestamp.
+ */
+let imdsAuthTokenCache: { value: string; expiresAt: number } | null = null
+
+/**
+ * Configures the HTTP and HTTPS client to use the specified IP family (IPv4 or IPv6).
+ *
+ * This modifies `httpClient.defaults`, meaning all subsequent requests will
+ * use the selected IP family unless changed again.
+ *
+ * @param family - The IP family (4 for IPv4, 6 for IPv6).
+ */
+const configureHttpFamily = (family: 4 | 6): void => {
+  httpClient.defaults.httpAgent = new HttpAgent({ family })
+  httpClient.defaults.httpsAgent = new HttpsAgent({ family, rejectUnauthorized: false })
+  httpClient.defaults.family = family
 }
 
-export const getTokenForIMDS = async () => {
-  return (
-    await httpClient
-      .put<string>(IMDS_TOKEN_PROVIDER, null, {
-        headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '21600' },
-      })
-      .then((res) => res.data)
-  ).trim()
+/**
+ * Sends an HTTP GET request to the specified address.
+ *
+ * @param address - The URL to request.
+ * @param headers - Optional headers for the request.
+ * @returns The trimmed response data.
+ * @throws If the response data is empty or missing.
+ */
+const fetchData = async (address: string, headers?: Record<string, string>): Promise<string> => {
+  const response = await httpClient.get<string>(address, { headers })
+  const data = response.data?.trim()
+
+  if (!data || data.length === 0) {
+    throw new Error(`fetchData failed: ${JSON.stringify({ address, headers })}`)
+  }
+
+  return data
 }
+
+/**
+ * Sends an HTTP GET request using an IMDS token for authentication.
+ *
+ * If the token is expired or invalid, it will be refreshed.
+ *
+ * @param address - The URL to request.
+ * @returns The trimmed response data.
+ */
+const fetchWithIMDSToken = async (address: string): Promise<string> => {
+  if (!imdsAuthTokenCache || Date.now() >= imdsAuthTokenCache.expiresAt) {
+    await ensureValidIMDSToken()
+  }
+
+  try {
+    return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache!.value })
+  } catch (error) {
+    if ((error as any)?.response?.status === 401) {
+      console.warn(`IMDS token rejected, refreshing and retrying...`)
+      await ensureValidIMDSToken()
+      return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache!.value })
+    }
+    throw error
+  }
+}
+
+/**
+ * Retrieves the public IP address (IPv4 or IPv6) using the best available source.
+ *
+ * - If a predefined public IP is available, it is returned immediately.
+ * - Otherwise, the function selects between a custom provider (`ipv4Provider`/`ipv6Provider`)
+ *   or the default metadata service.
+ * - If no custom provider is specified, authentication via IMDS may be required.
+ *
+ * @param family - The IP family (4 for IPv4, 6 for IPv6).
+ * @returns The retrieved public IP address.
+ */
+const retrievePublicIP = async (family: 4 | 6): Promise<string> => {
+  // Select the correct configuration values based on IP family
+  const publicIP = family === 4 ? networkConfig.publicIPv4 : networkConfig.publicIPv6
+  const provider = family === 4 ? networkConfig.ipv4Provider : networkConfig.ipv6Provider
+  const defaultProvider = family === 4 ? networkConfig.defaultIPv4Provider : networkConfig.defaultIPv6Provider
+
+  if (publicIP) {
+    return publicIP
+  }
+
+  configureHttpFamily(family)
+
+  const finalProvider = provider ?? defaultProvider
+  return provider ? fetchData(finalProvider) : fetchWithIMDSToken(finalProvider)
+}
+
+/**
+ * Refreshes the IMDS authentication token.
+ * The token is cached and automatically refreshed before expiration.
+ */
+const ensureValidIMDSToken = async (): Promise<void> => {
+  const token = await fetchData(networkConfig.imdsTokenProvider, {
+    'X-aws-ec2-metadata-token-ttl-seconds': '21600',
+  })
+
+  imdsAuthTokenCache = {
+    value: token,
+    expiresAt: Date.now() + 21600 * 1000, // Token valid for 6 hours
+  }
+}
+
+/**
+ * Retrieves the public IPv4 address.
+ */
+export const getPublicIPv4 = async (): Promise<string> => retrievePublicIP(4)
+
+/**
+ * Retrieves the public IPv6 address.
+ */
+export const getPublicIPv6 = async (): Promise<string> => retrievePublicIP(6)

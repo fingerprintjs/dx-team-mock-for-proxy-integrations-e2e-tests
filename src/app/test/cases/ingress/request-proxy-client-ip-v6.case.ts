@@ -1,6 +1,6 @@
 import { assertEqualIp } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
-import { getIPv6 } from '../../utils/getIP'
+import { getPublicIPv6 } from '../../utils/getIP'
 
 const testCase: TestCase = {
   name: 'ingress request get proxy client ipv6 and validity',
@@ -13,7 +13,7 @@ const testCase: TestCase = {
         host: api.testSession.host,
       },
     })
-    const ipOfClient = await getIPv6()
+    const ipOfClient = await getPublicIPv6()
 
     assertEqualIp(requestFromProxy.get('fpjs-proxy-client-ip'), ipOfClient, 'fpjs-proxy-client-ip')
   },
