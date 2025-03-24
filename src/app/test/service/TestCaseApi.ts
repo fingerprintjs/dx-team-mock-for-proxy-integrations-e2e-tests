@@ -1,5 +1,5 @@
-import { AxiosRequestConfig } from 'axios'
-import { sendAxiosRequestWithRequestConfig } from '../../../utils/httpClient'
+import { AxiosInstance, AxiosRequestConfig } from 'axios'
+import { createNewHttpClient, sendAxiosRequestWithRequestConfig } from '../../../utils/httpClient'
 import {
   addProxyRequestListener,
   createProxyRequestHandlerKey,
@@ -16,13 +16,16 @@ export class TestCaseApi {
     [ProxyRequestType.Ingress]: [],
     [ProxyRequestType.Cache]: [],
   }
+  public readonly httpClientInstance: AxiosInstance
 
   constructor(
     private readonly testName: string,
     private readonly ingressProxyUrl: URL,
     private readonly cdnProxyUrl: URL,
     public readonly testSession: TestSession
-  ) {}
+  ) {
+    this.httpClientInstance = createNewHttpClient()
+  }
 
   async sendRequestToCdn(
     query?: URLSearchParams,
@@ -48,14 +51,18 @@ export class TestCaseApi {
       console.info(`Sending request to CDN at ${url.toString()}`)
 
       try {
-        const response = await sendAxiosRequestWithRequestConfig(url, {
-          ...axiosRequestConfig,
-          method: 'GET',
-          headers: {
-            ...axiosRequestConfig?.headers,
-            ...this.createTestHeaders(ProxyRequestType.Cdn),
+        const response = await sendAxiosRequestWithRequestConfig(
+          url,
+          {
+            ...axiosRequestConfig,
+            method: 'GET',
+            headers: {
+              ...axiosRequestConfig?.headers,
+              ...this.createTestHeaders(ProxyRequestType.Cdn),
+            },
           },
-        })
+          this.httpClientInstance
+        )
 
         console.info(`CDN responded with ${response.status} at ${url.toString()}`, {
           body: response.data,
@@ -96,14 +103,18 @@ export class TestCaseApi {
       console.info(`Sending request to cache endpoint at ${url.toString()}`)
 
       try {
-        const response = await sendAxiosRequestWithRequestConfig(url, {
-          ...request,
-          method: 'GET',
-          headers: {
-            ...request.headers,
-            ...this.createTestHeaders(ProxyRequestType.Cache),
+        const response = await sendAxiosRequestWithRequestConfig(
+          url,
+          {
+            ...request,
+            method: 'GET',
+            headers: {
+              ...request.headers,
+              ...this.createTestHeaders(ProxyRequestType.Cache),
+            },
           },
-        })
+          this.httpClientInstance
+        )
 
         console.info(`Cache endpoint responded with ${response.status} at ${url.toString()}`, {
           body: response.data,
@@ -139,14 +150,18 @@ export class TestCaseApi {
       console.info(`Sending request to ingress at ${url.toString()}`)
 
       try {
-        const response = await sendAxiosRequestWithRequestConfig(url, {
-          ...request,
-          method: 'POST',
-          headers: {
-            ...request.headers,
-            ...this.createTestHeaders(ProxyRequestType.Ingress),
+        const response = await sendAxiosRequestWithRequestConfig(
+          url,
+          {
+            ...request,
+            method: 'POST',
+            headers: {
+              ...request.headers,
+              ...this.createTestHeaders(ProxyRequestType.Ingress),
+            },
           },
-        })
+          this.httpClientInstance
+        )
 
         console.info(`Ingress responded with ${response.status} at ${url.toString()}`, {
           body: response.data,
