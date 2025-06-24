@@ -13,7 +13,7 @@ In order to test your proxy integration, you need to configure it to send reques
 In most cases, this can be done by setting these two ENV variables when building the integration: `FPCDN` and `INGRESS_API`. For example:
 
 ```bash
-FPCDN=<API_URL> INGRESS_API=<API_URL> pnpm build
+FPCDN=<API_URL> INGRESS_API=<API_URL> pnpm run build
 ```
 
 You also need to set `secret` as your proxy secret key.
@@ -103,7 +103,7 @@ You will receive following response:
 
 As an alternative, you can use our CLI client:
 ```bash
-npm exec -y "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests.git" --
+pnpm dlx "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests.git" --
 # URL of the mock server 
 --api-url="<API_URL>" 
 # CDN url in your proxy integration 
@@ -154,8 +154,8 @@ It will be automatically picked up by the test runner.
 ## Running locally
 
 1. Clone the repository.
-2. Install dependencies: `npm install`.
-3. Run the app: `npm start:dev`. By default the app will run on port `3000`.
+2. Install dependencies: `pnpm install`.
+3. Run the app: `pnpm run start:dev`. By default the app will run on port `3000`.
 4. Use a tunnel to make the app accessible from the internet. For example, you can use [ngrok](https://ngrok.com/):
     ```bash
     ngrok http 3000
