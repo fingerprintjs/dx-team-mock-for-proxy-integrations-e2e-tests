@@ -3,6 +3,7 @@ import { Express, NextFunction, Request, Response } from 'express'
 import beforeResponseMiddleware from './middlewares/beforeResponse.middleware'
 import { proxyReceiverRouter } from './app/proxy-receiver/router'
 import { testRouter } from './app/test/router'
+import { loadTestCases } from './app/test/service/testRunner'
 
 const app: Express = express()
 const port = Number(process.env.PORT) || 3000
@@ -19,6 +20,14 @@ app.all('/health', (req, res) => {
 
 app.get('/', (req, res) => {
   res.sendFile('views/index.html', { root: process.cwd() })
+})
+
+app.get('/test-cases', async (req, res) => {
+  const testCases = await loadTestCases()
+
+  res.json({
+    data: testCases.map((t) => t.name)
+  })
 })
 
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
