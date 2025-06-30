@@ -11,7 +11,7 @@ services:
       - .:/app
     working_dir: /app
     command: >
-      /bin/sh -c "corepack enable && pnpm install && pnpm start:dev"
+      /bin/sh -c "corepack enable && corepack prepare pnpm@latest-10 && pnpm install && pnpm start:dev"
 
   ngrok:
     image: ngrok/ngrok:latest
