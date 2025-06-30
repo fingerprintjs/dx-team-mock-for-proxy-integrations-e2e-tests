@@ -22,7 +22,8 @@
     <div class='mb-3'>
       <label for='ingressProxyUrl'>Ingress Proxy URL <small>(Required)</small></label>
       <input type='text' name='ingressProxyUrl' id='ingressProxyUrl' v-model='formData.ingressProxyUrl'
-             class='form-control' :class="{'is-invalid': incorrectFields.includes('ingressProxyUrl')}" required placeholder='https://mydomain.tld/integration-path/ingress-path'/>
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('ingressProxyUrl')}" required
+             placeholder='https://mydomain.tld/integration-path/ingress-path' />
       <span class='text-secondary'>
         Ingress endpoint in your proxy integration.
       </span>
@@ -30,7 +31,8 @@
     <div class='mb-3'>
       <label for='cdnProxyUrl'>CDN Proxy URL <small>(Required)</small></label>
       <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control'
-             :class="{'is-invalid': incorrectFields.includes('cdnProxyUrl')}" required placeholder='https://mydomain.tld/integration-path/cdn-path' />
+             :class="{'is-invalid': incorrectFields.includes('cdnProxyUrl')}" required
+             placeholder='https://mydomain.tld/integration-path/cdn-path' />
       <span class='text-secondary'>
         CDN endpoint in your proxy integration.
       </span>
@@ -38,7 +40,8 @@
     <div class='mb-3'>
       <label for='trafficName'>Traffic Name</label>
       <input type='text' name='trafficName' id='trafficName' v-model='formData.trafficName' class='form-control'
-             :class="{'is-invalid': incorrectFields.includes('trafficName')}" placeholder='fingerprint-pro-acme-integration' />
+             :class="{'is-invalid': incorrectFields.includes('trafficName')}"
+             placeholder='fingerprint-pro-acme-integration' />
       <span class='text-secondary'>
         First part of ii parameter sent by our proxy integration: <strong>&lt;trafficName&gt;</strong>/&lt;integrationVersion&gt;/type
       </span>
@@ -46,10 +49,17 @@
     <div class='mb-3'>
       <label for='integrationVersion'>Integration Version</label>
       <input type='text' name='integrationVersion' id='integrationVersion' v-model='formData.integrationVersion'
-             class='form-control' :class="{'is-invalid': incorrectFields.includes('integrationVersion')}" placeholder='1.14.8' />
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('integrationVersion')}"
+             placeholder='1.14.8' />
       <span class='text-secondary'>
         Second part of ii parameter sent by our proxy integration: &lt;trafficName&gt;/<strong>&lt;integrationVersion&gt;</strong>/type
       </span>
+    </div>
+    <div class="mb-3">
+      <label for="testsFilter">Tests Filter</label>
+      <select multiple class="form-control" id="testsFilter" v-model="formData.testsFilter">
+        <option :value="testCase" v-for="testCase in testCases">{{testCase}}</option>
+      </select>
     </div>
     <div class='mb-3'>
       <button type='submit' class='btn btn-primary' :disabled='testResult.status === "pending"'>Submit</button>
@@ -167,65 +177,85 @@
         cdnProxyUrl: '',
         trafficName: '',
         integrationVersion: '',
+        testsFilter: [],
       },
       testResult: {
         status: 'initialize',
         success: false,
         results: [],
       },
+      testCases: [],
       incorrectFields: [],
       genericError: null,
     },
-    created: function() {
-      const url = new URL(window.location);
-      this.formData.host = url.searchParams.get('host');
-      this.formData.ingressProxyUrl = url.searchParams.get('ingressProxyUrl');
-      this.formData.cdnProxyUrl = url.searchParams.get('cdnProxyUrl');
-      this.formData.trafficName = url.searchParams.get('trafficName');
-      this.formData.integrationVersion = url.searchParams.get('integrationVersion');
+    created: async function() {
+      const url = new URL(window.location)
+      await this.loadTestCases();
+      this.formData.host = url.searchParams.get('host')
+      this.formData.ingressProxyUrl = url.searchParams.get('ingressProxyUrl')
+      this.formData.cdnProxyUrl = url.searchParams.get('cdnProxyUrl')
+      this.formData.trafficName = url.searchParams.get('trafficName')
+      this.formData.integrationVersion = url.searchParams.get('integrationVersion')
+      const selectedTestsFilters = url.searchParams.getAll('testsFilter')
+      if(selectedTestsFilters.length > 0) {
+        this.formData.testsFilter = selectedTestsFilters
+      } else {
+        this.formData.testsFilter = this.testCases;
+      }
     },
     methods: {
+      async loadTestCases() {
+        const response = await fetch('/test-cases', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if(response.ok) {
+          const result = await response.json();
+          this.testCases = result.data.sort((a,b) => a > b);
+        }
+      },
       async handleSubmit() {
-        this.incorrectFields = [];
-        this.testResult.status = 'pending';
-        this.testResult.results = [];
-        this.genericError = null;
+        this.incorrectFields = []
+        this.testResult.status = 'pending'
+        this.testResult.results = []
+        this.genericError = null
         const response = await fetch('/api/test/run-tests', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ ...this.formData }),
-        });
+        })
 
         if (!response.ok) {
           if (response.status === 500) {
             try {
-              const errorData = await response.json();
-              this.genericError = errorData?.reason ?? 'Unknown Error';
+              const errorData = await response.json()
+              this.genericError = errorData?.reason ?? 'Unknown Error'
             } catch (_) {
-              this.genericError = 'Invalid Response';
+              this.genericError = 'Invalid Response'
             }
           }
 
           if (response.status === 400) {
-            const errorData = await response.json();
-            this.incorrectFields = errorData[0].errors.issues.reduce((acc, issue) => [...acc, ...issue.path], []);
-            this.genericError = `Form Error, please check these fields: ${this.incorrectFields.join(', ')}`;
+            const errorData = await response.json()
+            this.incorrectFields = errorData[0].errors.issues.reduce((acc, issue) => [...acc, ...issue.path], [])
+            this.genericError = `Form Error, please check these fields: ${this.incorrectFields.join(', ')}`
           }
 
-          this.testResult.success = false;
+          this.testResult.success = false
         }
 
         if (response.ok) {
-          const data = await response.json();
-          this.testResult.success = data.results.every(t => t.passed === true);
-          this.testResult.results = data.results.map((item, index) => ({ ...item, id: `element${index}` }));
+          const data = await response.json()
+          this.testResult.success = data.results.every(t => t.passed === true)
+          this.testResult.results = data.results.map((item, index) => ({ ...item, id: `element${index}` }))
         }
-        this.testResult.status = 'finished';
+        this.testResult.status = 'finished'
       },
     },
-  });
+  })
 </script>
 </body>
 </html>
