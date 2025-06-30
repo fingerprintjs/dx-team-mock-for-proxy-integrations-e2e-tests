@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
   res.sendFile('views/index.html', { root: process.cwd() })
 })
 
+
 app.get('/test-cases', async (req, res) => {
   const testCases = await loadTestCases()
 
@@ -30,6 +31,7 @@ app.get('/test-cases', async (req, res) => {
   })
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   console.error(err)
   res.status(500).send({ reason: err.message })

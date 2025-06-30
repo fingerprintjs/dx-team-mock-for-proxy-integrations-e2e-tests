@@ -5,6 +5,8 @@ ARG NODE_ENV=production
 # Use the Node.js version specified by NODE_VERSION
 FROM node:${NODE_VERSION}-alpine AS builder
 
+RUN corepack enable && corepack prepare pnpm@latest-10 --activate
+
 # Set working directory
 WORKDIR /app
 
@@ -12,13 +14,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 FROM node:${NODE_VERSION}-alpine AS mock-warden-worker
 
