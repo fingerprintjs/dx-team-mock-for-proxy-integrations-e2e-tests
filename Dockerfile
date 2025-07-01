@@ -5,13 +5,16 @@ ARG NODE_ENV=production
 # Use the Node.js version specified by NODE_VERSION
 FROM node:${NODE_VERSION}-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@latest-10 --activate
+RUN npm install -g corepack@latest
+RUN corepack enable
+RUN corepack prepare pnpm@latest-9 --activate
 
 # Set working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
