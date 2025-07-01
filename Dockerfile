@@ -5,9 +5,7 @@ ARG NODE_ENV=production
 # Use the Node.js version specified by NODE_VERSION
 FROM node:${NODE_VERSION}-alpine AS builder
 
-RUN npm install -g corepack@latest
-RUN corepack enable
-RUN corepack prepare pnpm@latest-9 --activate
+RUN npm i -g pnpm@9
 
 # Set working directory
 WORKDIR /app
