@@ -7,6 +7,7 @@ import {
 
 import { TEST_CASE_HOST_HEADER, TEST_CASE_NAME_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from '../test/service/const'
 import { z } from 'zod'
+import { getMockResponse } from '../test/service/mockResponseRegistry'
 
 const proxyRequestTypeSchema = z.nativeEnum(ProxyRequestType)
 
@@ -30,8 +31,16 @@ export function proxyReceiverRouter() {
 
       notifyProxyRequestListener(testType.data, key, req)
 
-      res.setHeader('cache-control', 'no-cache')
-      res.send()
+      const mockResponse = getMockResponse(testName)
+      if (mockResponse) {
+        for (const [header, value] of Object.entries(mockResponse.headers || {})) {
+          res.setHeader(header, value)
+        }
+        res.status(mockResponse.status).send(mockResponse.body)
+      } else {
+        res.setHeader('cache-control', 'no-cache')
+        res.status(204).send()
+      }
 
       return
     }

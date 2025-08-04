@@ -8,6 +8,7 @@ import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
+import {clearMockResponsesForTest, setMockResponse} from "./mockResponseRegistry";
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -20,6 +21,7 @@ export async function loadTestCases() {
   const ext = process.env.TEST_CASE_EXT ?? '.js'
 
   const caseFiles = await glob(`../**/*.case${ext}`, { absolute: true })
+  console.log(caseFiles)
   return await Promise.all(caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase)))
 }
 
@@ -58,6 +60,14 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   let result: TestResult
 
   try {
+    if (testCase.response) {
+      setMockResponse(testCase.name, {
+        status: testCase.response.status ?? 200,
+        headers: testCase.response.headers ?? {},
+        body: testCase.response.body ?? '',
+      })
+    }
+
     await withTimeout(() => testCase.test(api), TEST_TIMEOUT_MS)
 
     result = {
@@ -72,6 +82,8 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
         requestsFromProxy: api.requestsFromProxy,
       },
     }
+  } finally {
+    clearMockResponsesForTest(testCase.name)
   }
 
   const key = createProxyRequestHandlerKey(testSession.host, testCase.name)

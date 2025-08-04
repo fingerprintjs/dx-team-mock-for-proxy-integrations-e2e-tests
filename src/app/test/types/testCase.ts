@@ -2,9 +2,15 @@ import { Request as ExpressRequest } from 'express'
 import { RequestsFromProxyRecord } from '../service/requestFromProxy'
 import { TestSession } from '../service/session'
 import { TestCaseApi } from '../service/TestCaseApi'
+import { AxiosResponseHeaders, RawAxiosResponseHeaders } from 'axios'
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
+  responseFromProxy: {
+    status: number
+    headers: RawAxiosResponseHeaders | AxiosResponseHeaders
+    body: any
+  }
 }
 
 export type FailedTestCaseMetadata = {
@@ -29,4 +35,9 @@ export type TestCase = {
   before?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
   after?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
   test: (testCaseApi: TestCaseApi) => Promise<void>
+  response?: {
+    status?: number
+    headers?: Record<string, string>
+    body?: any
+  }
 }
