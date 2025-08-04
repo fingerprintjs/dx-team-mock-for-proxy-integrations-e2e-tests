@@ -1,4 +1,4 @@
-type Key = string
+type ResponseRegistryKey = string
 
 type MockResponse = {
   status: number
@@ -6,7 +6,7 @@ type MockResponse = {
   body?: any
 }
 
-const registry = new Map<Key, MockResponse>()
+const registry = new Map<ResponseRegistryKey, MockResponse>()
 
 export function setMockResponse(testName: string, response: MockResponse) {
   registry.set(testName, response)
