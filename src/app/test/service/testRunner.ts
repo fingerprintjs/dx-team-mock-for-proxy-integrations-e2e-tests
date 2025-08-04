@@ -21,7 +21,6 @@ export async function loadTestCases() {
   const ext = process.env.TEST_CASE_EXT ?? '.js'
 
   const caseFiles = await glob(`../**/*.case${ext}`, { absolute: true })
-  console.log(caseFiles)
   return await Promise.all(caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase)))
 }
 
