@@ -39,7 +39,7 @@ export function proxyReceiverRouter() {
         res.status(mockResponse.status).send(mockResponse.body)
       } else {
         res.setHeader('cache-control', 'no-cache')
-        res.status(204).send()
+        res.send()
       }
 
       return
