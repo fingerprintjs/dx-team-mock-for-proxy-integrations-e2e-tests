@@ -1,17 +1,20 @@
 import { assert } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
+import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'non-successful response passthrough on Browser Cache responses',
-  response: {
-    status: 502,
-    headers: {
-      'x-error': 'upstream-fail',
-    },
-    body: 'Bad gateway',
-  },
   test: async (api) => {
-    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({})
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, undefined, {
+      requestId: generateRequestId(),
+      response: {
+        status: 502,
+        headers: {
+          'x-error': 'upstream-fail',
+        },
+        body: 'Bad gateway',
+      },
+    })
 
     assert(responseFromProxy.status, 502)
     assert(responseFromProxy.body, 'Bad gateway')

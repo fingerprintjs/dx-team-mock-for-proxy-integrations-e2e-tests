@@ -1,18 +1,21 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
-import { assert, assertToBeTruthy } from '../../service/assert'
+import { assertToBeTruthy } from '../../service/assert'
+import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'cache-control preserved or in-limit on ProCDN responses',
-  response: {
-    headers: {
-      'cache-control': 'max-age=3600',
-    },
-  },
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
-    const { responseFromProxy } = await api.sendRequestToCdn(query)
+    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
+      requestId: generateRequestId(),
+      response: {
+        headers: {
+          'cache-control': 'max-age=3600',
+        },
+      },
+    })
 
     const value = `${responseFromProxy.headers['cache-control'] || ''}`.toLowerCase()
     assertToBeTruthy(

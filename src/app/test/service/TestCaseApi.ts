@@ -6,10 +6,16 @@ import {
   ProxyRequestType,
 } from '../../proxy-receiver/service/proxyRequestHandler'
 import { SendRequestResult } from '../types/testCase'
-import { TEST_CASE_HOST_HEADER, TEST_CASE_NAME_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from './const'
+import {
+  TEST_CASE_HOST_HEADER,
+  TEST_CASE_NAME_HEADER,
+  TEST_CASE_PROXY_TYPE_HEADER,
+  TEST_CASE_REQUEST_ID,
+} from './const'
 import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromProxy'
 import { TestSession } from './session'
 import { Request } from 'express'
+import { MockResponse, setMockResponse } from './mockResponseRegistry'
 
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
@@ -18,6 +24,7 @@ export class TestCaseApi {
     [ProxyRequestType.Cache]: [],
   }
   public readonly httpClientInstance: AxiosInstance
+  public requestIdList: string[] = []
 
   constructor(
     private readonly testName: string,
@@ -30,7 +37,8 @@ export class TestCaseApi {
 
   async sendRequestToCdn(
     query?: URLSearchParams,
-    axiosRequestConfig?: Partial<AxiosRequestConfig>
+    axiosRequestConfig?: Partial<AxiosRequestConfig>,
+    mockResponse?: { response: MockResponse; requestId: string }
   ): Promise<SendRequestResult> {
     const url = new URL(this.cdnProxyUrl)
 
@@ -46,6 +54,11 @@ export class TestCaseApi {
         resolveRequest(request)
       })
     })
+
+    if (mockResponse) {
+      this.requestIdList.push(mockResponse.requestId)
+      setMockResponse(mockResponse.requestId, mockResponse.response)
+    }
 
     console.info(`Sending request to CDN at ${url.toString()}`)
 
@@ -92,7 +105,8 @@ export class TestCaseApi {
   async sendRequestToCacheEndpoint(
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
-    pathname?: string
+    pathname?: string,
+    mockResponse?: { response: MockResponse; requestId: string }
   ): Promise<SendRequestResult> {
     const url = new URL(this.ingressProxyUrl)
 
@@ -113,6 +127,11 @@ export class TestCaseApi {
       })
     })
 
+    if (mockResponse) {
+      this.requestIdList.push(mockResponse.requestId)
+      setMockResponse(mockResponse.requestId, mockResponse.response)
+    }
+
     console.info(`Sending request to cache endpoint at ${url.toString()}`)
 
     let responseFromProxy: SendRequestResult['responseFromProxy']
@@ -125,7 +144,7 @@ export class TestCaseApi {
           method: 'GET',
           headers: {
             ...request.headers,
-            ...this.createTestHeaders(ProxyRequestType.Cache),
+            ...this.createTestHeaders(ProxyRequestType.Cache, mockResponse?.requestId),
           },
         },
         this.httpClientInstance
@@ -157,7 +176,8 @@ export class TestCaseApi {
 
   async sendRequestToIngress(
     request: Partial<AxiosRequestConfig>,
-    query?: URLSearchParams
+    query?: URLSearchParams,
+    mockResponse?: { response: MockResponse; requestId: string }
   ): Promise<SendRequestResult> {
     const url = new URL(this.ingressProxyUrl)
 
@@ -176,6 +196,11 @@ export class TestCaseApi {
 
     console.info(`Sending request to ingress at ${url.toString()}`)
 
+    if (mockResponse) {
+      this.requestIdList.push(mockResponse.requestId)
+      setMockResponse(mockResponse.requestId, mockResponse.response)
+    }
+
     let responseFromProxy: SendRequestResult['responseFromProxy']
 
     try {
@@ -186,7 +211,7 @@ export class TestCaseApi {
           method: 'POST',
           headers: {
             ...request.headers,
-            ...this.createTestHeaders(ProxyRequestType.Ingress),
+            ...this.createTestHeaders(ProxyRequestType.Ingress, mockResponse?.requestId),
           },
         },
         this.httpClientInstance
@@ -216,12 +241,13 @@ export class TestCaseApi {
     return { requestFromProxy, responseFromProxy }
   }
 
-  private createTestHeaders(requestType: ProxyRequestType) {
+  private createTestHeaders(requestType: ProxyRequestType, requestId?: string) {
     return {
       [TEST_CASE_HOST_HEADER]: this.testSession.host,
       [TEST_CASE_PROXY_TYPE_HEADER]: requestType,
       [TEST_CASE_NAME_HEADER]: this.testName,
       'cache-control': 'no-cache',
+      [TEST_CASE_REQUEST_ID]: requestId,
     }
   }
 }
