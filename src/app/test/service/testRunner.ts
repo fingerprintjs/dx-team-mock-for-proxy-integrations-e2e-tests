@@ -46,10 +46,9 @@ export async function runTests(testSession: TestSession, filter?: string[]) {
 export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
   const startTime = Date.now()
 
-  const cdnProxyUrl = new URL(testSession.cdnProxyUrl)
-  const ingressProxyUrl = new URL(testSession.ingressProxyUrl)
+  const integrationUrl = new URL(testSession.integrationUrl)
 
-  const api = new TestCaseApi(testCase.name, ingressProxyUrl, cdnProxyUrl, testSession)
+  const api = new TestCaseApi(testCase.name, integrationUrl, testSession.ingressPath, testSession.cdnPath, testSession)
 
   if (testCase.before) {
     await testCase.before(api, testSession)
