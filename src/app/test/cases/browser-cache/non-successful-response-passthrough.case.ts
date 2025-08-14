@@ -6,14 +6,11 @@ const testCase: TestCase = {
   name: 'non-successful response passthrough on Browser Cache responses',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        status: 502,
-        headers: {
-          'x-error': 'upstream-fail',
-        },
-        body: 'Bad gateway',
+      status: 502,
+      headers: {
+        'x-error': 'upstream-fail',
       },
+      body: 'Bad gateway',
     })
 
     assert(responseFromProxy.status, 502)

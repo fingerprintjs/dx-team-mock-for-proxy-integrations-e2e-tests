@@ -1,7 +1,6 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
-import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'no unintended header modifications on ProCDN responses',
@@ -9,12 +8,9 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        headers: {
-          'x-foo': 'bar',
-          'x-bar': 'baz',
-        },
+      headers: {
+        'x-foo': 'bar',
+        'x-bar': 'baz',
       },
     })
 

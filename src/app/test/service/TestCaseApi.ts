@@ -16,6 +16,7 @@ import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromPr
 import { TestSession } from './session'
 import { Request } from 'express'
 import { MockResponse, setMockResponse } from './mockResponseRegistry'
+import { generateRequestId } from '../../../utils/generateRequestId'
 
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
@@ -38,7 +39,7 @@ export class TestCaseApi {
   async sendRequestToCdn(
     query?: URLSearchParams,
     axiosRequestConfig?: Partial<AxiosRequestConfig>,
-    mockResponse?: { response: MockResponse; requestId: string }
+    mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     const url = new URL(this.cdnProxyUrl)
 
@@ -55,9 +56,11 @@ export class TestCaseApi {
       })
     })
 
+    const requestId = generateRequestId()
+
     if (mockResponse) {
-      this.requestIdList.push(mockResponse.requestId)
-      setMockResponse(mockResponse.requestId, mockResponse.response)
+      this.requestIdList.push(requestId)
+      setMockResponse(requestId, mockResponse)
     }
 
     console.info(`Sending request to CDN at ${url.toString()}`)
@@ -72,7 +75,7 @@ export class TestCaseApi {
           method: 'GET',
           headers: {
             ...axiosRequestConfig?.headers,
-            ...this.createTestHeaders(ProxyRequestType.Cdn),
+            ...this.createTestHeaders(ProxyRequestType.Cdn, requestId),
           },
         },
         this.httpClientInstance
@@ -106,7 +109,7 @@ export class TestCaseApi {
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
     pathname?: string,
-    mockResponse?: { response: MockResponse; requestId: string }
+    mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     const url = new URL(this.ingressProxyUrl)
 
@@ -127,9 +130,11 @@ export class TestCaseApi {
       })
     })
 
+    const requestId = generateRequestId()
+
     if (mockResponse) {
-      this.requestIdList.push(mockResponse.requestId)
-      setMockResponse(mockResponse.requestId, mockResponse.response)
+      this.requestIdList.push(requestId)
+      setMockResponse(requestId, mockResponse)
     }
 
     console.info(`Sending request to cache endpoint at ${url.toString()}`)
@@ -144,7 +149,7 @@ export class TestCaseApi {
           method: 'GET',
           headers: {
             ...request.headers,
-            ...this.createTestHeaders(ProxyRequestType.Cache, mockResponse?.requestId),
+            ...this.createTestHeaders(ProxyRequestType.Cache, requestId),
           },
         },
         this.httpClientInstance
@@ -177,7 +182,7 @@ export class TestCaseApi {
   async sendRequestToIngress(
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
-    mockResponse?: { response: MockResponse; requestId: string }
+    mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     const url = new URL(this.ingressProxyUrl)
 
@@ -196,9 +201,11 @@ export class TestCaseApi {
 
     console.info(`Sending request to ingress at ${url.toString()}`)
 
+    const requestId = generateRequestId()
+
     if (mockResponse) {
-      this.requestIdList.push(mockResponse.requestId)
-      setMockResponse(mockResponse.requestId, mockResponse.response)
+      this.requestIdList.push(requestId)
+      setMockResponse(requestId, mockResponse)
     }
 
     let responseFromProxy: SendRequestResult['responseFromProxy']
@@ -211,7 +218,7 @@ export class TestCaseApi {
           method: 'POST',
           headers: {
             ...request.headers,
-            ...this.createTestHeaders(ProxyRequestType.Ingress, mockResponse?.requestId),
+            ...this.createTestHeaders(ProxyRequestType.Ingress, requestId),
           },
         },
         this.httpClientInstance

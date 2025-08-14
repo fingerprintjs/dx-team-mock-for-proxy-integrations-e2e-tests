@@ -6,12 +6,9 @@ const testCase: TestCase = {
   name: 'no header changes on Browser Cache responses',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        headers: {
-          'x-foo': 'bar',
-          'x-bar': 'baz',
-        },
+      headers: {
+        'x-foo': 'bar',
+        'x-bar': 'baz',
       },
     })
 
