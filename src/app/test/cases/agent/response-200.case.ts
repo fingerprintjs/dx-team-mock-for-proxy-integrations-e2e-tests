@@ -4,14 +4,14 @@ import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'response 200',
-  response: {
+  response: () => ({
     status: 200,
     headers: {
       'x-test': 'x-value',
       'x-test-two': 'x-value-two',
     },
     body: 'Hello!',
-  },
+  }),
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

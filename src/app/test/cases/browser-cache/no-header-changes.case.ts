@@ -3,12 +3,12 @@ import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
   name: 'no header changes on Browser Cache responses',
-  response: {
+  response: () => ({
     headers: {
       'x-foo': 'bar',
       'x-bar': 'baz',
     },
-  },
+  }),
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({})
 

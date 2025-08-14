@@ -8,7 +8,7 @@ import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
-import {clearMockResponsesForTest, setMockResponse} from "./mockResponseRegistry";
+import { clearMockResponsesForTest, setMockResponse } from './mockResponseRegistry'
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -60,11 +60,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
 
   try {
     if (testCase.response) {
-      setMockResponse(testCase.name, {
-        status: testCase.response.status ?? 200,
-        headers: testCase.response.headers ?? {},
-        body: testCase.response.body ?? '',
-      })
+      setMockResponse(testCase.name, testCase.response)
     }
 
     await withTimeout(() => testCase.test(api), TEST_TIMEOUT_MS)

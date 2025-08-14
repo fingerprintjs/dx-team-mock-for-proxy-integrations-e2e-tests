@@ -31,7 +31,8 @@ export function proxyReceiverRouter() {
 
       notifyProxyRequestListener(testType.data, key, req)
 
-      const mockResponse = getMockResponse(testName)
+      const mockResponseCallback = getMockResponse(testName)
+      const mockResponse = mockResponseCallback ? mockResponseCallback() : undefined
       if (mockResponse) {
         for (const [header, value] of Object.entries(mockResponse.headers || {})) {
           res.setHeader(header, value)

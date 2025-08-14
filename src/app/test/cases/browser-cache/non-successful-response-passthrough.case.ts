@@ -3,13 +3,13 @@ import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
   name: 'non-successful response passthrough on Browser Cache responses',
-  response: {
+  response: () => ({
     status: 502,
     headers: {
       'x-error': 'upstream-fail',
     },
     body: 'Bad gateway',
-  },
+  }),
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({})
 

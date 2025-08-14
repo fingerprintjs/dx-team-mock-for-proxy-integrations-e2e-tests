@@ -4,13 +4,13 @@ import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'successful response passthrough on ProCDN responses',
-  response: {
+  response: () => ({
     status: 200,
     headers: {
       'x-foo': 'bar',
     },
     body: 'ok',
-  },
+  }),
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

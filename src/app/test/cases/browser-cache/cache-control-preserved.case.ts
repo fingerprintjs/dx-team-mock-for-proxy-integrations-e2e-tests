@@ -3,11 +3,11 @@ import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
   name: 'cache-control preserved on Browser Cache responses',
-  response: {
+  response: () => ({
     headers: {
       'cache-control': 'public, max-age=600',
     },
-  },
+  }),
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({})
 

@@ -4,13 +4,13 @@ import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'non-successful response passthrough on ProCDN responses',
-  response: {
+  response: () => ({
     status: 502,
     headers: {
       'x-error': 'upstream-fail',
     },
     body: 'Bad gateway',
-  },
+  }),
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

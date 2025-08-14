@@ -3,6 +3,7 @@ import { RequestsFromProxyRecord } from '../service/requestFromProxy'
 import { TestSession } from '../service/session'
 import { TestCaseApi } from '../service/TestCaseApi'
 import { AxiosResponseHeaders, RawAxiosResponseHeaders } from 'axios'
+import { MockResponseFunction } from '../service/mockResponseRegistry'
 
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
@@ -35,9 +36,5 @@ export type TestCase = {
   before?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
   after?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
   test: (testCaseApi: TestCaseApi) => Promise<void>
-  response?: {
-    status?: number
-    headers?: Record<string, string>
-    body?: any
-  }
+  response?: MockResponseFunction
 }

@@ -4,6 +4,11 @@ import { getApiKey } from '../../utils/getApiKey'
 
 const testCase: TestCase = {
   name: 'agent request with different loaderVersion',
+  response: () => ({
+    status: 200,
+    headers: {},
+    body: '',
+  }),
   test: async (api) => {
     const query = new URLSearchParams()
 

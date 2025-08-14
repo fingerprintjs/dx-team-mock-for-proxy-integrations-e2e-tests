@@ -4,12 +4,12 @@ import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'no unintended header modifications on ProCDN responses',
-  response: {
+  response: () => ({
     headers: {
       'x-foo': 'bar',
       'x-bar': 'baz',
     },
-  },
+  }),
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

@@ -1,18 +1,20 @@
-type ResponseRegistryKey = string
+export type ResponseRegistryKey = string
 
-type MockResponse = {
-  status: number
+export type MockResponse = {
+  status?: number
   headers?: Record<string, string>
   body?: any
 }
 
-const registry = new Map<ResponseRegistryKey, MockResponse>()
+export type MockResponseFunction = () => MockResponse
 
-export function setMockResponse(testName: string, response: MockResponse) {
+const registry = new Map<ResponseRegistryKey, MockResponseFunction>()
+
+export function setMockResponse(testName: string, response: MockResponseFunction) {
   registry.set(testName, response)
 }
 
-export function getMockResponse(testName: string): MockResponse | undefined {
+export function getMockResponse(testName: string): MockResponseFunction | undefined {
   return registry.get(testName)
 }
 
