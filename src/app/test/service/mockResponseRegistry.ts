@@ -16,6 +16,6 @@ export function getMockResponse(requestId: string): MockResponse | undefined {
   return registry.get(requestId)
 }
 
-export function clearMockResponsesForTest(testName: string) {
-  registry.delete(testName)
+export function clearMockResponsesForTest(requestId: string) {
+  registry.delete(requestId)
 }
