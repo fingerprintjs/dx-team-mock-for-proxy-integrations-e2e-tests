@@ -1,6 +1,6 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
-import { assert, assertToBeTruthy } from '../../service/assert'
+import { assertToBeTruthy } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'cache-control preserved or in-limit on ProCDN responses',
