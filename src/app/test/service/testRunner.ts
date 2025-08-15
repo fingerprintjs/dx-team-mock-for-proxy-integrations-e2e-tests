@@ -47,6 +47,9 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   const startTime = Date.now()
 
   const integrationUrl = new URL(testSession.integrationUrl)
+  if (!integrationUrl.pathname.endsWith('/')) {
+    integrationUrl.pathname += '/'
+  }
 
   const api = new TestCaseApi(testCase.name, integrationUrl, testSession.ingressPath, testSession.cdnPath, testSession)
 
