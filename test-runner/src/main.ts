@@ -21,9 +21,6 @@ const args = argumentParser({
     cdnPath: z.string().optional(),
     cdnProxyUrl: z.string().url().optional(),
     ingressProxyUrl: z.string().url().optional(),
-    trafficName: z.string(),
-    integrationVersion: z.string(),
-    testsFilter: z.array(z.string()).optional(),
   }).strict(),
 }).parse(process.argv.slice(2))
 
