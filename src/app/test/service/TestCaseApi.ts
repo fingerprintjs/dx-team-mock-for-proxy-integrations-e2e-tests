@@ -61,18 +61,18 @@ export class TestCaseApi {
       }
 
       try {
-        const params = {
-          ...requestConfig,
-          method,
-          headers: {
-            ...requestConfig?.headers,
-            ...this.createTestHeaders(listenerType),
+        const response = await sendAxiosRequestWithRequestConfig(
+          url,
+          {
+            ...requestConfig,
+            method,
+            headers: {
+              ...requestConfig?.headers,
+              ...this.createTestHeaders(listenerType),
+            },
           },
-        }
-
-        console.info(`Sending request to ${url.toString()} with params: ${JSON.stringify(params)}`)
-
-        const response = await sendAxiosRequestWithRequestConfig(url, params, this.httpClientInstance)
+          this.httpClientInstance
+        )
 
         if (listenerType) {
           console.info(`${listenerType} responded with ${response.status} at ${url.toString()}`, {
