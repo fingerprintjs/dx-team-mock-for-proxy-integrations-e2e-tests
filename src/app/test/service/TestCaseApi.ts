@@ -46,7 +46,7 @@ export class TestCaseApi {
     listenerType,
   }: SendRequestOptions): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
-      const url = path ? new URL(path, this.integrationUrl) : this.integrationUrl
+      const url = new URL(path ?? '', this.integrationUrl)
 
       if (query) {
         url.search = query.toString()
