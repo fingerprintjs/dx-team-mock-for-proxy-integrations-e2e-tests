@@ -10,6 +10,16 @@ import { TEST_CASE_HOST_HEADER, TEST_CASE_NAME_HEADER, TEST_CASE_PROXY_TYPE_HEAD
 import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromProxy'
 import { TestSession } from './session'
 
+import type { Method } from 'axios'
+
+interface SendRequestOptions {
+  method: Method
+  path?: string
+  query?: URLSearchParams
+  requestConfig?: Partial<AxiosRequestConfig>
+  listenerType?: ProxyRequestType
+}
+
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
     [ProxyRequestType.Cdn]: [],
@@ -28,13 +38,13 @@ export class TestCaseApi {
     this.httpClientInstance = createNewHttpClient()
   }
 
-  async sendRequest(
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-    path?: string,
-    query?: URLSearchParams,
-    requestConfig?: Partial<AxiosRequestConfig>,
-    listenerType?: ProxyRequestType
-  ): Promise<SendRequestResult> {
+  async sendRequest({
+    method,
+    path,
+    query,
+    requestConfig,
+    listenerType,
+  }: SendRequestOptions): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
       const url = path ? new URL(path, this.integrationUrl) : this.integrationUrl
 
@@ -99,7 +109,13 @@ export class TestCaseApi {
     query?: URLSearchParams,
     axiosRequestConfig?: Partial<AxiosRequestConfig>
   ): Promise<SendRequestResult> {
-    return this.sendRequest('GET', this.cdnPath, query, axiosRequestConfig, ProxyRequestType.Cdn)
+    return this.sendRequest({
+      method: 'GET',
+      path: this.cdnPath,
+      query,
+      requestConfig: axiosRequestConfig,
+      listenerType: ProxyRequestType.Cdn,
+    })
   }
 
   async sendRequestToCacheEndpoint(
@@ -107,20 +123,26 @@ export class TestCaseApi {
     query?: URLSearchParams,
     pathname?: string
   ): Promise<SendRequestResult> {
-    return this.sendRequest(
-      'GET',
-      this.ingressPath + (pathname ? pathname : ''),
+    return this.sendRequest({
+      method: 'GET',
+      path: this.ingressPath + (pathname ? pathname : ''),
       query,
-      request,
-      ProxyRequestType.Cache
-    )
+      requestConfig: request,
+      listenerType: ProxyRequestType.Cache,
+    })
   }
 
   async sendRequestToIngress(
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams
   ): Promise<SendRequestResult> {
-    return this.sendRequest('POST', this.ingressPath, query, request, ProxyRequestType.Ingress)
+    return this.sendRequest({
+      method: 'POST',
+      path: this.ingressPath,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Ingress,
+    })
   }
 
   private createTestHeaders(requestType?: ProxyRequestType) {
