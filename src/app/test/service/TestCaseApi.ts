@@ -10,6 +10,16 @@ import { TEST_CASE_HOST_HEADER, TEST_CASE_NAME_HEADER, TEST_CASE_PROXY_TYPE_HEAD
 import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromProxy'
 import { TestSession } from './session'
 
+import type { Method } from 'axios'
+
+interface SendRequestOptions {
+  method: Method
+  path?: string
+  query?: URLSearchParams
+  requestConfig?: Partial<AxiosRequestConfig>
+  listenerType?: ProxyRequestType
+}
+
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
     [ProxyRequestType.Cdn]: [],
@@ -20,19 +30,23 @@ export class TestCaseApi {
 
   constructor(
     private readonly testName: string,
-    private readonly ingressProxyUrl: URL,
-    private readonly cdnProxyUrl: URL,
+    private readonly integrationUrl: URL,
+    private readonly ingressPath: string,
+    private readonly cdnPath: string,
     public readonly testSession: TestSession
   ) {
     this.httpClientInstance = createNewHttpClient()
   }
 
-  async sendRequestToCdn(
-    query?: URLSearchParams,
-    axiosRequestConfig?: Partial<AxiosRequestConfig>
-  ): Promise<SendRequestResult> {
+  async sendRequest({
+    method,
+    path,
+    query,
+    requestConfig,
+    listenerType,
+  }: SendRequestOptions): Promise<SendRequestResult> {
     return new Promise(async (resolve) => {
-      const url = new URL(this.cdnProxyUrl)
+      const url = new URL(path ?? '', this.integrationUrl)
 
       if (query) {
         url.search = query.toString()
@@ -40,37 +54,67 @@ export class TestCaseApi {
 
       const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
 
-      addProxyRequestListener(ProxyRequestType.Cdn, key, (request) => {
-        this.requestsFromProxy[ProxyRequestType.Cdn].push(createRequestFromProxy(request))
+      if (listenerType) {
+        addProxyRequestListener(listenerType, key, (request) => {
+          this.requestsFromProxy[listenerType].push(createRequestFromProxy(request))
 
-        resolve({
-          requestFromProxy: request,
+          resolve({
+            requestFromProxy: request,
+          })
         })
-      })
+      }
 
-      console.info(`Sending request to CDN at ${url.toString()}`)
+      if (listenerType) {
+        console.info(`Sending request to ${listenerType.toString()} at ${url.toString()}`)
+      } else {
+        console.info(`Sending request to ${url.toString()}`)
+      }
 
       try {
         const response = await sendAxiosRequestWithRequestConfig(
           url,
           {
-            ...axiosRequestConfig,
-            method: 'GET',
+            ...requestConfig,
+            method,
             headers: {
-              ...axiosRequestConfig?.headers,
-              ...this.createTestHeaders(ProxyRequestType.Cdn),
+              ...requestConfig?.headers,
+              ...this.createTestHeaders(listenerType),
             },
           },
           this.httpClientInstance
         )
 
-        console.info(`CDN responded with ${response.status} at ${url.toString()}`, {
-          body: response.data,
-          headers: response.headers,
-        })
+        if (listenerType) {
+          console.info(`${listenerType} responded with ${response.status} at ${url.toString()}`, {
+            body: response.data,
+            headers: response.headers,
+          })
+        } else {
+          console.info(`Responded with ${response.status} at ${url.toString()}`, {
+            body: response.data,
+            headers: response.headers,
+          })
+        }
       } catch (error) {
-        console.error(`Failed to send request to CDN at ${url.toString()}`, error)
+        if (listenerType) {
+          console.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error)
+        } else {
+          console.error(`Failed to send request to ${url.toString()}`, error)
+        }
       }
+    })
+  }
+
+  async sendRequestToCdn(
+    query?: URLSearchParams,
+    axiosRequestConfig?: Partial<AxiosRequestConfig>
+  ): Promise<SendRequestResult> {
+    return this.sendRequest({
+      method: 'GET',
+      path: this.cdnPath,
+      query,
+      requestConfig: axiosRequestConfig,
+      listenerType: ProxyRequestType.Cdn,
     })
   }
 
@@ -79,50 +123,12 @@ export class TestCaseApi {
     query?: URLSearchParams,
     pathname?: string
   ): Promise<SendRequestResult> {
-    return new Promise(async (resolve) => {
-      const url = new URL(this.ingressProxyUrl)
-
-      if (pathname) {
-        url.pathname += pathname
-      }
-
-      if (query) {
-        url.search = query.toString()
-      }
-
-      const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
-
-      addProxyRequestListener(ProxyRequestType.Cache, key, (request) => {
-        this.requestsFromProxy[ProxyRequestType.Cache].push(createRequestFromProxy(request))
-
-        resolve({
-          requestFromProxy: request,
-        })
-      })
-
-      console.info(`Sending request to cache endpoint at ${url.toString()}`)
-
-      try {
-        const response = await sendAxiosRequestWithRequestConfig(
-          url,
-          {
-            ...request,
-            method: 'GET',
-            headers: {
-              ...request.headers,
-              ...this.createTestHeaders(ProxyRequestType.Cache),
-            },
-          },
-          this.httpClientInstance
-        )
-
-        console.info(`Cache endpoint responded with ${response.status} at ${url.toString()}`, {
-          body: response.data,
-          headers: response.headers,
-        })
-      } catch (error) {
-        console.error(`Failed to send request to Cache endpoint at ${url.toString()}`, error)
-      }
+    return this.sendRequest({
+      method: 'GET',
+      path: this.ingressPath + (pathname ? pathname : ''),
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Cache,
     })
   }
 
@@ -130,53 +136,19 @@ export class TestCaseApi {
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams
   ): Promise<SendRequestResult> {
-    return new Promise(async (resolve) => {
-      const url = new URL(this.ingressProxyUrl)
-
-      if (query) {
-        url.search = query.toString()
-      }
-
-      const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
-
-      addProxyRequestListener(ProxyRequestType.Ingress, key, (request) => {
-        this.requestsFromProxy[ProxyRequestType.Ingress].push(createRequestFromProxy(request))
-
-        resolve({
-          requestFromProxy: request,
-        })
-      })
-
-      console.info(`Sending request to ingress at ${url.toString()}`)
-
-      try {
-        const response = await sendAxiosRequestWithRequestConfig(
-          url,
-          {
-            ...request,
-            method: 'POST',
-            headers: {
-              ...request.headers,
-              ...this.createTestHeaders(ProxyRequestType.Ingress),
-            },
-          },
-          this.httpClientInstance
-        )
-
-        console.info(`Ingress responded with ${response.status} at ${url.toString()}`, {
-          body: response.data,
-          headers: response.headers,
-        })
-      } catch (error) {
-        console.error(`Failed to send request to Ingress at ${url.toString()}`, error)
-      }
+    return this.sendRequest({
+      method: 'POST',
+      path: this.ingressPath,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Ingress,
     })
   }
 
-  private createTestHeaders(requestType: ProxyRequestType) {
+  private createTestHeaders(requestType?: ProxyRequestType) {
     return {
       [TEST_CASE_HOST_HEADER]: this.testSession.host,
-      [TEST_CASE_PROXY_TYPE_HEADER]: requestType,
+      [TEST_CASE_PROXY_TYPE_HEADER]: requestType || '',
       [TEST_CASE_NAME_HEADER]: this.testName,
       'cache-control': 'no-cache',
     }

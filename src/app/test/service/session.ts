@@ -16,8 +16,9 @@ export interface TestResponse {
 export class TestSession implements RunTestsRequest {
   constructor(
     public host: string,
-    public ingressProxyUrl: string,
-    public cdnProxyUrl: string,
+    public integrationUrl: string,
+    public ingressPath: string,
+    public cdnPath: string,
     public trafficName: string,
     public integrationVersion: string,
     public status: TestSessionStatus,
@@ -48,14 +49,11 @@ export class TestSession implements RunTestsRequest {
 const testSessions = new Map<string, TestSession>()
 
 function getHost(request: RunTestsRequest) {
-  const cdnUrl = new URL(request.cdnProxyUrl)
-  const ingressUrl = new URL(request.ingressProxyUrl)
+  const integrationUrl = new URL(request.integrationUrl)
 
-  if (cdnUrl.hostname !== ingressUrl.hostname) {
-    throw new Error('CDN and Ingress URLs must have the same host')
-  }
+  console.log(`Found integration hostname: ${integrationUrl.hostname}`)
 
-  return cdnUrl.hostname
+  return integrationUrl.hostname
 }
 
 export function createTestSession(request: RunTestsRequest) {
@@ -67,8 +65,9 @@ export function createTestSession(request: RunTestsRequest) {
 
   const session = new TestSession(
     host,
-    request.ingressProxyUrl,
-    request.cdnProxyUrl,
+    request.integrationUrl,
+    request.ingressPath,
+    request.cdnPath,
     request.trafficName,
     request.integrationVersion,
     TestSessionStatus.Created

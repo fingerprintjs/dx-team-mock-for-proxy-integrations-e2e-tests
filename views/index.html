@@ -20,19 +20,28 @@
   </div>
   <form @submit.prevent='handleSubmit'>
     <div class='mb-3'>
-      <label for='ingressProxyUrl'>Ingress Proxy URL <small>(Required)</small></label>
-      <input type='text' name='ingressProxyUrl' id='ingressProxyUrl' v-model='formData.ingressProxyUrl'
-             class='form-control' :class="{'is-invalid': incorrectFields.includes('ingressProxyUrl')}" required
-             placeholder='https://mydomain.tld/integration-path/ingress-path' />
+      <label for='integrationUrl'>Integration URL <small>(Required)</small></label>
+      <input type='text' name='integrationUrl' id='integrationUrl' v-model='formData.integrationUrl'
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('integrationUrl')}" required
+             placeholder='https://mydomain.tld/integration-path' />
+      <span class='text-secondary'>
+        Integration address of your proxy integration.
+      </span>
+    </div>
+    <div class='mb-3'>
+      <label for='ingressPath'>Ingress Path <small>(Required)</small></label>
+      <input type='text' name='ingressPath' id='ingressPath' v-model='formData.ingressPath'
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('ingressPath')}" required
+             placeholder='ingress' />
       <span class='text-secondary'>
         Ingress endpoint in your proxy integration.
       </span>
     </div>
     <div class='mb-3'>
-      <label for='cdnProxyUrl'>CDN Proxy URL <small>(Required)</small></label>
-      <input type='text' name='cdnProxyUrl' id='cdnProxyUrl' v-model='formData.cdnProxyUrl' class='form-control'
-             :class="{'is-invalid': incorrectFields.includes('cdnProxyUrl')}" required
-             placeholder='https://mydomain.tld/integration-path/cdn-path' />
+      <label for='cdnPath'>CDN Path <small>(Required)</small></label>
+      <input type='text' name='cdnPath' id='cdnPath' v-model='formData.cdnPath'
+             class='form-control' :class="{'is-invalid': incorrectFields.includes('cdnPath')}" required
+             placeholder='cdn' />
       <span class='text-secondary'>
         CDN endpoint in your proxy integration.
       </span>
@@ -62,7 +71,7 @@
       </select>
     </div>
     <div class='mb-3'>
-      <button type='submit' class='btn btn-primary' :disabled='testResult.status === "pending"'>Submit</button>
+      <button type='submit' class='btn btn-primary' :disabled='testResult.status === "pending" || testCases === []'>Submit</button>
     </div>
   </form>
   <div class='mb-4'>
@@ -173,8 +182,9 @@
     el: '#app',
     data: {
       formData: {
-        ingressProxyUrl: '',
-        cdnProxyUrl: '',
+        integrationUrl: '',
+        ingressPath: '',
+        cdnPath: '',
         trafficName: '',
         integrationVersion: '',
         testsFilter: [],
@@ -190,12 +200,12 @@
     },
     created: async function() {
       const url = new URL(window.location)
-      await this.loadTestCases();
-      this.formData.host = url.searchParams.get('host')
-      this.formData.ingressProxyUrl = url.searchParams.get('ingressProxyUrl')
-      this.formData.cdnProxyUrl = url.searchParams.get('cdnProxyUrl')
+      this.formData.integrationUrl = url.searchParams.get('integrationUrl')
+      this.formData.ingressPath = url.searchParams.get('ingressPath')
+      this.formData.cdnPath = url.searchParams.get('cdnPath')
       this.formData.trafficName = url.searchParams.get('trafficName')
       this.formData.integrationVersion = url.searchParams.get('integrationVersion')
+      await this.loadTestCases();
       const selectedTestsFilters = url.searchParams.getAll('testsFilter')
       if(selectedTestsFilters.length > 0) {
         this.formData.testsFilter = selectedTestsFilters

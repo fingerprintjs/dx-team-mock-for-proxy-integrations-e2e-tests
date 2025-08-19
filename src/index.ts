@@ -22,12 +22,11 @@ app.get('/', (req, res) => {
   res.sendFile('views/index.html', { root: process.cwd() })
 })
 
-
 app.get('/test-cases', async (req, res) => {
   const testCases = await loadTestCases()
 
   res.json({
-    data: testCases.map((t) => t.name)
+    data: testCases.map((t) => t.name),
   })
 })
 
