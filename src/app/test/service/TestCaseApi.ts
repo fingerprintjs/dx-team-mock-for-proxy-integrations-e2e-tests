@@ -144,7 +144,7 @@ export class TestCaseApi {
   async sendRequestToCdn(
     query?: URLSearchParams,
     axiosRequestConfig?: Partial<AxiosRequestConfig>,
-    mockResponse?: MockResponse,
+    mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
@@ -160,7 +160,7 @@ export class TestCaseApi {
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
     pathname?: string,
-    mockResponse?: MockResponse,
+    mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
