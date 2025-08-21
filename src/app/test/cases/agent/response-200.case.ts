@@ -1,21 +1,24 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
+import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'response 200',
-  response: {
-    status: 200,
-    headers: {
-      'x-test': 'x-value',
-      'x-test-two': 'x-value-two',
-    },
-    body: 'Hello!',
-  },
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
-    const { responseFromProxy } = await api.sendRequestToCdn(query)
+    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
+      requestId: generateRequestId(),
+      response: {
+        status: 200,
+        headers: {
+          'x-test': 'x-value',
+          'x-test-two': 'x-value-two',
+        },
+        body: 'Hello!',
+      },
+    })
 
     assert(responseFromProxy.status, 200)
     assert(responseFromProxy.body, 'Hello!')

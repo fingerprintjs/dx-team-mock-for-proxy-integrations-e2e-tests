@@ -35,9 +35,4 @@ export type TestCase = {
   before?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
   after?: (testCaseApi: TestCaseApi, session: TestSession) => Promise<void> | void
   test: (testCaseApi: TestCaseApi) => Promise<void>
-  response?: {
-    status?: number
-    headers?: Record<string, string>
-    body?: any
-  }
 }
