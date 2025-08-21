@@ -16,9 +16,9 @@ import { createRequestFromProxy, RequestsFromProxyRecord } from './requestFromPr
 import { TestSession } from './session'
 import { Request } from 'express'
 import { MockResponse, setMockResponse } from './mockResponseRegistry'
+import { generateRequestId } from '../../../utils/generateRequestId'
 
 import type { Method } from 'axios'
-import { generateRequestId } from '../../../utils/generateRequestId'
 
 interface SendRequestOptions {
   method: Method
@@ -26,7 +26,7 @@ interface SendRequestOptions {
   query?: URLSearchParams
   requestConfig?: Partial<AxiosRequestConfig>
   listenerType?: ProxyRequestType
-  mockResponse?: { response: MockResponse; requestId: string }
+  mockResponse?: MockResponse
 }
 
 export class TestCaseApi {
@@ -81,7 +81,7 @@ export class TestCaseApi {
 
     if (mockResponse) {
       this.requestIdList.push(requestId)
-      setMockResponse(mockResponse.requestId, mockResponse.response)
+      setMockResponse(requestId, mockResponse)
     }
 
     if (listenerType) {
@@ -100,7 +100,7 @@ export class TestCaseApi {
           method,
           headers: {
             ...requestConfig?.headers,
-            ...this.createTestHeaders(listenerType, mockResponse?.requestId),
+            ...this.createTestHeaders(listenerType, requestId),
           },
         },
         this.httpClientInstance
@@ -144,7 +144,7 @@ export class TestCaseApi {
   async sendRequestToCdn(
     query?: URLSearchParams,
     axiosRequestConfig?: Partial<AxiosRequestConfig>,
-    mockResponse?: { response: MockResponse; requestId: string }
+    mockResponse?: MockResponse,
   ): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
@@ -160,7 +160,7 @@ export class TestCaseApi {
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
     pathname?: string,
-    mockResponse?: { response: MockResponse; requestId: string }
+    mockResponse?: MockResponse,
   ): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
@@ -175,7 +175,7 @@ export class TestCaseApi {
   async sendRequestToIngress(
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
-    mockResponse?: { response: MockResponse; requestId: string }
+    mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'POST',

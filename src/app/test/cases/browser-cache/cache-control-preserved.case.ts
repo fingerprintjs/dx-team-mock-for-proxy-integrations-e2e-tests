@@ -6,11 +6,8 @@ const testCase: TestCase = {
   name: 'cache-control preserved on Browser Cache responses',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        headers: {
-          'cache-control': 'public, max-age=600',
-        },
+      headers: {
+        'cache-control': 'public, max-age=600',
       },
     })
 

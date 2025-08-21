@@ -6,14 +6,11 @@ const testCase: TestCase = {
   name: 'successful response passthrough on Browser Cache responses',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        status: 200,
-        headers: {
-          'x-foo': 'bar',
-        },
-        body: 'ok',
+      status: 200,
+      headers: {
+        'x-foo': 'bar',
       },
+      body: 'ok',
     })
 
     assert(responseFromProxy.status, 200)

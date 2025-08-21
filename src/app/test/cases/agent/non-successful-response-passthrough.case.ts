@@ -1,7 +1,6 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
-import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'non-successful response passthrough on ProCDN responses',
@@ -9,14 +8,11 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        status: 502,
-        headers: {
-          'x-error': 'upstream-fail',
-        },
-        body: 'Bad gateway',
+      status: 502,
+      headers: {
+        'x-error': 'upstream-fail',
       },
+      body: 'Bad gateway',
     })
 
     assert(responseFromProxy.status, 502)

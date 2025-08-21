@@ -6,14 +6,11 @@ const testCase: TestCase = {
   name: 'non-successful response passthrough on Identification responses',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        status: 502,
-        headers: {
-          'x-error': 'upstream-fail',
-        },
-        body: 'Bad gateway',
+      status: 502,
+      headers: {
+        'x-error': 'upstream-fail',
       },
+      body: 'Bad gateway',
     })
 
     assert(responseFromProxy.status, 502)

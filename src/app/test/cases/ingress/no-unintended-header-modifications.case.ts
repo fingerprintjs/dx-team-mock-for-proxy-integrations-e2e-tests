@@ -6,12 +6,9 @@ const testCase: TestCase = {
   name: 'no unintended header modifications on Identification responses',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        headers: {
-          'x-foo': 'bar',
-          'x-bar': 'baz',
-        },
+      headers: {
+        'x-foo': 'bar',
+        'x-bar': 'baz',
       },
     })
 

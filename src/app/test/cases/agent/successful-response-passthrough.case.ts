@@ -9,14 +9,11 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        status: 200,
-        headers: {
-          'x-foo': 'bar',
-        },
-        body: 'ok',
+      status: 200,
+      headers: {
+        'x-foo': 'bar',
       },
+      body: 'ok',
     })
 
     assert(responseFromProxy.status, 200)

@@ -1,7 +1,6 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assertToBeTruthy } from '../../service/assert'
-import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'cache-control preserved or in-limit on ProCDN responses',
@@ -9,11 +8,8 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      requestId: generateRequestId(),
-      response: {
-        headers: {
-          'cache-control': 'max-age=3600',
-        },
+      headers: {
+        'cache-control': 'max-age=3600',
       },
     })
 
