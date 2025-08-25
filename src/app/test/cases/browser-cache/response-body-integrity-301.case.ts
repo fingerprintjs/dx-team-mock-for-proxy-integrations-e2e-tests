@@ -9,7 +9,7 @@ const testCase: TestCase = {
     query.set('apiKey', getApiKey())
 
     const body = ''
-    const location = 'https://www.domain.tld/path?withQuery=param#1'
+    const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
       status: 301,

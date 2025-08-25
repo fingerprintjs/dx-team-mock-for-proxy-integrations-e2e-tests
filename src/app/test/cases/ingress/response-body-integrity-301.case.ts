@@ -6,7 +6,7 @@ const testCase: TestCase = {
   name: 'ingress response body integrity protected with 301 status code',
   test: async (api) => {
     const body = ''
-    const location = 'https://www.domain.tld/path?withQuery=param#1'
+    const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
       status: 301,
