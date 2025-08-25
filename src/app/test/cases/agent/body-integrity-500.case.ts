@@ -1,6 +1,7 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
+import { HTML_500_ERROR } from '../../utils/constants'
 
 const testCase: TestCase = {
   name: 'body integrity protected with 500 status code on ProCDN responses',
@@ -8,8 +9,7 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
 
-    const body =
-      '<html><head><title>Internal Server Error</title></head><body><h1>Internal Server Error</h1></body></html>'
+    const body = HTML_500_ERROR
 
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
       status: 500,

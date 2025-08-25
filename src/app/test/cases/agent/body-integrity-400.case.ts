@@ -1,6 +1,7 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
+import { diverseUnicodeJavascript } from '../../utils/diverseUnicode'
 
 const testCase: TestCase = {
   name: 'body integrity protected with 400 status code on ProCDN responses',
@@ -8,8 +9,7 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
 
-    const body = `export const fp = "fingerprínt";
-console.log("fra\u0301ud");`
+    const body = diverseUnicodeJavascript
 
     const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
       status: 400,

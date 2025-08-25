@@ -1,11 +1,11 @@
 import { TestCase } from '../../types/testCase'
 import { assert } from '../../service/assert'
+import { HTML_500_ERROR } from '../../utils/constants'
 
 const testCase: TestCase = {
   name: 'body integrity protected with 500 status code on Identification responses',
   test: async (api) => {
-    const body =
-      '<html><head><title>Internal Server Error</title></head><body><h1>Internal Server Error</h1></body></html>'
+    const body = HTML_500_ERROR
 
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
       status: 500,

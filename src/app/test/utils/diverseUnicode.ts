@@ -10,4 +10,7 @@ const zwj = [
 const zeroWidthSpace = 'finger\u200Bprint'
 const rtl = `\u202Bتم التحقق من البصمة\u202C \u202Bטביעת האצבע אומתה\u202C`
 
+export const diverseUnicodeJavascript = `export const fp = "fingerprínt";
+console.log("fra\u0301ud");`
+
 export const diverseUnicode = [nfc.join(' '), nfd.join(' '), zwj.join(' '), zeroWidthSpace, rtl].join(' | ')
