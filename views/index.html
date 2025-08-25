@@ -222,7 +222,7 @@
 
         if(response.ok) {
           const result = await response.json();
-          this.testCases = result.data.sort((a,b) => a > b);
+          this.testCases = result.data.sort((a,b) => a.localeCompare(b));
         }
       },
       async handleSubmit() {
@@ -260,7 +260,7 @@
         if (response.ok) {
           const data = await response.json()
           this.testResult.success = data.results.every(t => t.passed === true)
-          this.testResult.results = data.results.map((item, index) => ({ ...item, id: `element${index}` }))
+          this.testResult.results = data.results.map((item, index) => ({ ...item, id: `element${index}` })).sort((a, b) => a.id.localeCompare(b.id))
         }
         this.testResult.status = 'finished'
       },
