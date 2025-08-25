@@ -4,7 +4,7 @@ import { assert } from '../../service/assert'
 import { diverseUnicodeJavascript } from '../../utils/diverseUnicode'
 
 const testCase: TestCase = {
-  name: 'agent responsebody integrity protected with 200 status code',
+  name: 'agent response body integrity protected with 200 status code',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
