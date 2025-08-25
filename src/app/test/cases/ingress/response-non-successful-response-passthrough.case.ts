@@ -3,7 +3,7 @@ import { assert } from '../../service/assert'
 import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
-  name: 'non-successful response passthrough on Identification responses',
+  name: 'ingress response non-successful response passthrough',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
       status: 502,

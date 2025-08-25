@@ -3,7 +3,7 @@ import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
-  name: 'no unintended header modifications on ProCDN responses',
+  name: 'agent response no unintended header modifications',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

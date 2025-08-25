@@ -3,7 +3,7 @@ import { assert } from '../../service/assert'
 import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
-  name: 'no unintended header modifications on Identification responses',
+  name: 'ingress response no unintended header modifications',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
       headers: {

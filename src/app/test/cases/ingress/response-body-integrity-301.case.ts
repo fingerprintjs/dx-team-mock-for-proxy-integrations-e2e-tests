@@ -3,7 +3,7 @@ import { assert } from '../../service/assert'
 import { diverseUnicode } from '../../utils/diverseUnicode'
 
 const testCase: TestCase = {
-  name: 'body integrity protected with 301 status code on Identification responses',
+  name: 'ingress response body integrity protected with 301 status code',
   test: async (api) => {
     const body = ''
     const location = 'https://www.domain.tld/path?withQuery=param#1'

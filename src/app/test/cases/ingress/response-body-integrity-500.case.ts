@@ -3,7 +3,7 @@ import { assert } from '../../service/assert'
 import { HTML_500_ERROR } from '../../utils/constants'
 
 const testCase: TestCase = {
-  name: 'body integrity protected with 500 status code on Identification responses',
+  name: 'ingress response body integrity protected with 500 status code',
   test: async (api) => {
     const body = HTML_500_ERROR
 

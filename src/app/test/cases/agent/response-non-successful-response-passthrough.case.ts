@@ -3,7 +3,7 @@ import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
-  name: 'non-successful response passthrough on ProCDN responses',
+  name: 'agent response non-successful response passthrough',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

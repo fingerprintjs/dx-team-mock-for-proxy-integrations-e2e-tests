@@ -3,7 +3,7 @@ import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
-  name: 'body integrity protected with 301 status code on Browser Cache responses',
+  name: 'browser cache response body integrity protected with 301 status code',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

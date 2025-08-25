@@ -3,7 +3,7 @@ import { TestCase } from '../../types/testCase'
 import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
-  name: 'cache-control preserved on Browser Cache responses',
+  name: 'browser cache response cache-control preserved',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, undefined, {
       headers: {

@@ -2,7 +2,7 @@ import { assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
-  name: 'browser cache us region',
+  name: 'browser cache request us region',
   test: async (api) => {
     const region = 'us'
 

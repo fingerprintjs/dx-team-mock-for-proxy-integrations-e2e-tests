@@ -3,7 +3,7 @@ import { TestCase } from '../../types/testCase'
 import { getRandomString } from '../../utils/getRandomString'
 
 const testCase: TestCase = {
-  name: 'browser cache preserve path',
+  name: 'browser cache request preserve path',
   test: async (api) => {
     const path = `/${getRandomString()}/${getRandomString()}/${getRandomString()}`
     const { requestFromProxy } = await api.sendRequestToCacheEndpoint({}, undefined, path)

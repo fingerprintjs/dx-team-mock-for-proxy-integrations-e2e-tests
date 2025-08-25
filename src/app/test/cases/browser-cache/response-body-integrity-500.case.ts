@@ -4,7 +4,7 @@ import { assert } from '../../service/assert'
 import { HTML_500_ERROR } from '../../utils/constants'
 
 const testCase: TestCase = {
-  name: 'body integrity protected with 500 status code on Browser Cache responses',
+  name: 'browser cache response body integrity protected with 500 status code',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())

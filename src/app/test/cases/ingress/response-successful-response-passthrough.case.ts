@@ -2,7 +2,7 @@ import { TestCase } from '../../types/testCase'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
-  name: 'successful response passthrough on Identification responses',
+  name: 'ingress response successful response passthrough',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
       status: 200,

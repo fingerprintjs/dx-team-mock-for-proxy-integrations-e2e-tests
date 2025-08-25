@@ -3,7 +3,7 @@ import { getApiKey } from '../../utils/getApiKey'
 import { assertToBeTruthy } from '../../service/assert'
 
 const testCase: TestCase = {
-  name: 'cache-control preserved or in-limit on ProCDN responses',
+  name: 'agent response cache-control preserved or in-limit',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
