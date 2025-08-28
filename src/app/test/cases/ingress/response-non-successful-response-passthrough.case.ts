@@ -6,15 +6,15 @@ const testCase: TestCase = {
   name: 'ingress response non-successful response passthrough',
   test: async (api) => {
     const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      status: 502,
+      status: 500,
       headers: {
         'x-error': 'upstream-fail',
       },
-      body: 'Bad gateway',
+      body: 'Internal Server Error',
     })
 
-    assert(responseFromProxy.status, 502)
-    assert(responseFromProxy.body, 'Bad gateway')
+    assert(responseFromProxy.status, 500)
+    assert(responseFromProxy.body, 'Internal Server Error')
     assert(responseFromProxy.headers['x-error'], 'upstream-fail')
   },
 }
