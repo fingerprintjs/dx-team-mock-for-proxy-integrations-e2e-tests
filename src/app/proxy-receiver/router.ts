@@ -43,7 +43,7 @@ export function proxyReceiverRouter() {
           for (const [header, value] of Object.entries(mockResponse.headers || {})) {
             res.setHeader(header, value)
           }
-          res.status(mockResponse.status).send(mockResponse.body)
+          res.status(mockResponse.status ?? 200).send(mockResponse.body)
           return
         } else {
           res.setHeader('cache-control', 'no-cache')
