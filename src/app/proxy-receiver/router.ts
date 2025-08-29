@@ -44,9 +44,11 @@ export function proxyReceiverRouter() {
             res.setHeader(header, value)
           }
           res.status(mockResponse.status).send(mockResponse.body)
+          return
         } else {
           res.setHeader('cache-control', 'no-cache')
           res.send()
+          return
         }
       }
 
