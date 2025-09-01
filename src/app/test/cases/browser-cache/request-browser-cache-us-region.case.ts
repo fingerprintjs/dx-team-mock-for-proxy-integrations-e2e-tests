@@ -2,9 +2,9 @@ import { assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
-  name: 'browser cache invalid region',
+  name: 'browser cache request us region',
   test: async (api) => {
-    const region = 'invalid'
+    const region = 'us'
 
     const query = new URLSearchParams()
     query.set('region', region)

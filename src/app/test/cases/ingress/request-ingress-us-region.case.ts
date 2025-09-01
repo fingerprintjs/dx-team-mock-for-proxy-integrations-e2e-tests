@@ -2,14 +2,14 @@ import { assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
-  name: 'browser cache us region',
+  name: 'ingress request us region',
   test: async (api) => {
     const region = 'us'
 
     const query = new URLSearchParams()
     query.set('region', region)
 
-    const { requestFromProxy } = await api.sendRequestToCacheEndpoint({}, query)
+    const { requestFromProxy } = await api.sendRequestToIngress({}, query)
 
     const requestUrl = new URL(`https://${requestFromProxy.get('host')}${requestFromProxy.url}`)
 

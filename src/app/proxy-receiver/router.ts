@@ -5,8 +5,14 @@ import {
   createProxyRequestHandlerKey,
 } from './service/proxyRequestHandler'
 
-import { TEST_CASE_HOST_HEADER, TEST_CASE_NAME_HEADER, TEST_CASE_PROXY_TYPE_HEADER } from '../test/service/const'
+import {
+  TEST_CASE_HOST_HEADER,
+  TEST_CASE_NAME_HEADER,
+  TEST_CASE_PROXY_TYPE_HEADER,
+  TEST_CASE_REQUEST_ID,
+} from '../test/service/const'
 import { z } from 'zod'
+import { getMockResponse } from '../test/service/mockResponseRegistry'
 
 const proxyRequestTypeSchema = z.nativeEnum(ProxyRequestType)
 
@@ -26,12 +32,25 @@ export function proxyReceiverRouter() {
     if (testType.success) {
       const host = req.get(TEST_CASE_HOST_HEADER)
       const testName = req.get(TEST_CASE_NAME_HEADER)
+      const requestId = req.get(TEST_CASE_REQUEST_ID)
       const key = createProxyRequestHandlerKey(host, testName)
 
       notifyProxyRequestListener(testType.data, key, req)
 
-      res.setHeader('cache-control', 'no-cache')
-      res.send()
+      if (requestId) {
+        const mockResponse = getMockResponse(requestId)
+        if (mockResponse) {
+          for (const [header, value] of Object.entries(mockResponse.headers || {})) {
+            res.setHeader(header, value)
+          }
+          res.status(mockResponse.status ?? 200).send(mockResponse.body)
+          return
+        } else {
+          res.setHeader('cache-control', 'no-cache')
+          res.send()
+          return
+        }
+      }
 
       return
     }

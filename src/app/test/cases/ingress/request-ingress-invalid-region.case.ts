@@ -2,7 +2,7 @@ import { assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 
 const testCase: TestCase = {
-  name: 'ingress invalid region',
+  name: 'ingress request invalid region',
   test: async (api) => {
     const region = 'invalid'
 

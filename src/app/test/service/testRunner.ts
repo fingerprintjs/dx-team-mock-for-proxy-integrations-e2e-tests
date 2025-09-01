@@ -8,6 +8,7 @@ import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
+import { clearMockResponsesForTest } from './mockResponseRegistry'
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -74,6 +75,10 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
         requestsFromProxy: api.requestsFromProxy,
       },
     }
+  } finally {
+    api.requestIdList.forEach(id => {
+      clearMockResponsesForTest(id)
+    })
   }
 
   const key = createProxyRequestHandlerKey(testSession.host, testCase.name)

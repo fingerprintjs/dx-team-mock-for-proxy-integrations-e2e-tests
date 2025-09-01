@@ -21,5 +21,6 @@ export const sendAxiosRequestWithRequestConfig = async (
   return instance.request({
     url: url.toString(),
     ...axiosRequestConfig,
+    maxRedirects: 0,
   })
 }
