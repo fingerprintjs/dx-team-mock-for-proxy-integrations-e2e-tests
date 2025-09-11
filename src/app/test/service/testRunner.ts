@@ -11,6 +11,7 @@ import { withTimeout } from '../../../utils/timeout'
 import { clearMockResponsesForTest } from './mockResponseRegistry'
 import { makePatternMatcher } from '../../../utils/patternMatcher'
 import { sanitizeStringArray } from '../utils/sanitizeStringArray'
+import { NoMatchingTestsError } from '../errors'
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -50,7 +51,7 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
   }
 
   if (testCases.length === 0) {
-    throw new Error('No tests matched the provided include/exclude filters.')
+    throw new NoMatchingTestsError()
   }
 
   await Promise.allSettled(

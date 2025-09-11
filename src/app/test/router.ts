@@ -3,6 +3,7 @@ import { RunTestsRequestSchema } from './request.types'
 import { createTestSession, finalizeTestSession, TestSession } from './service/session'
 import { runTests } from './service/testRunner'
 import { validateRequest } from 'zod-express-middleware'
+import { HttpError } from './errors'
 
 const RunTestsSchema = validateRequest({
   body: RunTestsRequestSchema,
@@ -29,7 +30,16 @@ export function testRouter() {
       if (testSession) {
         finalizeTestSession(testSession)
       }
-      next(e)
+
+      if (e instanceof HttpError) {
+        return res.status(e.status).json({
+          error: {
+            code: e.code,
+            message: e.message,
+          },
+        })
+      }
+      return next(e)
     }
   })
 
