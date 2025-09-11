@@ -9,6 +9,7 @@ import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
 import { clearMockResponsesForTest } from './mockResponseRegistry'
+import { makePatternMatcher } from '../../../utils/patternMatcher'
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -34,39 +35,15 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
 
   let testCases = await loadTestCases()
 
-  const hasGlob = (p: string) => /[*?]/.test(p)
-  const escapeRegex = (s: string) => s.replace(/[.+${}()|[\]\\]/g, '\\$&')
-  const globToRegex = (p: string) => {
-    let constructed = ''
-    for (const char of p) {
-      if (char === '*') {
-        constructed += '.*'
-      } else if (char === '?') {
-        constructed += '.'
-      } else {
-        constructed += escapeRegex(char)
-      }
-    }
-    return new RegExp(`${constructed}$`, 'i')
-  }
-
-  const makeMatcher = (patterns: string[]) => {
-    const compiled = patterns.map((p) => (hasGlob(p) ? globToRegex(p) : p.toLowerCase()))
-    return (name: string) => {
-      const hay = name.toLowerCase()
-      return compiled.some((c) => (typeof c === 'string' ? hay.includes(c) : c.test(name)))
-    }
-  }
-
   const { include, exclude } = filter ?? {}
 
   if (include && include.length > 0) {
-    const matchInclude = makeMatcher(include)
+    const matchInclude = makePatternMatcher(include)
     testCases = testCases.filter((t) => matchInclude(t.name))
   }
 
   if (exclude && exclude.length > 0) {
-    const matchExclude = makeMatcher(exclude)
+    const matchExclude = makePatternMatcher(exclude)
     testCases = testCases.filter((t) => !matchExclude(t.name))
   }
 
@@ -117,7 +94,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
       },
     }
   } finally {
-    api.requestIdList.forEach(id => {
+    api.requestIdList.forEach((id) => {
       clearMockResponsesForTest(id)
     })
   }
