@@ -34,23 +34,39 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
 
   let testCases = await loadTestCases()
 
-  const makeSubstringMatcher = (patterns: string[]) => {
-    const needles = patterns.map((p) => p.toLowerCase())
+  const hasGlob = (p: string) => /[*?]/.test(p)
+  const escapeRegex = (s: string) => s.replace(/[.+${}()|[\]\\]/g, '\\$&')
+  const globToRegex = (p: string) => {
+    let constructed = ''
+    for (const char of p) {
+      if (char === '*') {
+        constructed += '.*'
+      } else if (char === '?') {
+        constructed += '.'
+      } else {
+        constructed += escapeRegex(char)
+      }
+    }
+    return new RegExp(`${constructed}$`, 'i')
+  }
+
+  const makeMatcher = (patterns: string[]) => {
+    const compiled = patterns.map((p) => (hasGlob(p) ? globToRegex(p) : p.toLowerCase()))
     return (name: string) => {
       const hay = name.toLowerCase()
-      return needles.some((needle) => hay.includes(needle))
+      return compiled.some((c) => (typeof c === 'string' ? hay.includes(c) : c.test(name)))
     }
   }
 
   const { include, exclude } = filter ?? {}
 
   if (include && include.length > 0) {
-    const matchInclude = makeSubstringMatcher(include)
+    const matchInclude = makeMatcher(include)
     testCases = testCases.filter((t) => matchInclude(t.name))
   }
 
   if (exclude && exclude.length > 0) {
-    const matchExclude = makeSubstringMatcher(exclude)
+    const matchExclude = makeMatcher(exclude)
     testCases = testCases.filter((t) => !matchExclude(t.name))
   }
 
