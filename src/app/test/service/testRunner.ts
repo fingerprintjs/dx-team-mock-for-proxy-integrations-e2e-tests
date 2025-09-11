@@ -10,6 +10,7 @@ import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
 import { clearMockResponsesForTest } from './mockResponseRegistry'
 import { makePatternMatcher } from '../../../utils/patternMatcher'
+import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -35,7 +36,8 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
 
   let testCases = await loadTestCases()
 
-  const { include, exclude } = filter ?? {}
+  const include = filter?.include ? sanitizeStringArray(filter.include) : []
+  const exclude = filter?.exclude ? sanitizeStringArray(filter.exclude) : []
 
   if (include && include.length > 0) {
     const matchInclude = makePatternMatcher(include)
