@@ -3920,6 +3920,8 @@ const RunTestsRequestSchema = objectType({
     cdnPath: stringType(),
     trafficName: stringType(),
     integrationVersion: stringType(),
+    include: arrayType(stringType()).optional(),
+    exclude: arrayType(stringType()).optional(),
     testsFilter: arrayType(stringType()).optional(),
 });
 
@@ -24879,6 +24881,9 @@ function parsePaths() {
 async function main() {
     const url = new URL(args.apiUrl);
     url.pathname = '/api/test/run-tests';
+    if (args.testsFilter) {
+        logger.box('[DEPRECATION] --tests-filter is deprecated. Use --include and/or --exclude instead.');
+    }
     if (args.ingressProxyUrl || args.cdnProxyUrl) {
         logger.box('[DEPRECATION] ingressProxyUrl and cdnProxyUrl will be removed in a future release. Use integration, ingress-path, and cdn-path parameters.');
     }
@@ -24900,6 +24905,8 @@ async function main() {
             cdnPath,
             trafficName: args.trafficName,
             integrationVersion: args.integrationVersion,
+            include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
+            exclude: args.exclude,
             testsFilter: args.testsFilter,
         };
         const response = await httpClient.post(url.toString(), JSON.stringify(requestBody), {

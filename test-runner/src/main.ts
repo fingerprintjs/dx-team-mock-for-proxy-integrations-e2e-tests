@@ -91,6 +91,10 @@ async function main() {
   const url = new URL(args.apiUrl)
   url.pathname = '/api/test/run-tests'
 
+  if (args.testsFilter) {
+    logger.box('[DEPRECATION] --tests-filter is deprecated. Use --include and/or --exclude instead.')
+  }
+
   if (args.ingressProxyUrl || args.cdnProxyUrl) {
     logger.box(
       '[DEPRECATION] ingressProxyUrl and cdnProxyUrl will be removed in a future release. Use integration, ingress-path, and cdn-path parameters.'
@@ -120,6 +124,8 @@ async function main() {
       cdnPath,
       trafficName: args.trafficName,
       integrationVersion: args.integrationVersion,
+      include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
+      exclude: args.exclude,
       testsFilter: args.testsFilter,
     } satisfies RunTestsRequest
 

@@ -17,6 +17,11 @@ export type DetailedTestResult = TestResult & {
   requestDurationMs: number
 }
 
+type TestFilterOptions = {
+  include?: string[]
+  exclude?: string[]
+}
+
 export async function loadTestCases() {
   const ext = process.env.TEST_CASE_EXT ?? '.js'
 
@@ -24,13 +29,33 @@ export async function loadTestCases() {
   return await Promise.all(caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase)))
 }
 
-export async function runTests(testSession: TestSession, filter?: string[]) {
+export async function runTests(testSession: TestSession, filter?: TestFilterOptions) {
   testSession.start()
 
   let testCases = await loadTestCases()
 
-  if (filter) {
-    testCases = testCases.filter((t) => filter.includes(t.name))
+  const makeSubstringMatcher = (patterns: string[]) => {
+    const needles = patterns.map((p) => p.toLowerCase())
+    return (name: string) => {
+      const hay = name.toLowerCase()
+      return needles.some((needle) => hay.includes(needle))
+    }
+  }
+
+  const { include, exclude } = filter ?? {}
+
+  if (include && include.length > 0) {
+    const matchInclude = makeSubstringMatcher(include)
+    testCases = testCases.filter((t) => matchInclude(t.name))
+  }
+
+  if (exclude && exclude.length > 0) {
+    const matchExclude = makeSubstringMatcher(exclude)
+    testCases = testCases.filter((t) => !matchExclude(t.name))
+  }
+
+  if (testCases.length === 0) {
+    throw new Error('No tests matched the provided include/exclude filters.')
   }
 
   await Promise.allSettled(

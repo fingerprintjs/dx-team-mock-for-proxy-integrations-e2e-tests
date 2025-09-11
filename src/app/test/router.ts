@@ -15,7 +15,14 @@ export function testRouter() {
     let testSession: TestSession
     try {
       testSession = createTestSession(req.body)
-      const result = await runTests(testSession, req.body.testsFilter)
+      const include = req.body.include && req.body.include.length > 0 ? req.body.include : req.body.testsFilter
+      const exclude = req.body.exclude
+
+      if (req.body.testsFilter) {
+        console.warn('[DEPRECATION] `testsFilter` is deprecated. Use `include`/`exclude`.')
+      }
+
+      const result = await runTests(testSession, { include, exclude })
 
       return res.json(result.toTestResponse())
     } catch (e) {
