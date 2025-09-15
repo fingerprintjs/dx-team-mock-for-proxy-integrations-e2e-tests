@@ -40,12 +40,12 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
   const include = filter?.include ? sanitizeStringArray(filter.include) : []
   const exclude = filter?.exclude ? sanitizeStringArray(filter.exclude) : []
 
-  if (include && include.length > 0) {
+  if (include.length > 0) {
     const matchInclude = makePatternMatcher(include)
     testCases = testCases.filter((t) => matchInclude(t.name))
   }
 
-  if (exclude && exclude.length > 0) {
+  if (exclude.length > 0) {
     const matchExclude = makePatternMatcher(exclude)
     testCases = testCases.filter((t) => !matchExclude(t.name))
   }
