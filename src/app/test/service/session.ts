@@ -1,5 +1,6 @@
 import { RunTestsRequest } from '../request.types'
 import { DetailedTestResult } from './testRunner'
+import { TestSessionAlreadyExistsError } from '../errors'
 
 export enum TestSessionStatus {
   Created = 'created',
@@ -60,7 +61,7 @@ export function createTestSession(request: RunTestsRequest) {
   const host = getHost(request)
 
   if (testSessions.has(host)) {
-    throw new Error('Test session already exists')
+    throw new TestSessionAlreadyExistsError()
   }
 
   const session = new TestSession(

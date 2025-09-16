@@ -9,12 +9,20 @@ import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
 import { withTimeout } from '../../../utils/timeout'
 import { clearMockResponsesForTest } from './mockResponseRegistry'
+import { makePatternMatcher } from '../../../utils/patternMatcher'
+import { sanitizeStringArray } from '../utils/sanitizeStringArray'
+import { NoMatchingTestsError } from '../errors'
 
 const TEST_TIMEOUT_MS = 10_000
 
 export type DetailedTestResult = TestResult & {
   testName: string
   requestDurationMs: number
+}
+
+type TestFilterOptions = {
+  include?: string[]
+  exclude?: string[]
 }
 
 export async function loadTestCases() {
@@ -24,13 +32,26 @@ export async function loadTestCases() {
   return await Promise.all(caseFiles.map(async (file) => import(file).then((module) => module.default as TestCase)))
 }
 
-export async function runTests(testSession: TestSession, filter?: string[]) {
+export async function runTests(testSession: TestSession, filter?: TestFilterOptions) {
   testSession.start()
 
   let testCases = await loadTestCases()
 
-  if (filter) {
-    testCases = testCases.filter((t) => filter.includes(t.name))
+  const include = filter?.include ? sanitizeStringArray(filter.include) : []
+  const exclude = filter?.exclude ? sanitizeStringArray(filter.exclude) : []
+
+  if (include.length > 0) {
+    const matchInclude = makePatternMatcher(include)
+    testCases = testCases.filter((t) => matchInclude(t.name))
+  }
+
+  if (exclude.length > 0) {
+    const matchExclude = makePatternMatcher(exclude)
+    testCases = testCases.filter((t) => !matchExclude(t.name))
+  }
+
+  if (testCases.length === 0) {
+    throw new NoMatchingTestsError()
   }
 
   await Promise.allSettled(
@@ -76,7 +97,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
       },
     }
   } finally {
-    api.requestIdList.forEach(id => {
+    api.requestIdList.forEach((id) => {
       clearMockResponsesForTest(id)
     })
   }

@@ -6,6 +6,8 @@ export const RunTestsRequestSchema = z.object({
   cdnPath: z.string(),
   trafficName: z.string(),
   integrationVersion: z.string(),
+  include: z.array(z.string()).optional(),
+  exclude: z.array(z.string()).optional(),
   testsFilter: z.array(z.string()).optional(),
 })
 

@@ -3,9 +3,9 @@
 import { argumentParser } from 'zodcli'
 import { RunTestsRequest, RunTestsRequestSchema } from '../../src/app/test/request.types'
 import { TestResponse } from '../../src/app/test/service/session'
-import { createConsola } from 'consola'
+import { createConsola, LogLevels } from 'consola'
 import { DetailedTestResult } from '../../src/app/test/service/testRunner'
-import { ExponentialBackoff, handleAll, retry } from 'cockatiel'
+import { ExponentialBackoff, handleWhen, retry } from 'cockatiel'
 import { z } from 'zod'
 import { FailedTestResult } from '../../src/app/test/types/testCase'
 import { httpClient } from '../../src/utils/httpClient'
@@ -21,6 +21,13 @@ const args = argumentParser({
     cdnPath: z.string().optional(),
     cdnProxyUrl: z.string().url().optional(),
     ingressProxyUrl: z.string().url().optional(),
+    verbose: z
+      .union([
+        z.literal('true').transform(() => true),
+        z.literal('false').transform(() => false),
+        z.null().transform(() => true),
+      ])
+      .default('false'),
   }).strict(),
 }).parse(process.argv.slice(2))
 
@@ -88,8 +95,16 @@ function parsePaths() {
 }
 
 async function main() {
+  if (args.verbose) {
+    logger.level = LogLevels.verbose
+  }
+
   const url = new URL(args.apiUrl)
   url.pathname = '/api/test/run-tests'
+
+  if (args.testsFilter) {
+    logger.box('[DEPRECATION] --tests-filter is deprecated. Use --include and/or --exclude instead.')
+  }
 
   if (args.ingressProxyUrl || args.cdnProxyUrl) {
     logger.box(
@@ -106,13 +121,21 @@ async function main() {
   logger.info(`Using ${url} as API url`)
   logger.start(`Sending request...`)
 
-  const policy = retry(handleAll, {
+  const shouldRetry = (err: any) => {
+    const status = err?.response?.status as number | undefined
+    if (typeof status === 'number') {
+      return status >= 500 || status === 429
+    }
+    return true
+  }
+
+  const policy = retry(handleWhen(shouldRetry), {
     maxAttempts: args.attempts,
     backoff: new ExponentialBackoff(),
   })
 
   await policy.execute(async (context) => {
-    logger.info(`Attempt ${context.attempt}...`)
+    logger.info(`Attempt ${context.attempt + 1}...`)
 
     const requestBody = {
       integrationUrl,
@@ -120,6 +143,8 @@ async function main() {
       cdnPath,
       trafficName: args.trafficName,
       integrationVersion: args.integrationVersion,
+      include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
+      exclude: args.exclude,
       testsFilter: args.testsFilter,
     } satisfies RunTestsRequest
 
@@ -174,7 +199,20 @@ function getFailedTestMessage(result: DetailedTestResult & FailedTestResult): st
 }
 
 main().catch((error) => {
-  logger.fatal(error)
+  const status = error?.response?.status
+
+  if (status) {
+    try {
+      const message = error?.response?.data?.error?.message ?? error.message
+      logger.box(`API error ${status}: ${message}`)
+    } catch {
+      logger.error(`HTTP ${status}: ${error?.message ?? 'Request failed'}`)
+    }
+  } else {
+    logger.error(error?.message ?? 'Request failed')
+  }
+
+  logger.debug(error)
 
   process.exit(1)
 })
