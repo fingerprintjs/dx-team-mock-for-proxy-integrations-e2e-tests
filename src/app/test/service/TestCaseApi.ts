@@ -157,9 +157,9 @@ export class TestCaseApi {
   }
 
   async sendRequestToCacheEndpoint(
+    pathname: string,
     request: Partial<AxiosRequestConfig>,
     query?: URLSearchParams,
-    pathname?: string,
     mockResponse?: MockResponse
   ): Promise<SendRequestResult> {
     return this.sendRequest({
