@@ -4913,7 +4913,6 @@ class RetryPolicy {
 }
 
 const typeFilter = (cls, predicate) => predicate ? (v) => v instanceof cls && predicate(v) : (v) => v instanceof cls;
-const always = () => true;
 const never = () => false;
 class Policy {
     /**
@@ -5017,9 +5016,11 @@ class Policy {
 }
 new NoopPolicy();
 /**
- * A policy that handles all errors.
+ * See {@link Policy.orWhen} for usage.
  */
-const handleAll = new Policy({ errorFilter: always, resultFilter: never });
+function handleWhen(predicate) {
+    return new Policy({ errorFilter: predicate, resultFilter: never });
+}
 /**
  * Creates a retry policy. The options should contain the backoff strategy to
  * use. Included strategies are:
@@ -24818,6 +24819,17 @@ const createNewHttpClient = (config = { withCredentials: true, httpsAgent, httpA
 };
 const httpClient = createNewHttpClient();
 
+var name = "test-runner";
+var version = "0.1.0";
+var pkg = {
+	name: name,
+	version: version};
+
+const versionInfo = {
+    name: pkg.name,
+    version: pkg.version
+};
+
 const logger = createConsola();
 const args = argumentParser({
     options: RunTestsRequestSchema.extend({
@@ -24828,6 +24840,12 @@ const args = argumentParser({
         cdnPath: stringType().optional(),
         cdnProxyUrl: stringType().url().optional(),
         ingressProxyUrl: stringType().url().optional(),
+        verbose: unionType([
+            literalType('true').transform(() => true),
+            literalType('false').transform(() => false),
+            nullType().transform(() => true),
+        ])
+            .default('false'),
     }).strict(),
 }).parse(process.argv.slice(2));
 function parsePaths() {
@@ -24878,9 +24896,30 @@ function parsePaths() {
         ingressPath,
     };
 }
+async function fetchApiBuildInfo(apiUrl) {
+    try {
+        apiUrl.pathname = '/version';
+        const res = await httpClient.get(apiUrl.toString(), { headers: { 'accept': 'application/json' } });
+        if (res.status === 200) {
+            return res.data;
+        }
+    }
+    catch {
+        logger.error("Couldn't fetch the target api version information.");
+    }
+    return null;
+}
 async function main() {
-    const url = new URL(args.apiUrl);
-    url.pathname = '/api/test/run-tests';
+    if (args.verbose) {
+        logger.level = LogLevels.verbose;
+    }
+    logger.box(`${versionInfo.name}@${versionInfo.version}`);
+    const apiUrl = new URL(args.apiUrl);
+    const apiInfo = await fetchApiBuildInfo(apiUrl);
+    if (apiInfo) {
+        logger.box(`API Version: ${apiInfo.version} - ${apiInfo.gitSha}`);
+    }
+    apiUrl.pathname = '/api/test/run-tests';
     if (args.testsFilter) {
         logger.box('[DEPRECATION] --tests-filter is deprecated. Use --include and/or --exclude instead.');
     }
@@ -24891,14 +24930,21 @@ async function main() {
     logger.info(`Found integrationUrl: ${integrationUrl}`);
     logger.info(`Found cdnPath: ${cdnPath}`);
     logger.info(`Found ingressPath: ${ingressPath}`);
-    logger.info(`Using ${url} as API url`);
+    logger.info(`Using ${apiUrl} as API url`);
     logger.start(`Sending request...`);
-    const policy = retry(handleAll, {
+    const shouldRetry = (err) => {
+        const status = err?.response?.status;
+        if (typeof status === 'number') {
+            return status >= 500 || status === 429;
+        }
+        return true;
+    };
+    const policy = retry(handleWhen(shouldRetry), {
         maxAttempts: args.attempts,
         backoff: new ExponentialBackoff(),
     });
     await policy.execute(async (context) => {
-        logger.info(`Attempt ${context.attempt}...`);
+        logger.info(`Attempt ${context.attempt + 1}...`);
         const requestBody = {
             integrationUrl,
             ingressPath,
@@ -24909,7 +24955,7 @@ async function main() {
             exclude: args.exclude,
             testsFilter: args.testsFilter,
         };
-        const response = await httpClient.post(url.toString(), JSON.stringify(requestBody), {
+        const response = await httpClient.post(apiUrl.toString(), JSON.stringify(requestBody), {
             headers: {
                 'content-type': 'application/json',
             },
@@ -24944,7 +24990,20 @@ function getFailedTestMessage(result) {
     return [`❌ "${result.testName}" failed: "${result.reason}" in ${result.requestDurationMs}MS`, ...proxyRequests].join('\n');
 }
 main().catch((error) => {
-    logger.fatal(error);
+    const status = error?.response?.status;
+    if (status) {
+        try {
+            const message = error?.response?.data?.error?.message ?? error.message;
+            logger.box(`API error ${status}: ${message}`);
+        }
+        catch {
+            logger.error(`HTTP ${status}: ${error?.message ?? 'Request failed'}`);
+        }
+    }
+    else {
+        logger.error(error?.message ?? 'Request failed');
+    }
+    logger.debug(error);
     process.exit(1);
 });
 //# sourceMappingURL=main.js.map

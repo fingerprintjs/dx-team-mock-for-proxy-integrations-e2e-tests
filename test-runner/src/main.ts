@@ -9,6 +9,8 @@ import { ExponentialBackoff, handleWhen, retry } from 'cockatiel'
 import { z } from 'zod'
 import { FailedTestResult } from '../../src/app/test/types/testCase'
 import { httpClient } from '../../src/utils/httpClient'
+import { versionInfo } from "./version";
+import { BuildInfo } from "../../src/version";
 
 const logger = createConsola()
 
@@ -94,13 +96,33 @@ function parsePaths() {
   }
 }
 
+async function fetchApiBuildInfo(apiUrl: URL): Promise<BuildInfo | null> {
+  try {
+    apiUrl.pathname = '/version'
+    const res = await httpClient.get<BuildInfo>(apiUrl.toString(), { headers: { 'accept': 'application/json' } })
+    if (res.status === 200) {
+      return res.data
+    }
+  } catch {
+    logger.error("Couldn't fetch the target api version information.")
+  }
+  return null
+}
+
 async function main() {
   if (args.verbose) {
     logger.level = LogLevels.verbose
   }
 
-  const url = new URL(args.apiUrl)
-  url.pathname = '/api/test/run-tests'
+  logger.box(`${versionInfo.name}@${versionInfo.version}`)
+
+  const apiUrl = new URL(args.apiUrl)
+  const apiInfo = await fetchApiBuildInfo(apiUrl)
+  if (apiInfo) {
+    logger.box(`API Version: ${apiInfo.version} - ${apiInfo.gitSha}`)
+  }
+
+  apiUrl.pathname = '/api/test/run-tests'
 
   if (args.testsFilter) {
     logger.box('[DEPRECATION] --tests-filter is deprecated. Use --include and/or --exclude instead.')
@@ -118,7 +140,7 @@ async function main() {
   logger.info(`Found cdnPath: ${cdnPath}`)
   logger.info(`Found ingressPath: ${ingressPath}`)
 
-  logger.info(`Using ${url} as API url`)
+  logger.info(`Using ${apiUrl} as API url`)
   logger.start(`Sending request...`)
 
   const shouldRetry = (err: any) => {
@@ -148,7 +170,7 @@ async function main() {
       testsFilter: args.testsFilter,
     } satisfies RunTestsRequest
 
-    const response = await httpClient.post<TestResponse>(url.toString(), JSON.stringify(requestBody), {
+    const response = await httpClient.post<TestResponse>(apiUrl.toString(), JSON.stringify(requestBody), {
       headers: {
         'content-type': 'application/json',
       },
