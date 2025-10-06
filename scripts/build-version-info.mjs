@@ -1,12 +1,11 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import path from 'node:path'
 import url from 'node:url'
+import * as pkg from '../package.json' with { type: 'json' }
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const root = path.join(dirname, '..')
-
-const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'))
 
 function tryCommand(cmd) {
     try {
