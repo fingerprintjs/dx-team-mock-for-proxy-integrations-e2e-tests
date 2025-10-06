@@ -1,6 +1,6 @@
 {
   "name": "mock-for-e2e",
-  "version": "1.0.0",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "engines": {
@@ -14,6 +14,7 @@
     "mock-for-e2e": "./test-runner/dist/main.js"
   },
   "scripts": {
+    "prebuild": "node scripts/build-version-info.mjs",
     "build": "tsc",
     "start:dev": "TEST_CASE_EXT=.ts nodemon",
     "start": "node dist/index.js",
@@ -38,6 +39,7 @@
     "@fingerprintjs/eslint-config-dx-team": "^0.1.0",
     "@fingerprintjs/prettier-config-dx-team": "^0.1.0",
     "axios": "^1.7.9",
+    "ejs": "^3.1.10",
     "express": "^4.18.2",
     "glob": "^10.3.12",
     "zod": "^3.22.4",

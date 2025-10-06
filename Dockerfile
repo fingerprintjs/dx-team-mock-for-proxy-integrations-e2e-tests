@@ -2,8 +2,13 @@
 ARG NODE_VERSION=22
 ARG NODE_ENV=production
 
+ARG GIT_SHA
+ARG BUILD_TIME
+
 # Use the Node.js version specified by NODE_VERSION
 FROM node:${NODE_VERSION}-alpine AS builder
+
+RUN apk add --no-cache git
 
 RUN npm i -g pnpm@9
 
@@ -13,12 +18,20 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package.json ./
 COPY pnpm-lock.yaml ./
+COPY scripts ./scripts
+
+ENV GIT_SHA=${GIT_SHA}
+ENV BUILD_TIME=${BUILD_TIME}
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
+
+RUN GIT_SHA="${GIT_SHA:-$(git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)}" \
+    BUILD_TIME="${BUILD_TIME:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" \
+    pnpm run prebuild
 
 # Build the application
 RUN pnpm run build
@@ -30,6 +43,8 @@ WORKDIR /app
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/views /app/views
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/build-info.json /app/build-info.json
 
 # Expose the port the app runs on
 EXPOSE 3000
