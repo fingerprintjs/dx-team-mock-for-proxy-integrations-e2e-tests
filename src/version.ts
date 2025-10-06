@@ -9,7 +9,7 @@ export type BuildInfo = {
 }
 
 function readJsonIfExists<T = unknown>(path: string): T | null {
-    if (!existsSync(path)){
+    if (!existsSync(path)) {
         return null
     }
 
