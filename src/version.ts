@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import * as pkg from '../package.json'
 
 export type BuildInfo = {
   name: string
@@ -22,7 +23,6 @@ function readJsonIfExists<T = unknown>(path: string): T | null {
 
 const root = join(__dirname, '..')
 const build = readJsonIfExists<Partial<BuildInfo>>(join(root, 'build-info.json'))
-const pkg = readJsonIfExists<any>(join(root, 'package.json'))
 
 export const buildInfo: BuildInfo = {
     name: build?.name ?? pkg?.name ?? process.env.APP_NAME ?? 'mock-for-e2e',
