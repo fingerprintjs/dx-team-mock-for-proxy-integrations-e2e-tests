@@ -24825,9 +24825,10 @@ var pkg = {
 	name: name,
 	version: version};
 
+const packageJson = pkg;
 const versionInfo = {
-    name: pkg.name,
-    version: pkg.version
+    name: packageJson.name,
+    version: packageJson.version
 };
 
 const logger = createConsola();
@@ -24897,9 +24898,10 @@ function parsePaths() {
     };
 }
 async function fetchApiBuildInfo(apiUrl) {
+    const url = new URL(apiUrl);
     try {
-        apiUrl.pathname = '/version';
-        const res = await httpClient.get(apiUrl.toString(), { headers: { 'accept': 'application/json' } });
+        url.pathname = '/version';
+        const res = await httpClient.get(url.toString(), { headers: { 'accept': 'application/json' } });
         if (res.status === 200) {
             return res.data;
         }
@@ -24915,7 +24917,7 @@ async function main() {
     }
     logger.box(`${versionInfo.name}@${versionInfo.version}`);
     const apiUrl = new URL(args.apiUrl);
-    const apiInfo = await fetchApiBuildInfo(apiUrl);
+    const apiInfo = await fetchApiBuildInfo(args.apiUrl);
     if (apiInfo) {
         logger.box(`API Version: ${apiInfo.version} - ${apiInfo.gitSha}`);
     }

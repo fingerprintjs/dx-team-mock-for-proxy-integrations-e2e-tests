@@ -96,10 +96,11 @@ function parsePaths() {
   }
 }
 
-async function fetchApiBuildInfo(apiUrl: URL): Promise<BuildInfo | null> {
+async function fetchApiBuildInfo(apiUrl: string): Promise<BuildInfo | null> {
+  const url = new URL(apiUrl)
   try {
-    apiUrl.pathname = '/version'
-    const res = await httpClient.get<BuildInfo>(apiUrl.toString(), { headers: { 'accept': 'application/json' } })
+    url.pathname = '/version'
+    const res = await httpClient.get<BuildInfo>(url.toString(), { headers: { 'accept': 'application/json' } })
     if (res.status === 200) {
       return res.data
     }
@@ -117,7 +118,7 @@ async function main() {
   logger.box(`${versionInfo.name}@${versionInfo.version}`)
 
   const apiUrl = new URL(args.apiUrl)
-  const apiInfo = await fetchApiBuildInfo(apiUrl)
+  const apiInfo = await fetchApiBuildInfo(args.apiUrl)
   if (apiInfo) {
     logger.box(`API Version: ${apiInfo.version} - ${apiInfo.gitSha}`)
   }
