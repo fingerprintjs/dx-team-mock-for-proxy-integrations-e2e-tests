@@ -9,8 +9,15 @@ const root = path.join(dirname, '..')
 
 function tryCommand(cmd) {
     try {
-        return execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
-    } catch {
+        return execSync(cmd, { stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim()
+    } catch (err) {
+        console.warn(`Command '${cmd}' failed with ${err?.status}`)
+        if (err?.stdout && err.stdout.length > 0) {
+            console.warn(err.stdout.toString())
+        }
+        if (err?.stderr && err.stderr.length > 0) {
+            console.error(err.stderr.toString())
+        }
         return ''
     }
 }
