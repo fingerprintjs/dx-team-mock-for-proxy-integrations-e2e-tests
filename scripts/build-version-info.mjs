@@ -42,7 +42,7 @@ const distDir = path.join(root, tsConfig?.compilerOptions?.outDir || 'dist')
 try {
     mkdirSync(distDir, { recursive: true })
     const buildInfoPath = path.join(distDir, 'build-info.json')
-    writeFileSync(buildInfoPath, JSON.stringify(info, null, 2) + '\n')
+    writeFileSync(buildInfoPath, JSON.stringify(info, null, 2))
     console.log(`Wrote build-info.json file to the ${buildInfoPath}`)
 } catch (err) {
     console.warn('Failed to write build-info.json to dist:', err?.message ?? err)
