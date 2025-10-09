@@ -457,6 +457,13 @@
     </div>
   </div>
 
+  <div class="grid">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-medium">Version:</span>
+      <span class="px-2 py-1 text-xs rounded bg-gray-200 dark:bg-gray-800"><%= version %></span>
+    </div>
+  </div>
+
   <!-- Toasts -->
   <div class="fixed bottom-4 right-4 space-y-2 z-50">
     <div v-for="t in toasts" :key="t.id"
