@@ -43,4 +43,4 @@ COPY --from=builder /app/build-info.json /app/build-info.json
 EXPOSE 3000
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/src/index.js"]

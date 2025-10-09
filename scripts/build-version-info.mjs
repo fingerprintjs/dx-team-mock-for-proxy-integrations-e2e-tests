@@ -1,8 +1,9 @@
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import path from 'node:path'
 import url from 'node:url'
-import * as pkg from '../package.json' with { type: 'json' }
+import pkg from '../package.json' with { type: 'json' }
+import tsConfig from '../tsconfig.json' with { type: 'json' }
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const root = path.join(dirname, '..')
@@ -35,3 +36,14 @@ const info = {
 
 const outPath = path.join(root, 'build-info.json')
 writeFileSync(outPath, JSON.stringify(info, null, 2))
+console.log(`Wrote build-info.json file to the ${outPath}`)
+
+const distDir = path.join(root, tsConfig?.compilerOptions?.outDir || 'dist')
+try {
+    mkdirSync(distDir, { recursive: true })
+    const buildInfoPath = path.join(distDir, 'build-info.json')
+    writeFileSync(buildInfoPath, JSON.stringify(info, null, 2) + '\n')
+    console.log(`Wrote build-info.json file to the ${buildInfoPath}`)
+} catch (err) {
+    console.warn('Failed to write build-info.json to dist:', err?.message ?? err)
+}
