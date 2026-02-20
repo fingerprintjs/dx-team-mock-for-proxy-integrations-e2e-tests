@@ -8,7 +8,7 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
     const { responseFromProxy } = await api.sendRequestToCdn({
-      query: query,
+      query,
 
       mockResponse: {
         headers: {

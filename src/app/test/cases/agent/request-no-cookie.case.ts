@@ -8,7 +8,7 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
     const { requestFromProxy } = await api.sendRequestToCdn({
-      query: query,
+      query,
       axiosRequestConfig: {
         headers: { cookie: 'test=123; _iidt=test' },
       },

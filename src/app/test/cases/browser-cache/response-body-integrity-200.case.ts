@@ -12,7 +12,7 @@ const testCase: TestCase = {
     const body = diverseUnicode
 
     const { responseFromProxy } = await api.sendRequestToCdn({
-      query: query,
+      query,
 
       mockResponse: {
         status: 200,

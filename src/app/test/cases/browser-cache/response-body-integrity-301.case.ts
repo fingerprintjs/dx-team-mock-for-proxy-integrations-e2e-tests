@@ -12,7 +12,7 @@ const testCase: TestCase = {
     const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
     const { responseFromProxy } = await api.sendRequestToCdn({
-      query: query,
+      query,
 
       mockResponse: {
         status: 301,

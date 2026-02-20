@@ -13,7 +13,7 @@ const testCase: TestCase = {
     const loaderVersion = '3.9.8_e1_noworker'
     query.set('loaderVersion', loaderVersion)
 
-    const { requestFromProxy } = await api.sendRequestToCdn({ query: query })
+    const { requestFromProxy } = await api.sendRequestToCdn({ query })
 
     const pathParts = requestFromProxy.path.split('/').filter(Boolean)
     const firstPart = pathParts[0]

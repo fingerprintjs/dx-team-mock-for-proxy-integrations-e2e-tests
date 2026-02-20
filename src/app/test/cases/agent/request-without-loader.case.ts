@@ -10,7 +10,7 @@ const testCase: TestCase = {
     query.set('apiKey', getApiKey())
     query.set('version', '3')
 
-    const { requestFromProxy } = await api.sendRequestToCdn({ query: query })
+    const { requestFromProxy } = await api.sendRequestToCdn({ query })
 
     const pathParts = requestFromProxy.path.split('/').filter(Boolean)
     const firstPart = pathParts[0]

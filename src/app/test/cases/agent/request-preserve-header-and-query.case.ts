@@ -10,7 +10,7 @@ const testCase: TestCase = {
     query.set('apiKey', getApiKey())
 
     const { requestFromProxy } = await api.sendRequestToCdn({
-      query: query,
+      query,
       axiosRequestConfig: { headers: { 'X-Custom': '123' } },
     })
     const { ii, customQuery } = requestFromProxy.query

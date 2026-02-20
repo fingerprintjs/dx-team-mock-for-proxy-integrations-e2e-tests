@@ -9,7 +9,7 @@ const testCase: TestCase = {
     query.set('customQuery', '123')
     query.set('apiKey', getApiKey())
 
-    const { requestFromProxy } = await api.sendRequestToCdn({ query: query })
+    const { requestFromProxy } = await api.sendRequestToCdn({ query })
     const { ii, customQuery } = requestFromProxy.query
 
     assertToBeTruthy('ii', ii)
