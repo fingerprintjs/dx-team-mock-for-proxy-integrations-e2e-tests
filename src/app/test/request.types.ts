@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 export const RunTestsRequestSchema = z.object({
   integrationUrl: z.string().url(),
-  ingressPath: z.string(),
-  cdnPath: z.string(),
+  ingressPath: z.string().optional(),
+  cdnPath: z.string().optional(),
   trafficName: z.string(),
   integrationVersion: z.string(),
   include: z.array(z.string()).optional(),

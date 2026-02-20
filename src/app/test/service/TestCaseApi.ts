@@ -56,7 +56,8 @@ export class TestCaseApi {
     listenerType,
     mockResponse,
   }: SendRequestOptions): Promise<SendRequestResult> {
-    const url = new URL(path ?? '', this.integrationUrl)
+    const url = new URL(this.integrationUrl)
+    url.pathname += path.replace(/^\//, '')
 
     if (query) {
       url.search = query.toString()

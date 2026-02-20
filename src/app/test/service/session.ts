@@ -67,8 +67,8 @@ export function createTestSession(request: RunTestsRequest) {
   const session = new TestSession(
     host,
     request.integrationUrl,
-    request.ingressPath,
-    request.cdnPath,
+    request.ingressPath ?? '',
+    request.cdnPath ?? '',
     request.trafficName,
     request.integrationVersion,
     TestSessionStatus.Created
