@@ -31,6 +31,7 @@ interface SendRequestOptions {
 
 interface RequestToCdnParams {
   query?: URLSearchParams
+  pathOverride?: string
   axiosRequestConfig?: Partial<AxiosRequestConfig>
   mockResponse?: MockResponse
 }
@@ -148,10 +149,15 @@ export class TestCaseApi {
     return { requestFromProxy, responseFromProxy }
   }
 
-  async sendRequestToCdn({ query, axiosRequestConfig, mockResponse }: RequestToCdnParams): Promise<SendRequestResult> {
+  async sendRequestToCdn({
+    query,
+    axiosRequestConfig,
+    mockResponse,
+    pathOverride = '',
+  }: RequestToCdnParams): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
-      path: this.cdnPath,
+      path: pathOverride ? pathOverride : this.cdnPath,
       query,
       requestConfig: axiosRequestConfig,
       listenerType: ProxyRequestType.Cdn,
