@@ -7,13 +7,17 @@ const testCase: TestCase = {
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
-    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      status: 200,
-      headers: {
-        'x-test': 'x-value',
-        'x-test-two': 'x-value-two',
+    const { responseFromProxy } = await api.sendRequestToCdn({
+      query: query,
+
+      mockResponse: {
+        status: 200,
+        headers: {
+          'x-test': 'x-value',
+          'x-test-two': 'x-value-two',
+        },
+        body: 'Hello!',
       },
-      body: 'Hello!',
     })
 
     assert(responseFromProxy.status, 200)

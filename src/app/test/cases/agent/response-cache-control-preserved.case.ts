@@ -7,9 +7,13 @@ const testCase: TestCase = {
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
-    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      headers: {
-        'cache-control': 'max-age=3600',
+    const { responseFromProxy } = await api.sendRequestToCdn({
+      query: query,
+
+      mockResponse: {
+        headers: {
+          'cache-control': 'max-age=3600',
+        },
       },
     })
 

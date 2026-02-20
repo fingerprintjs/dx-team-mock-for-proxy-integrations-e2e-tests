@@ -7,8 +7,11 @@ const testCase: TestCase = {
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
-    const { requestFromProxy } = await api.sendRequestToCdn(query, {
-      headers: { cookie: 'test=123; _iidt=test' },
+    const { requestFromProxy } = await api.sendRequestToCdn({
+      query: query,
+      axiosRequestConfig: {
+        headers: { cookie: 'test=123; _iidt=test' },
+      },
     })
     assertToBeFalsy('cookie', requestFromProxy.get('cookie'))
   },

@@ -7,10 +7,14 @@ const testCase: TestCase = {
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
-    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      headers: {
-        'x-foo': 'bar',
-        'x-bar': 'baz',
+    const { responseFromProxy } = await api.sendRequestToCdn({
+      query: query,
+
+      mockResponse: {
+        headers: {
+          'x-foo': 'bar',
+          'x-bar': 'baz',
+        },
       },
     })
 

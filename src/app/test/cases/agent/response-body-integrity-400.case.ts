@@ -11,12 +11,16 @@ const testCase: TestCase = {
 
     const body = diverseUnicodeJavascript
 
-    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      status: 400,
-      headers: {
-        'content-type': 'text/javascript; charset=utf-8',
+    const { responseFromProxy } = await api.sendRequestToCdn({
+      query: query,
+
+      mockResponse: {
+        status: 400,
+        headers: {
+          'content-type': 'text/javascript; charset=utf-8',
+        },
+        body,
       },
-      body,
     })
 
     assert(responseFromProxy.status, 400)
