@@ -1,5 +1,6 @@
 import { assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
+import { getRandomString } from '../../utils/getRandomString'
 
 const testCase: TestCase = {
   name: 'browser cache request us region',
@@ -10,7 +11,7 @@ const testCase: TestCase = {
     query.set('region', region)
 
     const { requestFromProxy } = await api.sendRequestToCacheEndpoint({
-      pathname: '/browser-cache',
+      pathname: `/browser-cache/${getRandomString()}`,
       query,
     })
 
