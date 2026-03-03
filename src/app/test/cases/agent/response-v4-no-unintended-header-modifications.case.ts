@@ -3,7 +3,7 @@ import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
-  name: 'agent response no unintended header modifications',
+  name: 'v4 agent response no unintended header modifications',
   test: async (api) => {
     const apiKey = getApiKey()
     const { responseFromProxy } = await api.sendRequestToCdn({

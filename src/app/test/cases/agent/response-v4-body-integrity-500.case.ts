@@ -4,7 +4,7 @@ import { assert } from '../../service/assert'
 import { HTML_500_ERROR } from '../../utils/constants'
 
 const testCase: TestCase = {
-  name: 'agent response body integrity protected with 500 status code',
+  name: 'v4 agent response body integrity protected with 500 status code',
   test: async (api) => {
     const apiKey = getApiKey()
 
