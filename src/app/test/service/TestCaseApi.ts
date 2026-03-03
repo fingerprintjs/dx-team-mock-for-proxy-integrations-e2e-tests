@@ -36,6 +36,14 @@ interface RequestToCdnParams {
   mockResponse?: MockResponse
 }
 
+interface RequestToCacheEndpointParams {
+  pathname?: string
+  pathOverride?: string
+  request?: Partial<AxiosRequestConfig>
+  query?: URLSearchParams
+  mockResponse?: MockResponse
+}
+
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
     [ProxyRequestType.Cdn]: [],
@@ -157,7 +165,7 @@ export class TestCaseApi {
   }: RequestToCdnParams): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
-      path: pathOverride ? pathOverride : this.cdnPath,
+      path: pathOverride ?? this.cdnPath,
       query,
       requestConfig: axiosRequestConfig,
       listenerType: ProxyRequestType.Cdn,
@@ -165,15 +173,16 @@ export class TestCaseApi {
     })
   }
 
-  async sendRequestToCacheEndpoint(
-    pathname: string,
-    request: Partial<AxiosRequestConfig>,
-    query?: URLSearchParams,
-    mockResponse?: MockResponse
-  ): Promise<SendRequestResult> {
+  async sendRequestToCacheEndpoint({
+    pathname,
+    request,
+    query,
+    mockResponse,
+    pathOverride,
+  }: RequestToCacheEndpointParams): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
-      path: this.ingressPath + (pathname ? pathname : ''),
+      path: pathOverride ?? this.ingressPath + (pathname ? pathname : ''),
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Cache,

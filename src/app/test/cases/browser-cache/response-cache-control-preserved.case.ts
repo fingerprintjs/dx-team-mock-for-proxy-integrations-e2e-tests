@@ -5,9 +5,12 @@ import { generateRequestId } from '../../../../utils/generateRequestId'
 const testCase: TestCase = {
   name: 'browser cache response cache-control preserved',
   test: async (api) => {
-    const { responseFromProxy } = await api.sendRequestToCacheEndpoint('/cache-control-test', {}, undefined, {
-      headers: {
-        'cache-control': 'public, max-age=600',
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
+      pathname: '/cache-control-test',
+      mockResponse: {
+        headers: {
+          'cache-control': 'public, max-age=600',
+        },
       },
     })
 

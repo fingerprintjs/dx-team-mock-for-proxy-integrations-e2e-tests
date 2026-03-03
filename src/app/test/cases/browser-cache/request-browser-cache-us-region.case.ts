@@ -9,7 +9,10 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('region', region)
 
-    const { requestFromProxy } = await api.sendRequestToCacheEndpoint('/browser-cache', {}, query)
+    const { requestFromProxy } = await api.sendRequestToCacheEndpoint({
+      pathname: '/browser-cache',
+      query,
+    })
 
     const requestUrl = new URL(`https://${requestFromProxy.get('host')}${requestFromProxy.url}`)
 
