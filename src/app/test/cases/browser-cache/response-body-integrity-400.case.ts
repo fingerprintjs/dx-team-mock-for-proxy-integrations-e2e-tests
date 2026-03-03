@@ -11,8 +11,9 @@ const testCase: TestCase = {
 
     const body = diverseUnicode
 
-    const { responseFromProxy } = await api.sendRequestToCdn({
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
       query,
+      pathname: '/browser-cache',
 
       mockResponse: {
         status: 400,

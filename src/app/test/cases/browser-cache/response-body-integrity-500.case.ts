@@ -11,8 +11,9 @@ const testCase: TestCase = {
 
     const body = HTML_500_ERROR
 
-    const { responseFromProxy } = await api.sendRequestToCdn({
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
       query,
+      pathname: '/browser-cache',
 
       mockResponse: {
         status: 500,

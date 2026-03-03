@@ -11,8 +11,9 @@ const testCase: TestCase = {
     const body = ''
     const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
-    const { responseFromProxy } = await api.sendRequestToCdn({
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
       query,
+      pathname: '/browser-cache',
 
       mockResponse: {
         status: 301,
