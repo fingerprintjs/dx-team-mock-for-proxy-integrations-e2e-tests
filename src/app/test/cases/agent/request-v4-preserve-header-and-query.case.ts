@@ -10,7 +10,7 @@ const testCase: TestCase = {
 
     const { requestFromProxy } = await api.sendRequestToCdn({
       query,
-      axiosRequestConfig: { headers: { 'X-Custom': '123' } },
+      request: { headers: { 'X-Custom': '123' } },
       pathOverride: `/web/v4/${getApiKey()}`,
     })
     const { ii, customQuery } = requestFromProxy.query

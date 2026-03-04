@@ -9,7 +9,7 @@ const testCase: TestCase = {
     query.set('apiKey', getApiKey())
     const { requestFromProxy } = await api.sendRequestToCdn({
       query,
-      axiosRequestConfig: {
+      request: {
         headers: { cookie: 'test=123; _iidt=test' },
       },
     })

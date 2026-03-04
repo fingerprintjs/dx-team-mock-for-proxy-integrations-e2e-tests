@@ -7,7 +7,7 @@ const testCase: TestCase = {
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToCdn({
       pathOverride: `/web/v4/${getApiKey()}`,
-      axiosRequestConfig: {
+      request: {
         headers: { cookie: 'test=123; _iidt=test' },
       },
     })
