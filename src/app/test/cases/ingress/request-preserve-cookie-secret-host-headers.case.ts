@@ -5,9 +5,11 @@ const testCase: TestCase = {
   name: 'ingress request with cookie filter and preservation of headers',
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToIngress({
-      headers: {
-        cookie: '_iidt=123;test=123',
-        'x-custom-header': '123',
+      request: {
+        headers: {
+          cookie: '_iidt=123;test=123',
+          'x-custom-header': '123',
+        },
       },
     })
 

@@ -7,12 +7,14 @@ const testCase: TestCase = {
   test: async (api) => {
     const body = diverseUnicode
 
-    const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      status: 400,
-      headers: {
-        'content-type': 'text/plain; charset=utf-8',
+    const { responseFromProxy } = await api.sendRequestToIngress({
+      mockResponse: {
+        status: 400,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+        },
+        body,
       },
-      body,
     })
 
     assert(responseFromProxy.status, 400)

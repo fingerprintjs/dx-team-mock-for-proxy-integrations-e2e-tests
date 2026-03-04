@@ -4,12 +4,14 @@ import { assert } from '../../service/assert'
 const testCase: TestCase = {
   name: 'ingress response successful response passthrough',
   test: async (api) => {
-    const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      status: 200,
-      headers: {
-        'x-foo': 'bar',
+    const { responseFromProxy } = await api.sendRequestToIngress({
+      mockResponse: {
+        status: 200,
+        headers: {
+          'x-foo': 'bar',
+        },
+        body: 'ok',
       },
-      body: 'ok',
     })
 
     assert(responseFromProxy.status, 200)

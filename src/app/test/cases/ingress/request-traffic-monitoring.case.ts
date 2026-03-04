@@ -4,7 +4,7 @@ import { TestCase } from '../../types/testCase'
 const testCase: TestCase = {
   name: 'ingress request traffic monitoring',
   test: async (api) => {
-    const { requestFromProxy } = await api.sendRequestToIngress({})
+    const { requestFromProxy } = await api.sendRequestToIngress()
     const { ii } = requestFromProxy.query
 
     assertToBeTruthy('ii', ii)

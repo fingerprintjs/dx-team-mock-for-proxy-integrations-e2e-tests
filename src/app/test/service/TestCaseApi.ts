@@ -44,6 +44,13 @@ interface RequestToCacheEndpointParams {
   mockResponse?: MockResponse
 }
 
+interface RequestToIngressParams {
+  request?: Partial<AxiosRequestConfig>
+  query?: URLSearchParams
+  mockResponse?: MockResponse
+  pathOverride?: string
+}
+
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
     [ProxyRequestType.Cdn]: [],
@@ -190,14 +197,15 @@ export class TestCaseApi {
     })
   }
 
-  async sendRequestToIngress(
-    request: Partial<AxiosRequestConfig>,
-    query?: URLSearchParams,
-    mockResponse?: MockResponse
-  ): Promise<SendRequestResult> {
+  async sendRequestToIngress({
+    request,
+    query,
+    mockResponse,
+    pathOverride,
+  }: RequestToIngressParams = {}): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'POST',
-      path: this.ingressPath,
+      path: pathOverride ?? this.ingressPath,
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Ingress,
