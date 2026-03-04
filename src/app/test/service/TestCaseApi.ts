@@ -168,7 +168,7 @@ export class TestCaseApi {
     query,
     axiosRequestConfig,
     mockResponse,
-    pathOverride = '',
+    pathOverride,
   }: RequestToCdnParams): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
