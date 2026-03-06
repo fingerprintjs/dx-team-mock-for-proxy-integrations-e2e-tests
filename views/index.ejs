@@ -414,6 +414,14 @@
                 Timeout Error, please check your setup
               </div>
 
+              <div v-if="res.meta.error?.name === 'NoProxyRequestReceivedError'">
+                <div class="text-rose-700 dark:text-rose-300 font-medium">No request received from the proxy.</div>
+                <div class="font-semibold">Request sent to the proxy:</div>
+                <pre class="bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-auto whitespace-pre-wrap">{{ formatRequestSentToProxy(res.meta.error.requestSentToProxy) }}</pre>
+                <div class="font-semibold">Response from the proxy:</div>
+                <pre class="bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-auto whitespace-pre-wrap">{{ formatResponseFromProxy(res.meta.error.responseFromProxy) }}</pre>
+              </div>
+
               <div v-if="res.meta.error?.operator === 'assert'" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div><span class="font-semibold">Field:</span> {{ res.reason }}</div>
                 <div>
@@ -921,6 +929,21 @@
         }
 
         this.testResult.status = 'finished';
+      },
+
+      formatRequestSentToProxy(request) {
+        const body = request.body ? (typeof request.body === 'string' ? request.body : JSON.stringify(request.body, null, "  ")) : ''
+
+        return `${request.method} ${request.url}\n` +
+          `${Object.entries(request.headers).filter(([name]) => !name.startsWith('x-test-case-'))
+            .map(([name, value]) => `${name}: ${value}`).join('\n')}\n` +
+          body
+      },
+
+      formatResponseFromProxy(response) {
+        return `${response.status}\n` +
+          `${Object.entries(response.headers).map(([name, value]) => `${name}: ${value}`).join('\n')}\n` +
+          (typeof response.body === 'string' ? response.body : JSON.stringify(response.body, null, "  "))
       },
     },
   })
