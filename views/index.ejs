@@ -452,6 +452,10 @@
                   <span class="font-semibold">Received:</span> {{ res.meta.error.actual }}
                 </div>
               </div>
+
+              <div v-if="res.meta.error?.name === 'Error'" class="text-rose-700 dark:text-rose-300 font-medium">
+                Test execution error: {{ res.reason }}
+              </div>
             </div>
           </div>
         </div>
