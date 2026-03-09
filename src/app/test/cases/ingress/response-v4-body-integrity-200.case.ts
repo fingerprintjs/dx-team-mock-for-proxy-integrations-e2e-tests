@@ -7,8 +7,7 @@ const testCase: TestCase = {
   test: async (api) => {
     const body = diverseUnicode
 
-    const { responseFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { responseFromProxy } = await api.sendRequestToV4Ingress({
       mockResponse: {
         status: 200,
         headers: {

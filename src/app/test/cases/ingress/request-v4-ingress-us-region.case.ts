@@ -9,8 +9,7 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('region', region)
 
-    const { requestFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { requestFromProxy } = await api.sendRequestToV4Ingress({
       query,
     })
 

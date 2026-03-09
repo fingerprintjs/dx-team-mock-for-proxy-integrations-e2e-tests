@@ -6,7 +6,9 @@ const testCase: TestCase = {
   name: 'v4 browser cache request preserve path',
   test: async (api) => {
     const path = `/${getRandomString()}/${getRandomString()}/${getRandomString()}`
-    const { requestFromProxy } = await api.sendRequestToCacheEndpoint({ pathOverride: path })
+    const { requestFromProxy } = await api.sendRequestToV4CacheEndpoint({
+      pathname: path,
+    })
 
     const requestUrl = new URL(`https://${requestFromProxy.get('host')}${requestFromProxy.url}`)
 

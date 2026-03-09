@@ -6,8 +6,7 @@ const testCase: TestCase = {
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('customQuery', '123')
-    const { requestFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { requestFromProxy } = await api.sendRequestToV4Ingress({
       query,
     })
     const { ii, customQuery } = requestFromProxy.query

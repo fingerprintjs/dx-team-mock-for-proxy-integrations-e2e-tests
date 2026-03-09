@@ -1,6 +1,5 @@
 import { TestCase } from '../../types/testCase'
 import { assert } from '../../service/assert'
-import { diverseUnicode } from '../../utils/diverseUnicode'
 
 const testCase: TestCase = {
   name: 'ingress response body integrity protected with 301 status code',

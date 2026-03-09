@@ -4,8 +4,7 @@ import { assert, assertToBeFalsy } from '../../service/assert'
 const testCase: TestCase = {
   name: 'v4 ingress response hsts removed',
   test: async (api) => {
-    const { responseFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { responseFromProxy } = await api.sendRequestToV4Ingress({
       mockResponse: {
         headers: {
           'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',

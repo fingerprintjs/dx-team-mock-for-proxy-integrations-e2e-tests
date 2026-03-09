@@ -1,6 +1,5 @@
 import { assert, assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
-import { getApiKey } from '../../utils/getApiKey'
 
 const testCase: TestCase = {
   name: 'v4 agent request preserve header and query',
@@ -8,10 +7,9 @@ const testCase: TestCase = {
     const query = new URLSearchParams()
     query.set('customQuery', '123')
 
-    const { requestFromProxy } = await api.sendRequestToCdn({
+    const { requestFromProxy } = await api.sendRequestToV4Cdn({
       query,
       request: { headers: { 'X-Custom': '123' } },
-      pathOverride: `/web/v4/${getApiKey()}`,
     })
     const { ii, customQuery } = requestFromProxy.query
 

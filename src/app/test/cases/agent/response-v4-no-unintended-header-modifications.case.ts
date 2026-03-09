@@ -1,14 +1,10 @@
 import { TestCase } from '../../types/testCase'
-import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'v4 agent response no unintended header modifications',
   test: async (api) => {
-    const apiKey = getApiKey()
-    const { responseFromProxy } = await api.sendRequestToCdn({
-      pathOverride: `/web/v4/${apiKey}`,
-
+    const { responseFromProxy } = await api.sendRequestToV4Cdn({
       mockResponse: {
         headers: {
           'x-foo': 'bar',

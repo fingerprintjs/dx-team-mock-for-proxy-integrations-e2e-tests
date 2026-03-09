@@ -1,6 +1,5 @@
 import { TestCase } from '../../types/testCase'
 import { assert, assertToBeFalsy } from '../../service/assert'
-import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'ingress response hsts removed',

@@ -4,8 +4,7 @@ import { TestCase } from '../../types/testCase'
 const testCase: TestCase = {
   name: 'v4 ingress request with cookie filter and preservation of headers',
   test: async (api) => {
-    const { requestFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { requestFromProxy } = await api.sendRequestToV4Ingress({
       request: {
         headers: {
           cookie: '_iidt=123;test=123',

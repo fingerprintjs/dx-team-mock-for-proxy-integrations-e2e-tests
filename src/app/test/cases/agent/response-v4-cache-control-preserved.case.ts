@@ -1,14 +1,10 @@
 import { TestCase } from '../../types/testCase'
-import { getApiKey } from '../../utils/getApiKey'
 import { assertToBeTruthy } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'v4 agent response cache-control preserved or in-limit',
   test: async (api) => {
-    const apiKey = getApiKey()
-    const { responseFromProxy } = await api.sendRequestToCdn({
-      pathOverride: `/web/v4/${apiKey}`,
-
+    const { responseFromProxy } = await api.sendRequestToV4Cdn({
       mockResponse: {
         headers: {
           'cache-control': 'max-age=3600',

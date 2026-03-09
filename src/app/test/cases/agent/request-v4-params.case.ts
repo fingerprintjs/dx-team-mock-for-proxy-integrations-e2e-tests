@@ -9,7 +9,7 @@ const testCase: TestCase = {
 
     const path = `/web/v4/${apiKey}`
 
-    const { requestFromProxy } = await api.sendRequestToCdn({ pathOverride: path })
+    const { requestFromProxy } = await api.sendRequestToV4Cdn({ apiKey })
 
     const pathParts = requestFromProxy.path.split('/').filter(Boolean)
     const firstPart = pathParts[0]

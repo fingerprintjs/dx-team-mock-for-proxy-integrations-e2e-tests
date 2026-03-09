@@ -8,8 +8,7 @@ const testCase: TestCase = {
     const reactTrafficMonitoring = 'fingerprintjs-pro-react/2.6.2/next/14.1.0'
     query.set('ii', reactTrafficMonitoring)
     query.set('customQuery', '123')
-    const { requestFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { requestFromProxy } = await api.sendRequestToV4Ingress({
       query,
     })
     const { ii, customQuery } = requestFromProxy.query

@@ -7,8 +7,7 @@ const testCase: TestCase = {
   test: async (api) => {
     const body = HTML_500_ERROR
 
-    const { responseFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { responseFromProxy } = await api.sendRequestToV4Ingress({
       mockResponse: {
         status: 500,
         headers: {

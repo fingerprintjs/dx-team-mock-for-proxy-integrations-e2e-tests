@@ -1,6 +1,5 @@
 import { TestCase } from '../../types/testCase'
 import { assert } from '../../service/assert'
-import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'ingress response no unintended header modifications',

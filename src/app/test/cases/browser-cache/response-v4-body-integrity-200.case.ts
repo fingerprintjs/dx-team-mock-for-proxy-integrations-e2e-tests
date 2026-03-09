@@ -2,7 +2,6 @@ import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 import { diverseUnicode } from '../../utils/diverseUnicode'
-import { getRandomString } from '../../utils/getRandomString'
 
 const testCase: TestCase = {
   name: 'v4 browser cache response body integrity protected with 200 status code',
@@ -12,10 +11,8 @@ const testCase: TestCase = {
 
     const body = diverseUnicode
 
-    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
+    const { responseFromProxy } = await api.sendRequestToV4CacheEndpoint({
       query,
-      pathOverride: `/browser-cache/${getRandomString()}`,
-
       mockResponse: {
         status: 200,
         headers: {

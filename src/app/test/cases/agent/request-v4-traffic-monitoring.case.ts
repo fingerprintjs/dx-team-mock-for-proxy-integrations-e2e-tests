@@ -1,16 +1,15 @@
 import { assert, assertToBeTruthy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
-import { getApiKey } from '../../utils/getApiKey'
 
 const testCase: TestCase = {
   name: 'v4 agent request traffic monitoring',
   test: async (api) => {
-    const apiKey = getApiKey()
-    const path = `/web/v4/${apiKey}`
     const query = new URLSearchParams()
     query.set('customQuery', '123')
 
-    const { requestFromProxy } = await api.sendRequestToCdn({ pathOverride: path, query })
+    const { requestFromProxy } = await api.sendRequestToV4Cdn({
+      query,
+    })
     const { ii, customQuery } = requestFromProxy.query
 
     assertToBeTruthy('ii', ii)

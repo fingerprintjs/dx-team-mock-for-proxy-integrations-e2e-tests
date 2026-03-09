@@ -1,17 +1,13 @@
 import { TestCase } from '../../types/testCase'
-import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 
 const testCase: TestCase = {
   name: 'v4 agent response body integrity protected with 301 status code',
   test: async (api) => {
-    const apiKey = getApiKey()
-
     const body = ``
     const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
-    const { responseFromProxy } = await api.sendRequestToCdn({
-      pathOverride: `/web/v4/${apiKey}`,
+    const { responseFromProxy } = await api.sendRequestToV4Cdn({
       mockResponse: {
         status: 301,
         headers: {

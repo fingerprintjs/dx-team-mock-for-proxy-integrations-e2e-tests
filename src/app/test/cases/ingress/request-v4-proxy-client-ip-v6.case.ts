@@ -8,8 +8,7 @@ const testCase: TestCase = {
     testCaseApi.httpClientInstance.defaults.family = 6
   },
   test: async (api) => {
-    const { requestFromProxy } = await api.sendRequestToIngress({
-      pathOverride: '/',
+    const { requestFromProxy } = await api.sendRequestToV4Ingress({
       request: {
         headers: {
           host: api.testSession.host,
