@@ -35,6 +35,7 @@ interface RequestToCdnParams {
   request?: Partial<AxiosRequestConfig>
   mockResponse?: MockResponse
   apiKey?: string
+  pathOverride?: string
 }
 
 interface RequestToCacheEndpointParams {
@@ -214,10 +215,11 @@ export class TestCaseApi {
     request,
     mockResponse,
     apiKey = getApiKey(),
+    pathOverride,
   }: RequestToCdnParams = {}): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
-      path: `/web/v4/${apiKey}`,
+      path: pathOverride || `/web/v4/${apiKey}`,
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Cdn,
