@@ -3800,6 +3800,7 @@ var ZodFirstPartyTypeKind;
 })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
 const stringType = ZodString.create;
 const numberType = ZodNumber.create;
+const booleanType = ZodBoolean.create;
 const nullType = ZodNull.create;
 ZodNever.create;
 const arrayType = ZodArray.create;
@@ -3916,13 +3917,14 @@ const argumentParser = ({ options, aliases, }) => {
 
 const RunTestsRequestSchema = objectType({
     integrationUrl: stringType().url(),
-    ingressPath: stringType(),
-    cdnPath: stringType(),
+    ingressPath: stringType().optional(),
+    cdnPath: stringType().optional(),
     trafficName: stringType(),
     integrationVersion: stringType(),
     include: arrayType(stringType()).optional(),
     exclude: arrayType(stringType()).optional(),
     testsFilter: arrayType(stringType()).optional(),
+    enableV4Tests: booleanType().optional(),
 });
 
 const LogLevels = {
@@ -16935,7 +16937,7 @@ var mimeDb = require$$0;
  * MIT Licensed
  */
 
-(function (exports) {
+(function (exports$1) {
 
 	/**
 	 * Module dependencies.
@@ -16958,16 +16960,16 @@ var mimeDb = require$$0;
 	 * @public
 	 */
 
-	exports.charset = charset;
-	exports.charsets = { lookup: charset };
-	exports.contentType = contentType;
-	exports.extension = extension;
-	exports.extensions = Object.create(null);
-	exports.lookup = lookup;
-	exports.types = Object.create(null);
+	exports$1.charset = charset;
+	exports$1.charsets = { lookup: charset };
+	exports$1.contentType = contentType;
+	exports$1.extension = extension;
+	exports$1.extensions = Object.create(null);
+	exports$1.lookup = lookup;
+	exports$1.types = Object.create(null);
 
 	// Populate the extensions/types maps
-	populateMaps(exports.extensions, exports.types);
+	populateMaps(exports$1.extensions, exports$1.types);
 
 	/**
 	 * Get the default charset for a MIME type.
@@ -17011,7 +17013,7 @@ var mimeDb = require$$0;
 	  }
 
 	  var mime = str.indexOf('/') === -1
-	    ? exports.lookup(str)
+	    ? exports$1.lookup(str)
 	    : str;
 
 	  if (!mime) {
@@ -17020,7 +17022,7 @@ var mimeDb = require$$0;
 
 	  // TODO: use content-type or other module
 	  if (mime.indexOf('charset') === -1) {
-	    var charset = exports.charset(mime);
+	    var charset = exports$1.charset(mime);
 	    if (charset) mime += '; charset=' + charset.toLowerCase();
 	  }
 
@@ -17043,7 +17045,7 @@ var mimeDb = require$$0;
 	  var match = EXTRACT_TYPE_REGEXP.exec(type);
 
 	  // get extensions
-	  var exts = match && exports.extensions[match[1].toLowerCase()];
+	  var exts = match && exports$1.extensions[match[1].toLowerCase()];
 
 	  if (!exts || !exts.length) {
 	    return false
@@ -17073,7 +17075,7 @@ var mimeDb = require$$0;
 	    return false
 	  }
 
-	  return exports.types[extension] || false
+	  return exports$1.types[extension] || false
 	}
 
 	/**
@@ -20701,17 +20703,17 @@ var hasRequiredBrowser;
 function requireBrowser () {
 	if (hasRequiredBrowser) return browser.exports;
 	hasRequiredBrowser = 1;
-	(function (module, exports) {
+	(function (module, exports$1) {
 		/**
 		 * This is the web browser implementation of `debug()`.
 		 */
 
-		exports.formatArgs = formatArgs;
-		exports.save = save;
-		exports.load = load;
-		exports.useColors = useColors;
-		exports.storage = localstorage();
-		exports.destroy = (() => {
+		exports$1.formatArgs = formatArgs;
+		exports$1.save = save;
+		exports$1.load = load;
+		exports$1.useColors = useColors;
+		exports$1.storage = localstorage();
+		exports$1.destroy = (() => {
 			let warned = false;
 
 			return () => {
@@ -20726,7 +20728,7 @@ function requireBrowser () {
 		 * Colors.
 		 */
 
-		exports.colors = [
+		exports$1.colors = [
 			'#0000CC',
 			'#0000FF',
 			'#0033CC',
@@ -20891,7 +20893,7 @@ function requireBrowser () {
 		 *
 		 * @api public
 		 */
-		exports.log = console.debug || console.log || (() => {});
+		exports$1.log = console.debug || console.log || (() => {});
 
 		/**
 		 * Save `namespaces`.
@@ -20902,9 +20904,9 @@ function requireBrowser () {
 		function save(namespaces) {
 			try {
 				if (namespaces) {
-					exports.storage.setItem('debug', namespaces);
+					exports$1.storage.setItem('debug', namespaces);
 				} else {
-					exports.storage.removeItem('debug');
+					exports$1.storage.removeItem('debug');
 				}
 			} catch (error) {
 				// Swallow
@@ -20921,7 +20923,7 @@ function requireBrowser () {
 		function load() {
 			let r;
 			try {
-				r = exports.storage.getItem('debug') || exports.storage.getItem('DEBUG') ;
+				r = exports$1.storage.getItem('debug') || exports$1.storage.getItem('DEBUG') ;
 			} catch (error) {
 				// Swallow
 				// XXX (@Qix-) should we be logging these?
@@ -20957,7 +20959,7 @@ function requireBrowser () {
 			}
 		}
 
-		module.exports = requireCommon()(exports);
+		module.exports = requireCommon()(exports$1);
 
 		const {formatters} = module.exports;
 
@@ -21142,7 +21144,7 @@ var hasRequiredNode;
 function requireNode () {
 	if (hasRequiredNode) return node.exports;
 	hasRequiredNode = 1;
-	(function (module, exports) {
+	(function (module, exports$1) {
 		const tty = require$$0$3;
 		const util = require$$1;
 
@@ -21150,13 +21152,13 @@ function requireNode () {
 		 * This is the Node.js implementation of `debug()`.
 		 */
 
-		exports.init = init;
-		exports.log = log;
-		exports.formatArgs = formatArgs;
-		exports.save = save;
-		exports.load = load;
-		exports.useColors = useColors;
-		exports.destroy = util.deprecate(
+		exports$1.init = init;
+		exports$1.log = log;
+		exports$1.formatArgs = formatArgs;
+		exports$1.save = save;
+		exports$1.load = load;
+		exports$1.useColors = useColors;
+		exports$1.destroy = util.deprecate(
 			() => {},
 			'Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.'
 		);
@@ -21165,7 +21167,7 @@ function requireNode () {
 		 * Colors.
 		 */
 
-		exports.colors = [6, 2, 3, 4, 5, 1];
+		exports$1.colors = [6, 2, 3, 4, 5, 1];
 
 		try {
 			// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
@@ -21173,7 +21175,7 @@ function requireNode () {
 			const supportsColor = requireSupportsColor();
 
 			if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
-				exports.colors = [
+				exports$1.colors = [
 					20,
 					21,
 					26,
@@ -21262,7 +21264,7 @@ function requireNode () {
 		 *   $ DEBUG_COLORS=no DEBUG_DEPTH=10 DEBUG_SHOW_HIDDEN=enabled node script.js
 		 */
 
-		exports.inspectOpts = Object.keys(process.env).filter(key => {
+		exports$1.inspectOpts = Object.keys(process.env).filter(key => {
 			return /^debug_/i.test(key);
 		}).reduce((obj, key) => {
 			// Camel-case
@@ -21294,8 +21296,8 @@ function requireNode () {
 		 */
 
 		function useColors() {
-			return 'colors' in exports.inspectOpts ?
-				Boolean(exports.inspectOpts.colors) :
+			return 'colors' in exports$1.inspectOpts ?
+				Boolean(exports$1.inspectOpts.colors) :
 				tty.isatty(process.stderr.fd);
 		}
 
@@ -21321,7 +21323,7 @@ function requireNode () {
 		}
 
 		function getDate() {
-			if (exports.inspectOpts.hideDate) {
+			if (exports$1.inspectOpts.hideDate) {
 				return '';
 			}
 			return new Date().toISOString() + ' ';
@@ -21332,7 +21334,7 @@ function requireNode () {
 		 */
 
 		function log(...args) {
-			return process.stderr.write(util.formatWithOptions(exports.inspectOpts, ...args) + '\n');
+			return process.stderr.write(util.formatWithOptions(exports$1.inspectOpts, ...args) + '\n');
 		}
 
 		/**
@@ -21372,13 +21374,13 @@ function requireNode () {
 		function init(debug) {
 			debug.inspectOpts = {};
 
-			const keys = Object.keys(exports.inspectOpts);
+			const keys = Object.keys(exports$1.inspectOpts);
 			for (let i = 0; i < keys.length; i++) {
-				debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
+				debug.inspectOpts[keys[i]] = exports$1.inspectOpts[keys[i]];
 			}
 		}
 
-		module.exports = requireCommon()(exports);
+		module.exports = requireCommon()(exports$1);
 
 		const {formatters} = module.exports;
 
@@ -21939,7 +21941,7 @@ RedirectableRequest.prototype._processResponse = function (response) {
 // Wraps the key/value object of protocols with redirect functionality
 function wrap(protocols) {
   // Default settings
-  var exports = {
+  var exports$1 = {
     maxRedirects: 21,
     maxBodyLength: 10 * 1024 * 1024,
   };
@@ -21949,7 +21951,7 @@ function wrap(protocols) {
   Object.keys(protocols).forEach(function (scheme) {
     var protocol = scheme + ":";
     var nativeProtocol = nativeProtocols[protocol] = protocols[scheme];
-    var wrappedProtocol = exports[scheme] = Object.create(nativeProtocol);
+    var wrappedProtocol = exports$1[scheme] = Object.create(nativeProtocol);
 
     // Executes a request, following redirects
     function request(input, options, callback) {
@@ -21972,8 +21974,8 @@ function wrap(protocols) {
 
       // Set defaults
       options = Object.assign({
-        maxRedirects: exports.maxRedirects,
-        maxBodyLength: exports.maxBodyLength,
+        maxRedirects: exports$1.maxRedirects,
+        maxBodyLength: exports$1.maxBodyLength,
       }, input, options);
       options.nativeProtocols = nativeProtocols;
       if (!isString(options.host) && !isString(options.hostname)) {
@@ -21998,7 +22000,7 @@ function wrap(protocols) {
       get: { value: get, configurable: true, enumerable: true, writable: true },
     });
   });
-  return exports;
+  return exports$1;
 }
 
 function noop() { /* empty */ }
@@ -24832,22 +24834,36 @@ const versionInfo = {
 };
 
 const logger = createConsola();
+unionType([
+    literalType('true').transform(() => true),
+    literalType('false').transform(() => false),
+    nullType().transform(() => true),
+]);
+function createBooleanUnion({ valueWhenNull, defaultValue }) {
+    return unionType([
+        literalType('true').transform(() => true),
+        literalType('false').transform(() => false),
+        nullType().transform(() => valueWhenNull),
+    ])
+        .default('false');
+}
+const OptionsSchema = RunTestsRequestSchema.omit({ enableV4Tests: true }).extend({
+    attempts: numberType().default(3),
+    apiUrl: stringType().url(),
+    integrationUrl: stringType().url().optional(),
+    ingressPath: stringType().optional(),
+    cdnPath: stringType().optional(),
+    cdnProxyUrl: stringType().url().optional(),
+    ingressProxyUrl: stringType().url().optional(),
+    verbose: createBooleanUnion({ valueWhenNull: true, defaultValue: false }),
+    // zodcli disallows numbers in properties, so we need to enableNewTests maps to enableV4Tests in the request body
+    enableNewTests: createBooleanUnion({
+        valueWhenNull: false,
+        defaultValue: false,
+    }),
+});
 const args = argumentParser({
-    options: RunTestsRequestSchema.extend({
-        attempts: numberType().default(3),
-        apiUrl: stringType().url(),
-        integrationUrl: stringType().url().optional(),
-        ingressPath: stringType().optional(),
-        cdnPath: stringType().optional(),
-        cdnProxyUrl: stringType().url().optional(),
-        ingressProxyUrl: stringType().url().optional(),
-        verbose: unionType([
-            literalType('true').transform(() => true),
-            literalType('false').transform(() => false),
-            nullType().transform(() => true),
-        ])
-            .default('false'),
-    }).strict(),
+    options: OptionsSchema.strict(),
 }).parse(process.argv.slice(2));
 function parsePaths() {
     if (args.integrationUrl) {
@@ -24901,7 +24917,7 @@ async function fetchApiBuildInfo(apiUrl) {
     const url = new URL(apiUrl);
     try {
         url.pathname = '/version';
-        const res = await httpClient.get(url.toString(), { headers: { 'accept': 'application/json' } });
+        const res = await httpClient.get(url.toString(), { headers: { accept: 'application/json' } });
         if (res.status === 200) {
             return res.data;
         }
@@ -24956,7 +24972,11 @@ async function main() {
             include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
             exclude: args.exclude,
             testsFilter: args.testsFilter,
+            enableV4Tests: args.enableNewTests,
         };
+        if (requestBody.enableV4Tests) {
+            logger.info('V4 tests are enabled');
+        }
         const response = await httpClient.post(apiUrl.toString(), JSON.stringify(requestBody), {
             headers: {
                 'content-type': 'application/json',

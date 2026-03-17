@@ -9,6 +9,7 @@ export const RunTestsRequestSchema = z.object({
   include: z.array(z.string()).optional(),
   exclude: z.array(z.string()).optional(),
   testsFilter: z.array(z.string()).optional(),
+  enableV4Tests: z.boolean().optional(),
 })
 
 export type RunTestsRequest = z.infer<typeof RunTestsRequestSchema>

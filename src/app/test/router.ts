@@ -16,8 +16,14 @@ export function testRouter() {
     let testSession: TestSession
     try {
       testSession = createTestSession(req.body)
-      const include = req.body.include && req.body.include.length > 0 ? req.body.include : req.body.testsFilter
-      const exclude = req.body.exclude
+      const rawInclude = req.body.include && req.body.include.length > 0 ? req.body.include : req.body.testsFilter
+      const include = rawInclude ?? []
+      const exclude = [...(req.body.exclude ?? [])]
+      const includeHasV4 = () => include.some((it) => it.includes('v4'))
+      // Unless v4 is explicitly enabled by flag or filters, exclude it
+      if (!req.body.enableV4Tests && !includeHasV4()) {
+        exclude.push('v4')
+      }
 
       if (req.body.testsFilter) {
         console.warn('[DEPRECATION] `testsFilter` is deprecated. Use `include`/`exclude`.')
