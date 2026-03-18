@@ -10,7 +10,7 @@ const testCase: TestCase = {
 
     const requestUrl = new URL(`https://${requestFromProxy.get('host')}${requestFromProxy.url}`)
 
-    assert(path, requestUrl.pathname, 'pathname')
+    assert(requestUrl.pathname, path, 'pathname')
   },
 }
 
