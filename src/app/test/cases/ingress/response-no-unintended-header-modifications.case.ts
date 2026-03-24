@@ -1,14 +1,15 @@
 import { TestCase } from '../../types/testCase'
 import { assert } from '../../service/assert'
-import { generateRequestId } from '../../../../utils/generateRequestId'
 
 const testCase: TestCase = {
   name: 'ingress response no unintended header modifications',
   test: async (api) => {
-    const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      headers: {
-        'x-foo': 'bar',
-        'x-bar': 'baz',
+    const { responseFromProxy } = await api.sendRequestToIngress({
+      mockResponse: {
+        headers: {
+          'x-foo': 'bar',
+          'x-bar': 'baz',
+        },
       },
     })
 

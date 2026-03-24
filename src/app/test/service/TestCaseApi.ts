@@ -1,3 +1,4 @@
+import type { Method } from 'axios'
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { createNewHttpClient, sendAxiosRequestWithRequestConfig } from '../../../utils/httpClient'
 import {
@@ -17,8 +18,8 @@ import { TestSession } from './session'
 import { Request } from 'express'
 import { MockResponse, setMockResponse } from './mockResponseRegistry'
 import { generateRequestId } from '../../../utils/generateRequestId'
-
-import type { Method } from 'axios'
+import { getApiKey } from '../utils/getApiKey'
+import { getRandomString } from '../utils/getRandomString'
 
 interface SendRequestOptions {
   method: Method
@@ -26,6 +27,27 @@ interface SendRequestOptions {
   query?: URLSearchParams
   requestConfig?: Partial<AxiosRequestConfig>
   listenerType?: ProxyRequestType
+  mockResponse?: MockResponse
+}
+
+interface RequestToCdnParams {
+  query?: URLSearchParams
+  request?: Partial<AxiosRequestConfig>
+  mockResponse?: MockResponse
+  apiKey?: string
+  pathOverride?: string
+}
+
+interface RequestToCacheEndpointParams {
+  pathname?: string
+  request?: Partial<AxiosRequestConfig>
+  query?: URLSearchParams
+  mockResponse?: MockResponse
+}
+
+interface RequestToIngressParams {
+  request?: Partial<AxiosRequestConfig>
+  query?: URLSearchParams
   mockResponse?: MockResponse
 }
 
@@ -56,7 +78,12 @@ export class TestCaseApi {
     listenerType,
     mockResponse,
   }: SendRequestOptions): Promise<SendRequestResult> {
-    const url = new URL(path ?? '', this.integrationUrl)
+    const url = new URL(this.integrationUrl)
+    if (url.pathname.endsWith('/')) {
+      url.pathname += path.replace(/^\//, '')
+    } else if (path !== '/') {
+      url.pathname += path
+    }
 
     if (query) {
       url.search = query.toString()
@@ -141,27 +168,23 @@ export class TestCaseApi {
     return { requestFromProxy, responseFromProxy }
   }
 
-  async sendRequestToCdn(
-    query?: URLSearchParams,
-    axiosRequestConfig?: Partial<AxiosRequestConfig>,
-    mockResponse?: MockResponse
-  ): Promise<SendRequestResult> {
+  async sendRequestToCdn({ query, request, mockResponse }: RequestToCdnParams): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
       path: this.cdnPath,
       query,
-      requestConfig: axiosRequestConfig,
+      requestConfig: request,
       listenerType: ProxyRequestType.Cdn,
       mockResponse,
     })
   }
 
-  async sendRequestToCacheEndpoint(
-    pathname: string,
-    request: Partial<AxiosRequestConfig>,
-    query?: URLSearchParams,
-    mockResponse?: MockResponse
-  ): Promise<SendRequestResult> {
+  async sendRequestToCacheEndpoint({
+    pathname,
+    request,
+    query,
+    mockResponse,
+  }: RequestToCacheEndpointParams): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'GET',
       path: this.ingressPath + (pathname ? pathname : ''),
@@ -172,14 +195,62 @@ export class TestCaseApi {
     })
   }
 
-  async sendRequestToIngress(
-    request: Partial<AxiosRequestConfig>,
-    query?: URLSearchParams,
-    mockResponse?: MockResponse
-  ): Promise<SendRequestResult> {
+  async sendRequestToIngress({
+    request,
+    query,
+    mockResponse,
+  }: RequestToIngressParams = {}): Promise<SendRequestResult> {
     return this.sendRequest({
       method: 'POST',
       path: this.ingressPath,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Ingress,
+      mockResponse,
+    })
+  }
+
+  async sendRequestToV4Cdn({
+    query,
+    request,
+    mockResponse,
+    apiKey = getApiKey(),
+    pathOverride,
+  }: RequestToCdnParams = {}): Promise<SendRequestResult> {
+    return this.sendRequest({
+      method: 'GET',
+      path: pathOverride || `/web/v4/${apiKey}`,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Cdn,
+      mockResponse,
+    })
+  }
+
+  async sendRequestToV4CacheEndpoint({
+    pathname,
+    request,
+    query,
+    mockResponse,
+  }: RequestToCacheEndpointParams = {}): Promise<SendRequestResult> {
+    return this.sendRequest({
+      method: 'GET',
+      path: pathname ?? `/browser-cache/${getRandomString()}`,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Cache,
+      mockResponse,
+    })
+  }
+
+  async sendRequestToV4Ingress({
+    request,
+    query,
+    mockResponse,
+  }: RequestToIngressParams = {}): Promise<SendRequestResult> {
+    return this.sendRequest({
+      method: 'POST',
+      path: '/',
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Ingress,

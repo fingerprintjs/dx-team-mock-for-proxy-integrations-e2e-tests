@@ -9,8 +9,10 @@ const testCase: TestCase = {
   },
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToIngress({
-      headers: {
-        host: api.testSession.host,
+      request: {
+        headers: {
+          host: api.testSession.host,
+        },
       },
     })
     const ipOfClient = await getPublicIPv6()

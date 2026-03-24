@@ -6,7 +6,7 @@ const testCase: TestCase = {
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('customQuery', '123')
-    const { requestFromProxy } = await api.sendRequestToIngress({}, query)
+    const { requestFromProxy } = await api.sendRequestToIngress({ query })
     const { ii, customQuery } = requestFromProxy.query
 
     assertToBeTruthy('ii', ii)

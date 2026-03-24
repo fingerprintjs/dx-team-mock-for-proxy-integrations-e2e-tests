@@ -9,29 +9,51 @@ import { ExponentialBackoff, handleWhen, retry } from 'cockatiel'
 import { z } from 'zod'
 import { FailedTestResult } from '../../src/app/test/types/testCase'
 import { httpClient } from '../../src/utils/httpClient'
-import { versionInfo } from "./version";
-import { BuildInfo } from "../../src/version";
+import { versionInfo } from './version'
+import { BuildInfo } from '../../src/version'
 
 const logger = createConsola()
 
+const BooleanUnion = z.union([
+  z.literal('true').transform(() => true),
+  z.literal('false').transform(() => false),
+  z.null().transform(() => true),
+])
+
+type BooleanUnionParams = {
+  valueWhenNull: boolean
+  defaultValue: boolean
+}
+
+function createBooleanUnion({ valueWhenNull, defaultValue }: BooleanUnionParams) {
+  return z
+    .union([
+      z.literal('true').transform(() => true),
+      z.literal('false').transform(() => false),
+      z.null().transform(() => valueWhenNull),
+    ])
+    .default(defaultValue ? 'true' : 'false')
+}
+
+const OptionsSchema = RunTestsRequestSchema.omit({ enableV4Tests: true }).extend({
+  attempts: z.number().default(3),
+  apiUrl: z.string().url(),
+  integrationUrl: z.string().url().optional(),
+  ingressPath: z.string().optional(),
+  cdnPath: z.string().optional(),
+  cdnProxyUrl: z.string().url().optional(),
+  ingressProxyUrl: z.string().url().optional(),
+  verbose: createBooleanUnion({ valueWhenNull: true, defaultValue: false }),
+  // zodcli disallows numbers in properties, so we need to enableNewTests maps to enableV4Tests in the request body
+  enableNewTests: createBooleanUnion({
+    valueWhenNull: false,
+    defaultValue: false,
+  }),
+})
+
 const args = argumentParser({
-  options: RunTestsRequestSchema.extend({
-    attempts: z.number().default(3),
-    apiUrl: z.string().url(),
-    integrationUrl: z.string().url().optional(),
-    ingressPath: z.string().optional(),
-    cdnPath: z.string().optional(),
-    cdnProxyUrl: z.string().url().optional(),
-    ingressProxyUrl: z.string().url().optional(),
-    verbose: z
-      .union([
-        z.literal('true').transform(() => true),
-        z.literal('false').transform(() => false),
-        z.null().transform(() => true),
-      ])
-      .default('false'),
-  }).strict(),
-}).parse(process.argv.slice(2))
+  options: OptionsSchema.strict(),
+}).parse(process.argv.slice(2)) as z.infer<typeof OptionsSchema>
 
 function parsePaths() {
   if (args.integrationUrl) {
@@ -100,7 +122,7 @@ async function fetchApiBuildInfo(apiUrl: string): Promise<BuildInfo | null> {
   const url = new URL(apiUrl)
   try {
     url.pathname = '/version'
-    const res = await httpClient.get<BuildInfo>(url.toString(), { headers: { 'accept': 'application/json' } })
+    const res = await httpClient.get<BuildInfo>(url.toString(), { headers: { accept: 'application/json' } })
     if (res.status === 200) {
       return res.data
     }
@@ -169,7 +191,12 @@ async function main() {
       include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
       exclude: args.exclude,
       testsFilter: args.testsFilter,
+      enableV4Tests: args.enableNewTests,
     } satisfies RunTestsRequest
+
+    if (requestBody.enableV4Tests) {
+      logger.info('V4 tests are enabled')
+    }
 
     const response = await httpClient.post<TestResponse>(apiUrl.toString(), JSON.stringify(requestBody), {
       headers: {

@@ -5,8 +5,10 @@ const testCase: TestCase = {
   name: 'ingress request delete all cookies if _iidt not present',
   test: async (api) => {
     const { requestFromProxy } = await api.sendRequestToIngress({
-      headers: {
-        cookie: 'random=123;test=123',
+      request: {
+        headers: {
+          cookie: 'random=123;test=123',
+        },
       },
     })
     assertToBeFalsy('cookie', requestFromProxy.get('cookie'))

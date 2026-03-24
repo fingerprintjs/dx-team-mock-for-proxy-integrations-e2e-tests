@@ -7,12 +7,14 @@ const testCase: TestCase = {
   test: async (api) => {
     const body = HTML_500_ERROR
 
-    const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      status: 500,
-      headers: {
-        'content-type': 'text/html; charset=utf-8',
+    const { responseFromProxy } = await api.sendRequestToIngress({
+      mockResponse: {
+        status: 500,
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+        },
+        body,
       },
-      body,
     })
 
     assert(responseFromProxy.status, 500)

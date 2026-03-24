@@ -1,6 +1,5 @@
 import { TestCase } from '../../types/testCase'
 import { assert } from '../../service/assert'
-import { diverseUnicode } from '../../utils/diverseUnicode'
 
 const testCase: TestCase = {
   name: 'ingress response body integrity protected with 301 status code',
@@ -8,13 +7,15 @@ const testCase: TestCase = {
     const body = ''
     const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
-    const { responseFromProxy } = await api.sendRequestToIngress({}, undefined, {
-      status: 301,
-      headers: {
-        'content-type': 'text/plain; charset=utf-8',
-        location,
+    const { responseFromProxy } = await api.sendRequestToIngress({
+      mockResponse: {
+        status: 301,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          location,
+        },
+        body,
       },
-      body,
     })
 
     assert(responseFromProxy.status, 301)

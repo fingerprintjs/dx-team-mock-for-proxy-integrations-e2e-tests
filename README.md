@@ -50,7 +50,9 @@ To run tests, send a `POST` request to: `/api/test/run-tests` with the following
   "integrationVersion": "1.0.1-snapshot.0",
   // Optional filters
   "include": ["ingress", "agent*", "/body integrity protected with \\d{3} status code$/i"],
-  "exclude": ["query params", "ipv6"]
+  "exclude": ["query params", "ipv6"],
+  // Optional flag to run new tests suite for API V4
+  "enableV4Tests": false
 }
 ```
 
@@ -128,6 +130,8 @@ pnpm dlx "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integratio
 --include="/body integrity protected with \d{3} status code$/i"
 # (Optional) Exclude tests (same matching rules as include)
 --exclude="ipv6"
+# (Optional) Runs new tests suite for API V4
+--enable-new-tests=true
 ```
 
 ## Adding new tests

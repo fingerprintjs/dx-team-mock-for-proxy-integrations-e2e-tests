@@ -1,6 +1,7 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
+import { getRandomString } from '../../utils/getRandomString'
 
 const testCase: TestCase = {
   name: 'browser cache response body integrity protected with 301 status code',
@@ -11,13 +12,18 @@ const testCase: TestCase = {
     const body = ''
     const location = `https://${api.testSession.host}/path?withQuery=param#1`
 
-    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      status: 301,
-      headers: {
-        'content-type': 'text/plain; charset=utf-8',
-        location,
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
+      query,
+      pathname: `/browser-cache/${getRandomString()}`,
+
+      mockResponse: {
+        status: 301,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          location,
+        },
+        body,
       },
-      body,
     })
 
     assert(responseFromProxy.status, 301)

@@ -11,12 +11,16 @@ const testCase: TestCase = {
 
     const body = HTML_500_ERROR
 
-    const { responseFromProxy } = await api.sendRequestToCdn(query, undefined, {
-      status: 500,
-      headers: {
-        'content-type': 'text/html; charset=utf-8',
+    const { responseFromProxy } = await api.sendRequestToCdn({
+      query,
+
+      mockResponse: {
+        status: 500,
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+        },
+        body,
       },
-      body,
     })
 
     assert(responseFromProxy.status, 500)

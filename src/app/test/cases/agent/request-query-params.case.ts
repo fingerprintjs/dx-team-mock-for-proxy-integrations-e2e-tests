@@ -12,9 +12,12 @@ const testCase: TestCase = {
     query.set('version', '3')
     query.set('loaderVersion', getLoaderVersion())
 
-    const { requestFromProxy } = await api.sendRequestToCdn(query)
+    const { requestFromProxy } = await api.sendRequestToCdn({ query })
 
-    const splitPath = requestFromProxy.path.split('/').slice(1)
+    const pathParts = requestFromProxy.path.split('/').filter(Boolean)
+    const firstPart = pathParts[0]
+    assert(firstPart, 'web', 'first part of path')
+    const splitPath = pathParts.slice(1)
 
     assert(splitPath.length, 3, 'splitPathLength')
 

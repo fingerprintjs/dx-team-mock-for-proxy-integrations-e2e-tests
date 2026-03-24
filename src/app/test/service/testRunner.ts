@@ -12,6 +12,7 @@ import { clearMockResponsesForTest } from './mockResponseRegistry'
 import { makePatternMatcher } from '../../../utils/patternMatcher'
 import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 import { NoMatchingTestsError } from '../errors'
+import { prependSlash } from '../../../utils/paths'
 
 const TEST_TIMEOUT_MS = 10_000
 
@@ -69,11 +70,14 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   const startTime = Date.now()
 
   const integrationUrl = new URL(testSession.integrationUrl)
-  if (!integrationUrl.pathname.endsWith('/')) {
-    integrationUrl.pathname += '/'
-  }
 
-  const api = new TestCaseApi(testCase.name, integrationUrl, testSession.ingressPath, testSession.cdnPath, testSession)
+  const api = new TestCaseApi(
+    testCase.name,
+    integrationUrl,
+    prependSlash(testSession.ingressPath),
+    prependSlash(testSession.cdnPath),
+    testSession
+  )
 
   if (testCase.before) {
     await testCase.before(api, testSession)

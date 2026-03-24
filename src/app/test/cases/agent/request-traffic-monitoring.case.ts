@@ -9,7 +9,7 @@ const testCase: TestCase = {
     query.set('customQuery', '123')
     query.set('apiKey', getApiKey())
 
-    const { requestFromProxy } = await api.sendRequestToCdn(query)
+    const { requestFromProxy } = await api.sendRequestToCdn({ query })
     const { ii, customQuery } = requestFromProxy.query
 
     assertToBeTruthy('ii', ii)
@@ -18,7 +18,7 @@ const testCase: TestCase = {
 
     assert(integration, api.testSession.trafficName, 'trafficName')
     assert(version, api.testSession.integrationVersion, 'integrationVersion')
-    assert(type, 'procdn', 'integrationType')
+    assert(type, 'ingress', 'integrationType')
     assert(customQuery, '123', 'customQuery')
   },
 }

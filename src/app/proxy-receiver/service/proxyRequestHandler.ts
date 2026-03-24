@@ -24,7 +24,11 @@ function getStoreByType(type: ProxyRequestType) {
 }
 
 export function addProxyRequestListener(type: ProxyRequestType, key: Key, listener: RequestListener) {
-  getStoreByType(type).set(key, listener)
+  const store = getStoreByType(type)
+  if (store.has(key)) {
+    throw new Error(`Proxy request listener already exists for key: ${key}`)
+  }
+  store.set(key, listener)
 }
 
 export function removeProxyRequestListener(type: ProxyRequestType, key: Key) {

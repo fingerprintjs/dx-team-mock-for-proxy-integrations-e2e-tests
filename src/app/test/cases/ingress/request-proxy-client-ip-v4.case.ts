@@ -12,9 +12,11 @@ const testCase: TestCase = {
     testCaseApi.httpClientInstance.defaults.httpAgent = new http.Agent({ family: 4 })
   },
   test: async (api) => {
-    const { requestFromProxy } = await api.sendRequestToIngress({
-      headers: {
-        host: api.testSession.host,
+    const { requestFromProxy } = await api.sendRequestToV4Ingress({
+      request: {
+        headers: {
+          host: api.testSession.host,
+        },
       },
     })
     const ipOfClient = await getPublicIPv4()

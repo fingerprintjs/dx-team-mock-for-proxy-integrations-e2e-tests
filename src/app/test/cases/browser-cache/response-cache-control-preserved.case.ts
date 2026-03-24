@@ -1,13 +1,16 @@
 import { assert } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
-import { generateRequestId } from '../../../../utils/generateRequestId'
+import { getRandomString } from '../../utils/getRandomString'
 
 const testCase: TestCase = {
   name: 'browser cache response cache-control preserved',
   test: async (api) => {
-    const { responseFromProxy } = await api.sendRequestToCacheEndpoint('/cache-control-test', {}, undefined, {
-      headers: {
-        'cache-control': 'public, max-age=600',
+    const { responseFromProxy } = await api.sendRequestToCacheEndpoint({
+      pathname: `/cache-control-test/${getRandomString()}`,
+      mockResponse: {
+        headers: {
+          'cache-control': 'public, max-age=600',
+        },
       },
     })
 

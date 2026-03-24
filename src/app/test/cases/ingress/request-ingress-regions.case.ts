@@ -10,7 +10,7 @@ const testCase: TestCase = {
       const query = new URLSearchParams()
       query.set('region', region)
 
-      const { requestFromProxy } = await api.sendRequestToIngress({}, query)
+      const { requestFromProxy } = await api.sendRequestToIngress({ query })
 
       const requestUrl = new URL(`https://${requestFromProxy.get('host')}${requestFromProxy.url}`)
 
