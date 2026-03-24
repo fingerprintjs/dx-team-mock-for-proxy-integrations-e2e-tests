@@ -6,7 +6,7 @@ import {
   createProxyRequestHandlerKey,
   ProxyRequestType,
 } from '../../proxy-receiver/service/proxyRequestHandler'
-import { SendRequestResult } from '../types/testCase'
+import { RequestSentToProxy, ResponseFromProxy, SendRequestResult } from '../types/testCase'
 import {
   TEST_CASE_HOST_HEADER,
   TEST_CASE_NAME_HEADER,
@@ -20,6 +20,7 @@ import { MockResponse, setMockResponse } from './mockResponseRegistry'
 import { generateRequestId } from '../../../utils/generateRequestId'
 import { getApiKey } from '../utils/getApiKey'
 import { getRandomString } from '../utils/getRandomString'
+import { NoProxyRequestReceivedError } from '../errors'
 
 interface SendRequestOptions {
   method: Method
@@ -70,14 +71,11 @@ export class TestCaseApi {
     this.httpClientInstance = createNewHttpClient()
   }
 
-  async sendRequest({
-    method,
-    path,
-    query,
-    requestConfig,
-    listenerType,
-    mockResponse,
-  }: SendRequestOptions): Promise<SendRequestResult> {
+  async sendRequest({ method, path, query, requestConfig, listenerType, mockResponse }: SendRequestOptions): Promise<{
+    responseFromProxy: ResponseFromProxy
+    requestFromProxy: Request | null
+    requestSentToProxy: RequestSentToProxy
+  }> {
     const url = new URL(this.integrationUrl)
     if (url.pathname.endsWith('/')) {
       url.pathname += path.replace(/^\//, '')
@@ -91,17 +89,15 @@ export class TestCaseApi {
 
     const key = createProxyRequestHandlerKey(this.testSession.host, this.testName)
 
-    let requestFromProxyPromise: Promise<Request | undefined>
+    // This request will be set before the response from the proxy is received IF
+    // the proxy integration correctly forwards the request.
+    let requestFromProxy: Request | null = null
     if (listenerType) {
-      requestFromProxyPromise = new Promise<Request>((resolveRequest) => {
-        addProxyRequestListener(listenerType, key, (request) => {
-          this.requestsFromProxy[listenerType].push(createRequestFromProxy(request))
+      addProxyRequestListener(listenerType, key, (request) => {
+        this.requestsFromProxy[listenerType].push(createRequestFromProxy(request))
 
-          resolveRequest(request)
-        })
+        requestFromProxy = request
       })
-    } else {
-      requestFromProxyPromise = Promise.resolve(undefined)
     }
 
     const requestId = generateRequestId()
@@ -117,21 +113,19 @@ export class TestCaseApi {
       console.info(`Sending request to ${url.toString()}`)
     }
 
-    let responseFromProxy: SendRequestResult['responseFromProxy']
+    let responseFromProxy: ResponseFromProxy
+
+    const requestToSend = {
+      ...requestConfig,
+      method,
+      headers: {
+        ...requestConfig?.headers,
+        ...this.createTestHeaders(listenerType, requestId),
+      },
+    }
 
     try {
-      const response = await sendAxiosRequestWithRequestConfig(
-        url,
-        {
-          ...requestConfig,
-          method,
-          headers: {
-            ...requestConfig?.headers,
-            ...this.createTestHeaders(listenerType, requestId),
-          },
-        },
-        this.httpClientInstance
-      )
+      const response = await sendAxiosRequestWithRequestConfig(url, requestToSend, this.httpClientInstance)
 
       responseFromProxy = {
         status: response.status,
@@ -164,12 +158,29 @@ export class TestCaseApi {
       }
     }
 
-    const requestFromProxy = await requestFromProxyPromise
-    return { requestFromProxy, responseFromProxy }
+    const headers: Record<string, string | string[]> = {}
+    if (requestToSend.headers) {
+      for (const [name, value] of Object.entries(requestToSend.headers)) {
+        if (Array.isArray(value)) {
+          headers[name] = value.map((v) => v.toString())
+        } else {
+          headers[name] = value.toString()
+        }
+      }
+    }
+
+    const requestSentToProxy = {
+      method: requestToSend.method,
+      url: url.toString(),
+      headers,
+      body: requestToSend.data,
+    }
+
+    return { requestFromProxy, responseFromProxy, requestSentToProxy }
   }
 
   async sendRequestToCdn({ query, request, mockResponse }: RequestToCdnParams): Promise<SendRequestResult> {
-    return this.sendRequest({
+    const result = await this.sendRequest({
       method: 'GET',
       path: this.cdnPath,
       query,
@@ -177,6 +188,11 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cdn,
       mockResponse,
     })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
   }
 
   async sendRequestToCacheEndpoint({
@@ -185,7 +201,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToCacheEndpointParams): Promise<SendRequestResult> {
-    return this.sendRequest({
+    const result = await this.sendRequest({
       method: 'GET',
       path: this.ingressPath + (pathname ? pathname : ''),
       query,
@@ -193,6 +209,11 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cache,
       mockResponse,
     })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
   }
 
   async sendRequestToIngress({
@@ -200,7 +221,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToIngressParams = {}): Promise<SendRequestResult> {
-    return this.sendRequest({
+    const result = await this.sendRequest({
       method: 'POST',
       path: this.ingressPath,
       query,
@@ -208,6 +229,11 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Ingress,
       mockResponse,
     })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
   }
 
   async sendRequestToV4Cdn({
@@ -217,7 +243,7 @@ export class TestCaseApi {
     apiKey = getApiKey(),
     pathOverride,
   }: RequestToCdnParams = {}): Promise<SendRequestResult> {
-    return this.sendRequest({
+    const result = await this.sendRequest({
       method: 'GET',
       path: pathOverride || `/web/v4/${apiKey}`,
       query,
@@ -225,6 +251,11 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cdn,
       mockResponse,
     })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
   }
 
   async sendRequestToV4CacheEndpoint({
@@ -233,7 +264,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToCacheEndpointParams = {}): Promise<SendRequestResult> {
-    return this.sendRequest({
+    const result = await this.sendRequest({
       method: 'GET',
       path: pathname ?? `/browser-cache/${getRandomString()}`,
       query,
@@ -241,6 +272,11 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cache,
       mockResponse,
     })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
   }
 
   async sendRequestToV4Ingress({
@@ -248,7 +284,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToIngressParams = {}): Promise<SendRequestResult> {
-    return this.sendRequest({
+    const result = await this.sendRequest({
       method: 'POST',
       path: '/',
       query,
@@ -256,6 +292,11 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Ingress,
       mockResponse,
     })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
   }
 
   private createTestHeaders(requestType: ProxyRequestType, requestId?: string) {
