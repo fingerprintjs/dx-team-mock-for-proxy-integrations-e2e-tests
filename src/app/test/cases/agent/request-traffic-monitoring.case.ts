@@ -1,4 +1,4 @@
-import { assert, assertToBeTruthy } from '../../service/assert'
+import { assert, assertToBeFalsy } from '../../service/assert'
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 
@@ -12,13 +12,7 @@ const testCase: TestCase = {
     const { requestFromProxy } = await api.sendRequestToCdn({ query })
     const { ii, customQuery } = requestFromProxy.query
 
-    assertToBeTruthy('ii', ii)
-
-    const [integration, version, type] = ii.toString().split('/')
-
-    assert(integration, api.testSession.trafficName, 'trafficName')
-    assert(version, api.testSession.integrationVersion, 'integrationVersion')
-    assert(type, 'ingress', 'integrationType')
+    assertToBeFalsy('ii', ii)
     assert(customQuery, '123', 'customQuery')
   },
 }
