@@ -2,12 +2,14 @@ import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
 import { diverseUnicodeJavascript } from '../../utils/diverseUnicode'
+import { withCacheDisablingQueryParam } from '../../../../utils/query'
 
 const testCase: TestCase = {
   name: 'agent response body integrity protected with 400 status code',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
+    withCacheDisablingQueryParam(query)
 
     const body = diverseUnicodeJavascript
 
