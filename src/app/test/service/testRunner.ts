@@ -85,8 +85,8 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
 
   try {
     await withRetry(async () => await testCase.test(api), {
-      maxAttempts: 5,
-      interval: 3000,
+      maxAttempts: 3,
+      interval: 5000,
       onRetry: ({ attempt, error }) => {
         api.logMetadata.attempt = attempt
         api.logger.error(error)
