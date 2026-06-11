@@ -22,14 +22,13 @@ export function proxyReceiverRouter() {
   router.all('*', (req, res, next) => {
     const testType = proxyRequestTypeSchema.safeParse(req.get(TEST_CASE_PROXY_TYPE_HEADER))
 
-    console.info('Received potential proxy request', {
-      headers: req.headers,
-      url: req.url,
-      path: req.path,
-      isProxyRequest: testType.success,
-    })
-
     if (testType.success) {
+      console.info('Received proxy request', {
+        headers: req.headers,
+        url: req.url,
+        path: req.path,
+      })
+
       const host = req.get(TEST_CASE_HOST_HEADER)
       const testName = req.get(TEST_CASE_NAME_HEADER)
       const requestId = req.get(TEST_CASE_REQUEST_ID)
