@@ -37,15 +37,27 @@ export function proxyReceiverRouter() {
       notifyProxyRequestListener(testType.data, key, req)
 
       if (requestId) {
+        const disableCache = () => {
+          res.setHeader('cache-control', 'no-cache, no-store')
+        }
+
         const mockResponse = getMockResponse(requestId)
         if (mockResponse) {
+          let hasCacheControl = false
           for (const [header, value] of Object.entries(mockResponse.headers || {})) {
             res.setHeader(header, value)
+            if (header.toLowerCase() === 'cache-control') {
+              hasCacheControl = true
+            }
+          }
+
+          if (!hasCacheControl) {
+            disableCache()
           }
           res.status(mockResponse.status ?? 200).send(mockResponse.body)
           return
         } else {
-          res.setHeader('cache-control', 'no-cache')
+          disableCache()
           res.send()
           return
         }
