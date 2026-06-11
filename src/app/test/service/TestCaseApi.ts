@@ -74,7 +74,9 @@ export class TestCaseApi {
     private readonly cdnPath: string,
     public readonly testSession: TestSession
   ) {
-    this.httpClientInstance = createNewHttpClient()
+    this.httpClientInstance = createNewHttpClient({
+      timeout: 10_000,
+    })
     this.logger = createLogger(`[TestCaseApi][${testName}-${integrationUrl.host}]`, this.logMetadata)
   }
 
