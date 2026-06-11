@@ -5,6 +5,7 @@ export type RequestFromProxy = {
   url: string
   headers: Record<string, string>
   method: string
+  statusCode?: number
 }
 export type RequestsFromProxyRecord = Record<ProxyRequestType, RequestFromProxy[]>
 
@@ -13,5 +14,6 @@ export function createRequestFromProxy(request: ExpressRequest): RequestFromProx
     url: request.url,
     headers: request.headers as Record<string, string>,
     method: request.method,
+    statusCode: request.statusCode,
   }
 }

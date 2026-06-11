@@ -7,14 +7,12 @@ import {
 import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
-import { withTimeout } from '../../../utils/timeout'
 import { clearMockResponsesForTest } from './mockResponseRegistry'
 import { makePatternMatcher } from '../../../utils/patternMatcher'
 import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
-
-const TEST_TIMEOUT_MS = 10_000
+import { withRetry } from '../../../utils/retry'
 
 export type DetailedTestResult = TestResult & {
   testName: string
@@ -86,7 +84,14 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   let result: TestResult
 
   try {
-    await withTimeout(() => testCase.test(api), TEST_TIMEOUT_MS)
+    await withRetry(async () => await testCase.test(api), {
+      maxAttempts: 5,
+      interval: 3000,
+      onRetry: ({ attempt, error }) => {
+        api.logMetadata.attempt = attempt
+        api.logger.error(error)
+      },
+    })
 
     result = {
       passed: true,
