@@ -4,10 +4,15 @@ import beforeResponseMiddleware from './middlewares/beforeResponse.middleware'
 import { proxyReceiverRouter } from './app/proxy-receiver/router'
 import { testRouter } from './app/test/router'
 import { loadTestCases } from './app/test/service/testRunner'
-import { buildInfo } from "./version";
+import { buildInfo } from './version'
+import { installLogger } from './utils/groupedLogger'
 
 const app: Express = express()
 const port = Number(process.env.PORT) || 3000
+
+installLogger({
+  mode: process.env.LOG_LIVE === 'true' ? 'live' : 'grouped',
+})
 
 app.set('view engine', 'ejs')
 

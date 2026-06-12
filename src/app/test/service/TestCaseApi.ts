@@ -75,9 +75,9 @@ export class TestCaseApi {
     public readonly testSession: TestSession
   ) {
     this.httpClientInstance = createNewHttpClient({
-      timeout: 10_000,
+      timeout: 20_000,
     })
-    this.logger = createLogger(`[TestCaseApi][${testName}-${integrationUrl.host}]`, this.logMetadata)
+    this.logger = createLogger(this.logMetadata)
   }
 
   async sendRequest({ method, path, query, requestConfig, listenerType, mockResponse }: SendRequestOptions): Promise<{
@@ -160,9 +160,9 @@ export class TestCaseApi {
       }
     } catch (error) {
       if (listenerType) {
-        this.logger.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error)
+        this.logger.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error.message)
       } else {
-        this.logger.error(`Failed to send request to ${url.toString()}`, error)
+        this.logger.error(`Failed to send request to ${url.toString()}`, error.message)
       }
 
       responseFromProxy = {

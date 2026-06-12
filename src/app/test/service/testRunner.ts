@@ -13,10 +13,13 @@ import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
 import { withRetry } from '../../../utils/retry'
+import { runWithGroupedLog } from '../../../utils/groupedLogger'
+import pLimit from 'p-limit'
 
 export type DetailedTestResult = TestResult & {
   testName: string
   requestDurationMs: number
+  logs?: string[]
 }
 
 type TestFilterOptions = {
@@ -53,11 +56,22 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
     throw new NoMatchingTestsError()
   }
 
+  const limit = pLimit(5)
+
   await Promise.allSettled(
     testCases.map(async (testCase) => {
-      const result = await runTest(testSession, testCase)
+      return limit(async () => {
+        const { logs, result } = await runWithGroupedLog(`${testSession.host} - ${testCase.name}`, async () => {
+          return runTest(testSession, testCase)
+        })
 
-      testSession.addResult(result)
+        if (result) {
+          testSession.addResult({
+            ...result,
+            logs,
+          })
+        }
+      })
     })
   )
 
@@ -86,7 +100,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   try {
     await withRetry(async () => await testCase.test(api), {
       maxAttempts: 3,
-      interval: 5000,
+      interval: 10_000,
       onRetry: ({ attempt, error }) => {
         api.logMetadata.attempt = attempt
         api.logger.error(error)
