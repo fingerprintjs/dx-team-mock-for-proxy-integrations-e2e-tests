@@ -8,7 +8,7 @@ const httpAgent = new http.Agent({})
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
 export const createNewHttpClient = (
-  config: CreateAxiosDefaults = { withCredentials: true, httpsAgent, httpAgent, timeout: 20_000 }
+  config: CreateAxiosDefaults = { withCredentials: true, httpsAgent, httpAgent, timeout: 60_000 }
 ) => {
   return axios.create(config)
 }
