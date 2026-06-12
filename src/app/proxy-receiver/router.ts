@@ -23,12 +23,6 @@ export function proxyReceiverRouter() {
     const testType = proxyRequestTypeSchema.safeParse(req.get(TEST_CASE_PROXY_TYPE_HEADER))
 
     if (testType.success) {
-      console.info('Received proxy request', {
-        headers: req.headers,
-        url: req.url,
-        path: req.path,
-      })
-
       const host = req.get(TEST_CASE_HOST_HEADER)
       const testName = req.get(TEST_CASE_NAME_HEADER)
       const requestId = req.get(TEST_CASE_REQUEST_ID)
@@ -55,24 +49,23 @@ export function proxyReceiverRouter() {
             disableCache()
           }
           res.status(mockResponse.status ?? 200).send(mockResponse.body)
-          return
         } else {
           disableCache()
-          res.send()
-          return
         }
+
+        return res.send()
       }
 
-      return
+      return next()
     }
 
-    // Some proxy integration providers will sent a periodic health check request to the proxy receiver on a path that ends with /status
+    // Some proxy integration providers will send a periodic health check request to the proxy receiver on a path that ends with /status
     // We return empty 200 response here, so that the platform won't mark the proxy receiver as unhealthy
     if (req.path.endsWith('/status')) {
       return res.status(200).send()
     }
 
-    next()
+    return next()
   })
 
   return router
