@@ -74,9 +74,7 @@ export class TestCaseApi {
     private readonly cdnPath: string,
     public readonly testSession: TestSession
   ) {
-    this.httpClientInstance = createNewHttpClient({
-      timeout: 20_000,
-    })
+    this.httpClientInstance = createNewHttpClient()
     this.logger = createLogger(this.logMetadata)
   }
 
