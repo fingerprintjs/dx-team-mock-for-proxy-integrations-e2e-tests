@@ -59,12 +59,6 @@ export function proxyReceiverRouter() {
       return next()
     }
 
-    // Some proxy integration providers will send a periodic health check request to the proxy receiver on a path that ends with /status
-    // We return empty 200 response here, so that the platform won't mark the proxy receiver as unhealthy
-    if (req.path.endsWith('/status')) {
-      return res.status(200).send()
-    }
-
     return next()
   })
 
