@@ -32,7 +32,6 @@ export function addProxyRequestListener(type: ProxyRequestType, key: Key, listen
 }
 
 export function removeProxyRequestListener(type: ProxyRequestType, key: Key) {
-  console.info('Removing proxy request listener', { type, key })
   getStoreByType(type).delete(key)
 }
 
