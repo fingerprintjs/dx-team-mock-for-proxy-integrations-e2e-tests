@@ -14,7 +14,6 @@ import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
 import { withRetry } from '../../../utils/retry'
 import { runWithGroupedLog } from '../../../utils/groupedLogger'
-import pLimit from 'p-limit'
 
 export type DetailedTestResult = TestResult & {
   testName: string
@@ -56,22 +55,18 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
     throw new NoMatchingTestsError()
   }
 
-  const limit = pLimit(5)
-
   await Promise.allSettled(
     testCases.map(async (testCase) => {
-      return limit(async () => {
-        const { logs, result } = await runWithGroupedLog(`${testSession.host} - ${testCase.name}`, async () => {
-          return runTest(testSession, testCase)
-        })
-
-        if (result) {
-          testSession.addResult({
-            ...result,
-            logs,
-          })
-        }
+      const { logs, result } = await runWithGroupedLog(`${testSession.host} - ${testCase.name}`, async () => {
+        return runTest(testSession, testCase)
       })
+
+      if (result) {
+        testSession.addResult({
+          ...result,
+          logs,
+        })
+      }
     })
   )
 
