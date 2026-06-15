@@ -62,8 +62,7 @@ export function installLogger(opts: { mode?: LogMode } = {}): void {
 }
 
 /**
- * Run a single group inside its own logging context. Wrap each group case with
- * this in your Promise.allSettled map. The try/finally guarantees the buffer
+ * Run a single group inside its own logging context. The try/finally guarantees the buffer
  * flushes even when the group throws, so failing groups still print their logs.
  */
 export function runWithGroupedLog<T>(label: string, fn: () => Promise<T>): Promise<{ result?: T; logs: string[] }> {
