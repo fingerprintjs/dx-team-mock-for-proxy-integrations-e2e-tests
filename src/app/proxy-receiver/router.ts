@@ -44,11 +44,14 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
         hasCacheControl = true
       }
     }
-    res.status(mockResponse.status ?? 200).send(mockResponse.body)
   }
 
   if (!hasCacheControl) {
     res.setHeader('cache-control', 'no-cache, no-store')
+  }
+
+  if (mockResponse?.body) {
+    return res.status(mockResponse.status ?? 200).send(mockResponse.body)
   }
 
   return res.send()
