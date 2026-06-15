@@ -51,6 +51,4 @@ export async function withRetry<T>(
       await wait(interval)
     }
   }
-
-  throw new Error('Max attempts reached')
 }
