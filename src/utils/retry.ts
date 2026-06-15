@@ -58,48 +58,33 @@ export type RetryContext = {
 export async function withRetry<T>(
   callback: (context: RetryContext) => Promise<T>,
   { interval, condition = () => true, maxAttempts = 5, onRetry }: RetryUntilParams<T>
-) {
-  return new Promise<T>(async (resolve, reject) => {
-    let attempts = 0
-    let isDone = false
-    let lastError: Error | undefined = undefined
+): Promise<T> {
+  let attempts = 0
+  let lastError: Error | undefined = undefined
 
-    const run = async () => {
+  while (attempts < maxAttempts) {
+    if (attempts > 0) {
+      onRetry?.({ attempt: attempts, error: lastError })
+    }
+
+    try {
+      const value = await callback({ attempt: attempts })
+      if (condition(value)) {
+        return value
+      }
+      attempts++
+    } catch (error) {
+      attempts++
       if (attempts >= maxAttempts) {
-        isDone = true
-        reject(new Error('Max attempts reached'))
-        return
+        throw error
       }
-
-      if (attempts > 0) {
-        onRetry?.({ attempt: attempts, error: lastError })
-      }
-
-      try {
-        const value = await callback({ attempt: attempts })
-        if (condition(value)) {
-          isDone = true
-          resolve(value)
-        } else {
-          attempts++
-        }
-      } catch (error) {
-        attempts++
-        if (attempts >= maxAttempts) {
-          isDone = true
-          reject(error)
-        } else {
-          lastError = error instanceof Error ? error : new Error(String(error))
-        }
-      }
+      lastError = error instanceof Error ? error : new Error(String(error))
     }
 
-    while (!isDone) {
-      await run()
-
-      if (!isDone) {
-        await wait(interval)
-      }
+    if (attempts < maxAttempts) {
+      await wait(interval)
     }
-  })
+  }
+
+  throw new Error('Max attempts reached')
 }
