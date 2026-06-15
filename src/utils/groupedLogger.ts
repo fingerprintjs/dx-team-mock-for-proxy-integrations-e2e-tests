@@ -32,7 +32,7 @@ let mode: LogMode = 'grouped'
 let patched = false
 
 /**
- * Patch the global console once, at startup. After this, any console.* call
+ * Patches the global console once, at startup. After this, any console.* call
  * made inside a runWithgroupLog() context is attributed to that group - no need
  * to touch existing console.log calls inside rungroup().
  *
