@@ -201,7 +201,11 @@ async function main() {
   if (hasFailedTests) {
     // Write mock warden response to a file for easier debugging
     // Can be used in GitHub action as an artifact
-    fs.writeFileSync(`mock-warden-test-results.json`, JSON.stringify(response.data, null, 2))
+    try {
+      fs.writeFileSync(`mock-warden-test-results.json`, JSON.stringify(response.data, null, 2))
+    } catch (e) {
+      logger.warn('Failed to write mock-warden-test-results.json', e)
+    }
     throw new Error('Tests failed')
   }
 }
