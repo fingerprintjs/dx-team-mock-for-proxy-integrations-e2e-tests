@@ -22,44 +22,39 @@ export function proxyReceiverRouter() {
   router.all('*', (req, res, next) => {
     const testType = proxyRequestTypeSchema.safeParse(req.get(TEST_CASE_PROXY_TYPE_HEADER))
 
-    if (testType.success) {
-      const host = req.get(TEST_CASE_HOST_HEADER)
-      const testName = req.get(TEST_CASE_NAME_HEADER)
-      const requestId = req.get(TEST_CASE_REQUEST_ID)
-      const key = createProxyRequestHandlerKey(host, testName)
-
-      notifyProxyRequestListener(testType.data, key, req)
-
-      if (requestId) {
-        const disableCache = () => {
-          res.setHeader('cache-control', 'no-cache, no-store')
-        }
-
-        const mockResponse = getMockResponse(requestId)
-        if (mockResponse) {
-          let hasCacheControl = false
-          for (const [header, value] of Object.entries(mockResponse.headers || {})) {
-            res.setHeader(header, value)
-            if (header.toLowerCase() === 'cache-control') {
-              hasCacheControl = true
-            }
-          }
-
-          if (!hasCacheControl) {
-            disableCache()
-          }
-          res.status(mockResponse.status ?? 200).send(mockResponse.body)
-        } else {
-          disableCache()
-        }
-
-        return res.send()
-      }
-
+    if (!testType.success) {
       return next()
     }
 
-    return next()
+    const host = req.get(TEST_CASE_HOST_HEADER)
+    const testName = req.get(TEST_CASE_NAME_HEADER)
+    const requestId = req.get(TEST_CASE_REQUEST_ID)
+    const key = createProxyRequestHandlerKey(host, testName)
+
+    if (!requestId) {
+      return next()
+    }
+
+    notifyProxyRequestListener(testType.data, key, req)
+
+    const mockResponse = getMockResponse(requestId)
+    let hasCacheControl = false
+
+    if (mockResponse) {
+      for (const [header, value] of Object.entries(mockResponse.headers || {})) {
+        res.setHeader(header, value)
+        if (header.toLowerCase() === 'cache-control') {
+          hasCacheControl = true
+        }
+      }
+      res.status(mockResponse.status ?? 200).send(mockResponse.body)
+    }
+
+    if (!hasCacheControl) {
+      res.setHeader('cache-control', 'no-cache, no-store')
+    }
+
+    return res.send()
   })
 
   return router
