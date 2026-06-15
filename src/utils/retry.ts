@@ -97,7 +97,9 @@ export async function withRetry<T>(
     while (!isDone) {
       await run()
 
-      await wait(interval)
+      if (!isDone) {
+        await wait(interval)
+      }
     }
   })
 }
