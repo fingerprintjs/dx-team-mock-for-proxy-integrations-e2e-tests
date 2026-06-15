@@ -457,6 +457,17 @@
                 Test execution error: {{ res.reason }}
               </div>
             </div>
+
+            <div v-if="res.logs && res.logs.length" class="mt-2">
+              <button type="button"
+                      class="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 inline-flex items-center gap-1"
+                      @click="toggleLogs(res.id)">
+                <i :data-lucide="openLogs.has(res.id) ? 'chevron-down' : 'chevron-right'" class="w-3.5 h-3.5"></i>
+                <span>Logs ({{ res.logs.length }})</span>
+              </button>
+              <pre v-show="openLogs.has(res.id)"
+                   class="mt-2 bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-auto whitespace-pre-wrap text-xs">{{ res.logs.join('\n') }}</pre>
+            </div>
           </div>
         </div>
 
@@ -532,6 +543,7 @@
 
       // UI state
       openIds: new Set(),
+      openLogs: new Set(),
       showOnlyFailed: false,
       lastRunFailures: new Set(),
 
@@ -868,6 +880,10 @@
       toggleOpen(id) {
         if (this.openIds.has(id)) this.openIds.delete(id); else this.openIds.add(id);
         this.openIds = new Set(this.openIds);
+      },
+      toggleLogs(id) {
+        if (this.openLogs.has(id)) this.openLogs.delete(id); else this.openLogs.add(id);
+        this.openLogs = new Set(this.openLogs);
       },
       toggleShowOnlyFailed() { this.showOnlyFailed = !this.showOnlyFailed; },
 
