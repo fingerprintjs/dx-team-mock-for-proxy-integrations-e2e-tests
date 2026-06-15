@@ -52,10 +52,10 @@ export function installLogger(opts: { mode?: LogMode } = {}): void {
         return
       }
       const message = format(...args)
+      ctx.entries.push({ level, message, at: Date.now() })
+
       if (mode === 'live') {
         real[level](`[${ctx.label}] ${message}`)
-      } else {
-        ctx.entries.push({ level, message, at: Date.now() })
       }
     }
   }
@@ -68,16 +68,14 @@ export function installLogger(opts: { mode?: LogMode } = {}): void {
  */
 export function runWithGroupedLog<T>(label: string, fn: () => Promise<T>): Promise<{ result?: T; logs: string[] }> {
   let result: T
-  let logs: string[]
+  let logs: string[] = []
 
   const ctx: LogContext = { label, entries: [] }
   return als.run(ctx, async () => {
     try {
       result = await fn()
     } finally {
-      if (mode === 'grouped') {
-        logs = flush(ctx)
-      }
+      logs = flush(ctx, mode)
     }
 
     return {
@@ -87,7 +85,7 @@ export function runWithGroupedLog<T>(label: string, fn: () => Promise<T>): Promi
   })
 }
 
-function flush(ctx: LogContext): string[] {
+function flush(ctx: LogContext, mode: LogMode): string[] {
   if (ctx.entries.length === 0) {
     return []
   }
@@ -99,11 +97,13 @@ function flush(ctx: LogContext): string[] {
     return `${level} ${new Date(e.at).toISOString()} ${e.message}`
   })
 
-  real.log(header)
-  body.forEach((line) => {
-    real.log(`  ${line}`)
-  })
-  real.log(headerEnd)
+  if (mode === 'grouped') {
+    real.log(header)
+    body.forEach((line) => {
+      real.log(`  ${line}`)
+    })
+    real.log(headerEnd)
+  }
 
   return body
 }
