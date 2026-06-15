@@ -45,9 +45,8 @@ export type RetryContext = {
  * - If `maxAttempts` is reached without the condition ever matching, the promise
  *   rejects with `Error('Max attempts reached')`.
  *
- * Between every attempt (including after a successful resolve, before the loop
- * exits) the function waits `interval` ms via {@link wait}.
- *
+ * Between attempts (after a failed attempt and before the next one), the function waits
+ * `interval` ms via {@link wait}.
  * @template T - Type of the value resolved by the callback.
  * @param callback - Async function to invoke on each attempt. Receives the current
  *   {@link RetryContext}.
