@@ -11,10 +11,3 @@ export function createLogger(...prefix: any[]) {
 }
 
 export type Logger = ReturnType<typeof createLogger>
-      }
-      return target[prop]
-    },
-  })
-}
-
-export type Logger = ReturnType<typeof createLogger>
