@@ -7,18 +7,18 @@ import {
 import { TestCase, TestResult } from '../types/testCase'
 import { finalizeTestSession, TestSession } from './session'
 import { TestCaseApi } from './TestCaseApi'
-import { withTimeout } from '../../../utils/timeout'
 import { clearMockResponsesForTest } from './mockResponseRegistry'
 import { makePatternMatcher } from '../../../utils/patternMatcher'
 import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
-
-const TEST_TIMEOUT_MS = 10_000
+import { withRetry } from '../../../utils/retry'
+import { runWithGroupedLog } from '../../../utils/groupedLogger'
 
 export type DetailedTestResult = TestResult & {
   testName: string
   requestDurationMs: number
+  logs?: string[]
 }
 
 type TestFilterOptions = {
@@ -57,9 +57,16 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
 
   await Promise.allSettled(
     testCases.map(async (testCase) => {
-      const result = await runTest(testSession, testCase)
+      const { logs, result } = await runWithGroupedLog(`${testSession.host} - ${testCase.name}`, async () => {
+        return runTest(testSession, testCase)
+      })
 
-      testSession.addResult(result)
+      if (result) {
+        testSession.addResult({
+          ...result,
+          logs,
+        })
+      }
     })
   )
 
@@ -86,7 +93,14 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   let result: TestResult
 
   try {
-    await withTimeout(() => testCase.test(api), TEST_TIMEOUT_MS)
+    await withRetry(async () => await testCase.test(api), {
+      maxAttempts: 3,
+      interval: 10_000,
+      onRetry: ({ attempt, error }) => {
+        api.logMetadata.attempt = attempt
+        api.logger.error(error)
+      },
+    })
 
     result = {
       passed: true,

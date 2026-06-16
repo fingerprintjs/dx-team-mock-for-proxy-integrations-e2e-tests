@@ -5,6 +5,7 @@ import {
   addProxyRequestListener,
   createProxyRequestHandlerKey,
   ProxyRequestType,
+  removeProxyRequestListener,
 } from '../../proxy-receiver/service/proxyRequestHandler'
 import { RequestSentToProxy, ResponseFromProxy, SendRequestResult } from '../types/testCase'
 import {
@@ -21,6 +22,7 @@ import { generateRequestId } from '../../../utils/generateRequestId'
 import { getApiKey } from '../utils/getApiKey'
 import { getRandomString } from '../utils/getRandomString'
 import { NoProxyRequestReceivedError } from '../errors'
+import { createLogger, Logger } from '../../../utils/logger'
 
 interface SendRequestOptions {
   method: Method
@@ -61,6 +63,10 @@ export class TestCaseApi {
   public readonly httpClientInstance: AxiosInstance
   public requestIdList: string[] = []
 
+  public logMetadata: { attempt: number } = { attempt: 0 }
+
+  public readonly logger: Logger
+
   constructor(
     private readonly testName: string,
     private readonly integrationUrl: URL,
@@ -69,6 +75,7 @@ export class TestCaseApi {
     public readonly testSession: TestSession
   ) {
     this.httpClientInstance = createNewHttpClient()
+    this.logger = createLogger(this.logMetadata)
   }
 
   async sendRequest({ method, path, query, requestConfig, listenerType, mockResponse }: SendRequestOptions): Promise<{
@@ -94,10 +101,15 @@ export class TestCaseApi {
     let requestFromProxy: Request | null = null
     if (listenerType) {
       addProxyRequestListener(listenerType, key, (request) => {
-        this.requestsFromProxy[listenerType].push(createRequestFromProxy(request))
+        const proxyRequest = createRequestFromProxy(request)
+        this.requestsFromProxy[listenerType].push(proxyRequest)
+
+        this.logger.info(`Received request from ${listenerType} at ${key}`, proxyRequest)
 
         requestFromProxy = request
       })
+
+      this.logger.info(`Prepared listener for ${listenerType} at ${key}`)
     }
 
     const requestId = generateRequestId()
@@ -108,9 +120,9 @@ export class TestCaseApi {
     }
 
     if (listenerType) {
-      console.info(`Sending request to ${listenerType.toString()} at ${url.toString()}`)
+      this.logger.info(`Sending request to ${listenerType.toString()} at ${url.toString()}`)
     } else {
-      console.info(`Sending request to ${url.toString()}`)
+      this.logger.info(`Sending request to ${url.toString()}`)
     }
 
     let responseFromProxy: ResponseFromProxy
@@ -134,21 +146,21 @@ export class TestCaseApi {
       }
 
       if (listenerType) {
-        console.info(`${listenerType} responded with ${response.status} at ${url.toString()}`, {
+        this.logger.info(`${listenerType} responded with ${response.status} at ${url.toString()}`, {
           body: responseFromProxy.body,
           headers: responseFromProxy.headers,
         })
       } else {
-        console.info(`Responded with ${response.status} at ${url.toString()}`, {
+        this.logger.info(`Responded with ${response.status} at ${url.toString()}`, {
           body: responseFromProxy.body,
           headers: responseFromProxy.headers,
         })
       }
     } catch (error) {
       if (listenerType) {
-        console.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error)
+        this.logger.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error.message)
       } else {
-        console.error(`Failed to send request to ${url.toString()}`, error)
+        this.logger.error(`Failed to send request to ${url.toString()}`, error.message)
       }
 
       responseFromProxy = {
@@ -174,6 +186,10 @@ export class TestCaseApi {
       url: url.toString(),
       headers,
       body: requestToSend.data,
+    }
+
+    if (listenerType) {
+      removeProxyRequestListener(listenerType, key)
     }
 
     return { requestFromProxy, responseFromProxy, requestSentToProxy }
@@ -304,7 +320,7 @@ export class TestCaseApi {
       [TEST_CASE_HOST_HEADER]: this.testSession.host,
       [TEST_CASE_PROXY_TYPE_HEADER]: requestType || '',
       [TEST_CASE_NAME_HEADER]: this.testName,
-      'cache-control': 'no-cache',
+      'cache-control': 'no-cache, no-store',
       [TEST_CASE_REQUEST_ID]: requestId,
     }
   }

@@ -5,20 +5,14 @@ import { RunTestsRequest, RunTestsRequestSchema } from '../../src/app/test/reque
 import { TestResponse } from '../../src/app/test/service/session'
 import { createConsola, LogLevels } from 'consola'
 import { DetailedTestResult } from '../../src/app/test/service/testRunner'
-import { ExponentialBackoff, handleWhen, retry } from 'cockatiel'
 import { z } from 'zod'
 import { FailedTestResult } from '../../src/app/test/types/testCase'
 import { httpClient } from '../../src/utils/httpClient'
 import { versionInfo } from './version'
 import { BuildInfo } from '../../src/version'
+import * as fs from 'node:fs'
 
 const logger = createConsola()
-
-const BooleanUnion = z.union([
-  z.literal('true').transform(() => true),
-  z.literal('false').transform(() => false),
-  z.null().transform(() => true),
-])
 
 type BooleanUnionParams = {
   valueWhenNull: boolean
@@ -166,64 +160,54 @@ async function main() {
   logger.info(`Using ${apiUrl} as API url`)
   logger.start(`Sending request...`)
 
-  const shouldRetry = (err: any) => {
-    const status = err?.response?.status as number | undefined
-    if (typeof status === 'number') {
-      return status >= 500 || status === 429
-    }
-    return true
+  const requestBody = {
+    integrationUrl,
+    ingressPath,
+    cdnPath,
+    trafficName: args.trafficName,
+    integrationVersion: args.integrationVersion,
+    include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
+    exclude: args.exclude,
+    testsFilter: args.testsFilter,
+    enableV4Tests: args.enableNewTests,
+  } satisfies RunTestsRequest
+
+  if (requestBody.enableV4Tests) {
+    logger.info('V4 tests are enabled')
   }
 
-  const policy = retry(handleWhen(shouldRetry), {
-    maxAttempts: args.attempts,
-    backoff: new ExponentialBackoff(),
+  const response = await httpClient.post<TestResponse>(apiUrl.toString(), JSON.stringify(requestBody), {
+    headers: {
+      'content-type': 'application/json',
+    },
   })
 
-  await policy.execute(async (context) => {
-    logger.info(`Attempt ${context.attempt + 1}...`)
+  logger.ready(`API replied with status code ${response.status}`)
 
-    const requestBody = {
-      integrationUrl,
-      ingressPath,
-      cdnPath,
-      trafficName: args.trafficName,
-      integrationVersion: args.integrationVersion,
-      include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
-      exclude: args.exclude,
-      testsFilter: args.testsFilter,
-      enableV4Tests: args.enableNewTests,
-    } satisfies RunTestsRequest
+  logger.debug(`Response`, response.data)
 
-    if (requestBody.enableV4Tests) {
-      logger.info('V4 tests are enabled')
-    }
+  const hasFailedTests = response.data.results.some((result) => !result.passed)
 
-    const response = await httpClient.post<TestResponse>(apiUrl.toString(), JSON.stringify(requestBody), {
-      headers: {
-        'content-type': 'application/json',
-      },
-    })
-
-    logger.ready(`API replied with status code ${response.status}`)
-
-    logger.debug(`Response`, response.data)
-
-    const hasFailedTests = response.data.results.some((result) => !result.passed)
-
-    const results = response.data.results.map((result) => {
-      return result.passed
-        ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
-        : getFailedTestMessage(result as DetailedTestResult & FailedTestResult)
-    })
-
-    results.unshift(`Test results (${results.length}):`)
-
-    logger.box(results.join('\n'))
-
-    if (hasFailedTests) {
-      throw new Error('Tests failed')
-    }
+  const results = response.data.results.map((result) => {
+    return result.passed
+      ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
+      : getFailedTestMessage(result as DetailedTestResult & FailedTestResult)
   })
+
+  results.unshift(`Test results (${results.length}):`)
+
+  logger.box(results.join('\n'))
+
+  if (hasFailedTests) {
+    // Write mock warden response to a file for easier debugging
+    // Can be used in GitHub action as an artifact
+    try {
+      fs.writeFileSync(`mock-warden-test-results.json`, JSON.stringify(response.data, null, 2))
+    } catch (e) {
+      logger.warn('Failed to write mock-warden-test-results.json', e)
+    }
+    throw new Error('Tests failed')
+  }
 }
 
 function getFailedTestMessage(result: DetailedTestResult & FailedTestResult): string {
