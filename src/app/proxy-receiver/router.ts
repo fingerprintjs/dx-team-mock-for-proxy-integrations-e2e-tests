@@ -52,7 +52,7 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
 
   res.status(mockResponse?.status ?? 200)
 
-  if (mockResponse?.body) {
+  if (mockResponse?.body !== undefined) {
     return res.send(mockResponse.body)
   }
 
