@@ -50,8 +50,10 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
     res.setHeader('cache-control', 'no-cache, no-store')
   }
 
+  res.status(mockResponse?.status ?? 200)
+
   if (mockResponse?.body) {
-    return res.status(mockResponse.status ?? 200).send(mockResponse.body)
+    return res.send(mockResponse.body)
   }
 
   return res.send()
