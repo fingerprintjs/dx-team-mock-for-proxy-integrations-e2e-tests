@@ -1,12 +1,14 @@
 import { TestCase } from '../../types/testCase'
 import { getApiKey } from '../../utils/getApiKey'
 import { assert } from '../../service/assert'
+import { disableCacheByQueryParam } from '../../../../utils/query'
 
 const testCase: TestCase = {
   name: 'agent response successful response passthrough',
   test: async (api) => {
     const query = new URLSearchParams()
     query.set('apiKey', getApiKey())
+    disableCacheByQueryParam(query)
     const { responseFromProxy } = await api.sendRequestToCdn({
       query,
 
