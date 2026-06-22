@@ -54,6 +54,14 @@ interface RequestToIngressParams {
   mockResponse?: MockResponse
 }
 
+interface ArbitraryV4RequestParams {
+  method: Method
+  path?: string
+  request?: Partial<AxiosRequestConfig>
+  query?: URLSearchParams
+  mockResponse?: MockResponse
+}
+
 export class TestCaseApi {
   readonly requestsFromProxy: RequestsFromProxyRecord = {
     [ProxyRequestType.Cdn]: [],
@@ -303,6 +311,28 @@ export class TestCaseApi {
     const result = await this.sendRequest({
       method: 'POST',
       path: '/',
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Ingress,
+      mockResponse,
+    })
+
+    if (!result.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
+    }
+    return result
+  }
+
+  async sendArbitraryRequestToV4Ingress({
+    method,
+    path = '/',
+    request,
+    query,
+    mockResponse,
+  }: ArbitraryV4RequestParams): Promise<SendRequestResult> {
+    const result = await this.sendRequest({
+      method,
+      path,
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Ingress,
