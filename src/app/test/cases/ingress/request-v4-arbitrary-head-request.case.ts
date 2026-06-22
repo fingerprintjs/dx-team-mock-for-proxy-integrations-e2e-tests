@@ -16,7 +16,7 @@ const testCase: TestCase = {
 
     // Method and path should reach us as is.
     assert(requestFromProxy.method, 'HEAD', 'method')
-    assertToBeTruthy('path', requestFromProxy.path.includes('some_path'))
+    assertToBeTruthy('path', requestFromProxy.path === '/some_path')
 
     // Custom header should be preserved.
     assert(requestFromProxy.get('x-custom-header'), '123', 'x-custom-header')
