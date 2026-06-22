@@ -27,11 +27,9 @@ const testCase: TestCase = {
     assertToBeTruthy('body is buffer', Buffer.isBuffer(requestFromProxy.body))
     assert(Buffer.compare(requestFromProxy.body, body), 0, 'body')
 
-    // fpjs headers should be added by the integration.
+    // ii query param and fpjs headers should not be added by the integration, it should only happen for POST requests
     assertToBeFalsy('fpjs-proxy-forwarded-host', requestFromProxy.get('fpjs-proxy-forwarded-host'))
     assertToBeFalsy('fpjs-proxy-secret', requestFromProxy.get('fpjs-proxy-secret'))
-
-    // ii query param should not be added by the integration, it should only happen for POST requests
     const { ii } = requestFromProxy.query
     assertToBeFalsy('ii', ii)
   },

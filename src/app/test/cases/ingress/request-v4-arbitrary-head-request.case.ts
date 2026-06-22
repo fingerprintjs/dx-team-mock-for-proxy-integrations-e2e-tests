@@ -21,9 +21,9 @@ const testCase: TestCase = {
     // Custom header should be preserved.
     assert(requestFromProxy.get('x-custom-header'), '123', 'x-custom-header')
 
+    // ii query param and fpjs headers should not be added by the integration, it should only happen for POST requests
     assertToBeFalsy('fpjs-proxy-forwarded-host', requestFromProxy.get('fpjs-proxy-forwarded-host'))
-
-    // ii query param should not be added by the integration, it should only happen for POST requests
+    assertToBeFalsy('fpjs-proxy-secret', requestFromProxy.get('fpjs-proxy-secret'))
     const { ii } = requestFromProxy.query
     assertToBeFalsy('ii', ii)
   },
