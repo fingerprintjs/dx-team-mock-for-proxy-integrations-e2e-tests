@@ -17,6 +17,8 @@ installLogger({
 app.set('view engine', 'ejs')
 
 app.use(express.json())
+// Needed for test cases that send and expect binary bodies
+app.use(express.raw({ type: 'application/octet-stream' }))
 app.use(beforeResponseMiddleware(console.info))
 
 app.use(proxyReceiverRouter())
