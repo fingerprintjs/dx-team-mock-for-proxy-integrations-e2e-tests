@@ -66,7 +66,7 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
 export function proxyReceiverRouter() {
   const router = express.Router()
 
-  router.all('*', handleProxyRequest)
+  router.all('{*splat}', handleProxyRequest)
 
   return router
 }
