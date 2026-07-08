@@ -1,4 +1,4 @@
-import * as express from 'express'
+import express from 'express'
 import { RunTestsRequestSchema } from './request.types'
 import { createTestSession, finalizeTestSession, TestSession } from './service/session'
 import { runTests } from './service/testRunner'
@@ -13,7 +13,7 @@ export function testRouter() {
   const router = express.Router()
 
   router.post('/run-tests', RunTestsSchema, async (req, res, next) => {
-    let testSession: TestSession
+    let testSession: TestSession | undefined
     try {
       testSession = createTestSession(req.body)
       const rawInclude = req.body.include && req.body.include.length > 0 ? req.body.include : req.body.testsFilter

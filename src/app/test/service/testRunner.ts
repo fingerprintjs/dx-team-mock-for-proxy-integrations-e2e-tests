@@ -110,7 +110,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
       passed: false,
       reason: error instanceof Error ? error.message : String(error),
       meta: {
-        error,
+        error: error instanceof Error ? error : new Error(String(error)),
         requestsFromProxy: api.requestsFromProxy,
       },
     }

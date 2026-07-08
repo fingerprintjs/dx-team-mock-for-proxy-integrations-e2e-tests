@@ -92,10 +92,11 @@ export class TestCaseApi {
     requestSentToProxy: RequestSentToProxy
   }> {
     const url = new URL(this.integrationUrl)
+    const normalizedPath = (path || '/').replace(/^\//, '')
     if (url.pathname.endsWith('/')) {
-      url.pathname += path.replace(/^\//, '')
+      url.pathname += normalizedPath
     } else if (path !== '/') {
-      url.pathname += path
+      url.pathname += normalizedPath
     }
 
     if (query) {
@@ -140,7 +141,7 @@ export class TestCaseApi {
       method,
       headers: {
         ...requestConfig?.headers,
-        ...this.createTestHeaders(listenerType, requestId),
+        ...(listenerType ? this.createTestHeaders(listenerType, requestId) : {}),
       },
     }
 
@@ -164,7 +165,7 @@ export class TestCaseApi {
           headers: responseFromProxy.headers,
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       if (listenerType) {
         this.logger.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error.message)
       } else {
@@ -181,10 +182,12 @@ export class TestCaseApi {
     const headers: Record<string, string | string[]> = {}
     if (requestToSend.headers) {
       for (const [name, value] of Object.entries(requestToSend.headers)) {
-        if (Array.isArray(value)) {
-          headers[name] = value.map((v) => v.toString())
-        } else {
-          headers[name] = value.toString()
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            headers[name] = value.map((v) => v.toString())
+          } else {
+            headers[name] = value.toString()
+          }
         }
       }
     }
@@ -216,7 +219,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   async sendRequestToCacheEndpoint({
@@ -237,7 +240,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   async sendRequestToIngress({
@@ -257,7 +260,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   async sendRequestToV4Cdn({
@@ -279,7 +282,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   async sendRequestToV4CacheEndpoint({
@@ -300,7 +303,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   async sendRequestToV4Ingress({
@@ -320,7 +323,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   async sendArbitraryRequestToV4Ingress({
@@ -342,7 +345,7 @@ export class TestCaseApi {
     if (!result.requestFromProxy) {
       throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
     }
-    return result
+    return result as SendRequestResult
   }
 
   private createTestHeaders(requestType: ProxyRequestType, requestId?: string) {

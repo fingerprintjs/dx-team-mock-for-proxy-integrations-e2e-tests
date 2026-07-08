@@ -26,6 +26,10 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
   const host = req.get(TEST_CASE_HOST_HEADER)
   const testName = req.get(TEST_CASE_NAME_HEADER)
   const requestId = req.get(TEST_CASE_REQUEST_ID)
+  if (!host || !testName) {
+    return next()
+  }
+
   const key = createProxyRequestHandlerKey(host, testName)
 
   if (!requestId) {

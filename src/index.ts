@@ -1,4 +1,4 @@
-import * as express from 'express'
+import express from 'express'
 import { Express, NextFunction, Request, Response } from 'express'
 import beforeResponseMiddleware from './middlewares/beforeResponse.middleware'
 import { proxyReceiverRouter } from './app/proxy-receiver/router'

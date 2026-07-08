@@ -7,8 +7,6 @@ const testCase: TestCase = {
   test: async (api) => {
     const apiKey = getApiKey()
 
-    const path = `/web/v4/${apiKey}`
-
     const { requestFromProxy } = await api.sendRequestToV4Cdn({ apiKey })
 
     const pathParts = requestFromProxy.path.split('/').filter(Boolean)

@@ -22,8 +22,8 @@ function removePortFromIp(ip: string): string {
   return ip.replace(/(^\[[a-fA-F0-9:]+]):\d+$/, '$1').replace(/(^[0-9.]+):\d+$/, '$1')
 }
 
-export function assertEqualIp(actualIp: string, expectedIp: string, message?: string) {
-  assert(removePortFromIp(actualIp), removePortFromIp(expectedIp), message)
+export function assertEqualIp(actualIp: string | undefined, expectedIp: string, message?: string) {
+  assert(removePortFromIp(actualIp || ''), removePortFromIp(expectedIp), message)
 }
 
 export function assertLowerThanOrEqual(actual: number, expected: number, message?: string) {
@@ -48,7 +48,7 @@ export function assertRegExp(actual: string, regExp: RegExp, message?: string) {
   }
 }
 
-export function assertToBeTruthy(field: string, actual: unknown, message?: string) {
+export function assertToBeTruthy(field: string, actual: unknown, message?: string): asserts actual is NonNullable<unknown> {
   const safeActual = typeof actual === 'string' ? actual.trim() : actual
   if ((Array.isArray(safeActual) || typeof safeActual === 'string') && safeActual.length > 0) {
     return
