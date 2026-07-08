@@ -92,12 +92,10 @@ export class TestCaseApi {
     requestSentToProxy: RequestSentToProxy
   }> {
     const url = new URL(this.integrationUrl)
-    const normalizedPath = (path || '/').replace(/^\//, '')
-    if (url.pathname.endsWith('/')) {
-      url.pathname += normalizedPath
-    } else if (path !== '/') {
-      url.pathname += normalizedPath
-    }
+    const basePath = url.pathname.replace(/\/+$/, '')
+    const requestPath = (path ?? '/').replace(/^\/+/, '')
+
+    url.pathname = requestPath ? `${basePath}/${requestPath}` : basePath || '/'
 
     if (query) {
       url.search = query.toString()
