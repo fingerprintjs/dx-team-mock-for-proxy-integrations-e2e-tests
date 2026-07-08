@@ -1,4 +1,4 @@
-import express from 'express'
+import * as express from 'express'
 import { RunTestsRequestSchema } from './request.types'
 import { createTestSession, finalizeTestSession, TestSession } from './service/session'
 import { runTests } from './service/testRunner'
