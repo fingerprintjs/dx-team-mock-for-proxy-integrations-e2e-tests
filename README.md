@@ -3,11 +3,11 @@
 > **Note**
 > This repository isn’t part of our core product, it's a part of our internal tools.
 
-This repository contains mock server that is used for advanced E2E tests for our proxy integrations.
+This repository contains a mock server that is used for advanced E2E tests for our proxy integrations.
 When the integration is properly configured, it allows us to inspect requests sent from these integrations and perform necessary assertions.
 
 
-## Preperation
+## Preparation
 
 In order to test your proxy integration, you need to configure it to send requests to this mock app.
 In most cases, this can be done by setting this ENV variable when building the integration: `INGRESS_API`. For example:
@@ -33,30 +33,31 @@ If you navigate to the mock app URL, you will see a simple UI that allows you to
 
 ### REST API
 
-This app exposes REST API that can be used to run the tests.
+This app exposes a REST API that can be used to run the tests.
 
 To run tests, send a `POST` request to: `/api/test/run-tests` with the following payload:
 ```json
 {
   // Base origin of your proxy integration
   "integrationUrl": "https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/",
-  // CDN path in your proxy integration
+  // (Optional) CDN path in your proxy integration
   "cdnPath": "pxdownload",
-  // Ingress path in your proxy integration
+  // (Optional) Ingress path in your proxy integration
   "ingressPath": "pxresult",
   // First part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
   "trafficName": "fingerprint-pro-akamai",
   // Second part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
   "integrationVersion": "1.0.1-snapshot.0",
-  // Optional filters
+  // (Optional) filters
   "include": ["ingress", "agent*", "/body integrity protected with \\d{3} status code$/i"],
+  // (Optional) filters
   "exclude": ["query params", "ipv6"],
-  // Optional flag to run new tests suite for API V4
+  // (Optional) flag to run new tests suite for API V4
   "enableV4Tests": false
 }
 ```
 
-You will receive following response:
+You will receive the following response:
 ```json
 {
   "host": "https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com",
@@ -87,17 +88,21 @@ You will receive following response:
           "expected": "1234",
           "operator": "assert"
         },
-        // Array of requests that we received from proxy for this test
-        "requestsFromProxy": [
-          {
-            // URL from our app that proxy sent request to
-            "url": "<MOCK_APP_HOST>/worker/pxresult",
-            // Request headers
-            "headers": {},
-            // Request method
-            "method": "POST"
-          }
-        ]
+        // Record of requests that we received from proxy for this test, grouped by type (cdn, ingress, cache)
+        "requestsFromProxy": {
+          "ingress": [
+            {
+              // URL from our app that proxy sent request to
+              "url": "/worker/pxresult",
+              // Request headers
+              "headers": {},
+              // Request method
+              "method": "POST"
+            }
+          ],
+          "cdn": [],
+          "cache": []
+        }
       }
     }
   ]
@@ -108,28 +113,27 @@ You will receive following response:
 
 As an alternative, you can use our CLI client:
 ```bash
-pnpm dlx "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests.git" --
+pnpm dlx "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests.git" -- \
 # URL of the mock server 
---api-url="<API_URL>" 
+--api-url="<API_URL>" \
 # Base URL of your integration
---integration-url="https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/"
+--integration-url="https://mock-test-inter-568-mock-app-tests.cfi-fingerprint.com/worker/" \
 # CDN path in your proxy integration 
---cdn-path="pxdownload"
+--cdn-path="pxdownload" \
 # Ingress path in your proxy integration
---ingress-path="pxresult"
+--ingress-path="pxresult" \
 # First part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
---traffic-name="fingerprint-pro-akamai"
+--traffic-name="fingerprint-pro-akamai" \
 # Second part of ii parameter sent by our proxy integration: <trafficName>/<integrationVersion>/type
---integration-version="1.0.1-snapshot.0"
+--integration-version="1.0.1-snapshot.0" \
 # (Optional) Include tests by case-insensitive substring matching (if omitted, all tests are included)
---include="agent request"
+--include="agent request" \
 # (Optional) Glob-lite matching (* any sequence, ? any single char)
---include="agent*" # includes test cases that start with "agent"
---include="*status code" # includes tests that end with "status code"
+--include="agent*" \
 # (Optional) RegEx literal: /pattern/flags
---include="/body integrity protected with \d{3} status code$/i"
+--include="/body integrity protected with \d{3} status code$/i" \
 # (Optional) Exclude tests (same matching rules as include)
---exclude="ipv6"
+--exclude="ipv6" \
 # (Optional) Runs new tests suite for API V4
 --enable-new-tests=true
 ```
@@ -153,11 +157,11 @@ const testCase: TestCase = {
     const { requestFromProxy } = await api
       // or .sendRequestToIngress which sends request to the ingress endpoint
       // or .sendRequestToCacheEndpoint which sends request to the cache endpoint
-      .sendRequestToCdn(query, { headers: { 'X-Custom': '123' } })
+      .sendRequestToCdn({ query, request: { headers: { 'X-Custom': '123' } } })
     const { ii, customQuery } = requestFromProxy.query
 
-    assertToBeTruthy(ii)
-    assertToBeTruthy(customQuery)
+    assertToBeTruthy('ii', ii)
+    assertToBeTruthy('customQuery', customQuery)
 
     // More assertions
   },
@@ -166,7 +170,7 @@ const testCase: TestCase = {
 export default testCase
 ```
 
-To add new test case, simply create new file in [src/app/test/cases](src/app/test/cases) directory with `*.case.ts` file name and provide default export with the `TestCase` object.
+To add a new test case, simply create a new file in [src/app/test/cases](src/app/test/cases) directory with `*.case.ts` file name and provide a default export with the `TestCase` object.
 It will be automatically picked up by the test runner.
 
 ## Running locally
