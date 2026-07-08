@@ -10,10 +10,10 @@ When the integration is properly configured, it allows us to inspect requests se
 ## Preperation
 
 In order to test your proxy integration, you need to configure it to send requests to this mock app.
-In most cases, this can be done by setting these two ENV variables when building the integration: `FPCDN` and `INGRESS_API`. For example:
+In most cases, this can be done by setting this ENV variable when building the integration: `INGRESS_API`. For example:
 
 ```bash
-FPCDN=<API_URL> INGRESS_API=<API_URL> pnpm run build
+INGRESS_API=<API_URL> pnpm run build
 ```
 
 You also need to set `secret` as your proxy secret key.
