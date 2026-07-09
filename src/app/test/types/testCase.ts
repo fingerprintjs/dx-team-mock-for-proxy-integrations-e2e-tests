@@ -20,6 +20,7 @@ export type RequestSentToProxy = {
 export type SendRequestResult = {
   requestFromProxy: ExpressRequest
   responseFromProxy: ResponseFromProxy
+  requestSentToProxy: RequestSentToProxy
 }
 
 export type FailedTestCaseMetadata = {
