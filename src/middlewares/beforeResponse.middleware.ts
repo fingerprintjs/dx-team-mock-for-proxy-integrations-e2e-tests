@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express'
 const beforeResponseMiddleware = (logger: ApplicationLogger) => (req: Request, res: Response, next: NextFunction) => {
   let requestResolve: (payload: RequestPayload) => void
   let responseResolve: (payload: ResponsePayload) => void
-  let requestReject: (args: unknown) => void, responseReject: (args: unknown) => void
+  let requestReject: (reason?: unknown) => void, responseReject: (reason?: unknown) => void
   const requestPromise = new Promise<RequestPayload>((reqResolve, reqReject) => {
     requestResolve = reqResolve
     requestReject = reqReject
