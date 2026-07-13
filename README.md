@@ -6,29 +6,53 @@
 This repository contains mock server that is used for advanced E2E tests for our proxy integrations.
 When the integration is properly configured, it allows us to inspect requests sent from these integrations and perform necessary assertions.
 
+> **Hosted Version Available**
+> You don't need to run this tool locally! We have a hosted version available at https://mock-warden.fpjs.sh/ - you only need to follow the preparation steps below to configure your proxy integration. Running locally is optional and instructions are provided in the "Running locally" section if needed.
 
 ## Preperation
 
-In order to test your proxy integration, you need to configure it to send requests to this mock app.
-In most cases, this can be done by setting these two ENV variables when building the integration: `FPCDN` and `INGRESS_API`. For example:
+In order to test your proxy integration, you need to configure it to route requests to this mock app instead of the regular FingerprintJS API endpoints. This allows the mock server to intercept and validate the requests from your proxy integration.
+
+### Configuration Methods
+
+**Method 1: Environment Variables (Most Common)**
+For integrations that use environment variables, set these when building:
 
 ```bash
-FPCDN=<API_URL> INGRESS_API=<API_URL> pnpm run build
+FPCDN=<MOCK_API_URL> INGRESS_API=<MOCK_API_URL> pnpm run build
 ```
 
-You also need to set `secret` as your proxy secret key.
+**Method 2: Configuration Files**
+For integrations that use configuration files, update the base URLs directly. For example, if your proxy has a `config.ts` file:
 
-Refer to specific integration README for more details.
+```typescript
+// Before (production URLs)
+export const config = {
+  fpcdn: 'fpcdn.io',
+  ingressApi: 'api.fpjs.io',
+}
 
-> **Note**
-> In order to get the API URL, contact the DX team.
+// After (mock URLs for testing)
+export const config = {
+  fpcdn: 'mock-warden.fpjs.sh',
+  ingressApi: 'mock-warden.fpjs.sh',
+}
+```
+
+**Additional Requirements:**
+- Set the text value `secret` as your proxy secret key
+
+Refer to your specific integration README for more configuration details.
 
 ## How to use it
 
 ### UI
 
-If you navigate to the mock app URL, you will see a simple UI that allows you to run the tests.
-![ui.png](assets/ui.png)
+If you navigate to the mock app URL, you will see a simple UI that allows you to run the tests. You can run a single test, or all tests within one or multiple domains.
+
+Some tests will require input of variables like "Traffic Name". The custom proxy integration docs have additional information on these parameters: https://dev.fingerprint.com/docs/custom-proxy-integrations
+
+![ui.png](assets/ui-updated.png)
 
 
 ### REST API
