@@ -1,53 +1,46 @@
-import * as express from 'express'
 import { RunTestsRequestSchema } from './request.types'
 import { createTestSession, finalizeTestSession, TestSession } from './service/session'
 import { runTests } from './service/testRunner'
-import { validateRequest } from 'zod-express-middleware'
-import { HttpError } from './errors'
+import { Routing, EndpointsFactory } from 'express-zod-api'
 
-const RunTestsSchema = validateRequest({
-  body: RunTestsRequestSchema,
+export const testRouting = (factory: EndpointsFactory<any>): Routing => ({
+  'run-tests': factory.build({
+    method: 'post',
+    input: RunTestsRequestSchema,
+    output: RunTestsRequestSchema.passthrough(),
+    handler: async ({ input, logger }) => {
+      let testSession: TestSession | undefined
+      try {
+        testSession = createTestSession(input)
+        const rawInclude = input.include && input.include.length > 0 ? input.include : input.testsFilter
+        const include = (rawInclude ?? []) as string[]
+        const exclude = [...(input.exclude ?? [])] as string[]
+        const includeHasV4 = () => include.some((it: string) => it.includes('v4'))
+        // Unless v4 is explicitly enabled by flag or filters, exclude it
+        if (!input.enableV4Tests && !includeHasV4()) {
+          exclude.push('v4')
+        }
+
+        if (input.testsFilter) {
+          logger.warn('[DEPRECATION] `testsFilter` is deprecated. Use `include`/`exclude`.')
+        }
+
+        const result = await runTests(testSession, { include, exclude })
+
+        return result.toTestResponse() as any
+      } catch (e) {
+        if (testSession) {
+          finalizeTestSession(testSession)
+        }
+
+        throw e
+      }
+    },
+  }),
 })
 
 export function testRouter() {
-  const router = express.Router()
-
-  router.post('/run-tests', RunTestsSchema, async (req, res, next) => {
-    let testSession: TestSession | undefined
-    try {
-      testSession = createTestSession(req.body)
-      const rawInclude = req.body.include && req.body.include.length > 0 ? req.body.include : req.body.testsFilter
-      const include = rawInclude ?? []
-      const exclude = [...(req.body.exclude ?? [])]
-      const includeHasV4 = () => include.some((it) => it.includes('v4'))
-      // Unless v4 is explicitly enabled by flag or filters, exclude it
-      if (!req.body.enableV4Tests && !includeHasV4()) {
-        exclude.push('v4')
-      }
-
-      if (req.body.testsFilter) {
-        console.warn('[DEPRECATION] `testsFilter` is deprecated. Use `include`/`exclude`.')
-      }
-
-      const result = await runTests(testSession, { include, exclude })
-
-      return res.json(result.toTestResponse())
-    } catch (e) {
-      if (testSession) {
-        finalizeTestSession(testSession)
-      }
-
-      if (e instanceof HttpError) {
-        return res.status(e.status).json({
-          error: {
-            code: e.code,
-            message: e.message,
-          },
-        })
-      }
-      return next(e)
-    }
-  })
-
-  return router
+  // This is no longer used but keeping it for backward compatibility if needed by other files
+  // In v28+, we should use attachRouting in index.ts
+  return {} as any
 }
