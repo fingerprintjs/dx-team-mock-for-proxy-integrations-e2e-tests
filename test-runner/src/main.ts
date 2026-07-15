@@ -26,17 +26,19 @@ function createBooleanUnion({ valueWhenNull, defaultValue }: BooleanUnionParams)
       z.literal('false').transform(() => false),
       z.null().transform(() => valueWhenNull),
     ])
-    .default(defaultValue ? 'true' : 'false')
+    .default(defaultValue)
 }
 
 const OptionsSchema = RunTestsRequestSchema.omit({ enableV4Tests: true }).extend({
+  trafficName: z.string().optional(),
+  integrationVersion: z.string().optional(),
   attempts: z.number().default(3),
-  apiUrl: z.string().url(),
-  integrationUrl: z.string().url().optional(),
+  apiUrl: z.url().optional(),
+  integrationUrl: z.url().optional(),
   ingressPath: z.string().optional(),
   cdnPath: z.string().optional(),
-  cdnProxyUrl: z.string().url().optional(),
-  ingressProxyUrl: z.string().url().optional(),
+  cdnProxyUrl: z.url().optional(),
+  ingressProxyUrl: z.url().optional(),
   verbose: createBooleanUnion({ valueWhenNull: true, defaultValue: false }),
   // zodcli disallows numbers in properties, so we need to enableNewTests maps to enableV4Tests in the request body
   enableNewTests: createBooleanUnion({
@@ -127,8 +129,17 @@ async function fetchApiBuildInfo(apiUrl: string): Promise<BuildInfo | null> {
 }
 
 async function main() {
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    logger.box('Help is not implemented yet')
+    return
+  }
+
   if (args.verbose) {
     logger.level = LogLevels.verbose
+  }
+
+  if (!args.apiUrl) {
+    throw new Error('API URL is required. Use --api-url')
   }
 
   logger.box(`${versionInfo.name}@${versionInfo.version}`)
@@ -164,8 +175,8 @@ async function main() {
     integrationUrl,
     ingressPath,
     cdnPath,
-    trafficName: args.trafficName,
-    integrationVersion: args.integrationVersion,
+    trafficName: args.trafficName ?? 'unknown',
+    integrationVersion: args.integrationVersion ?? 'unknown',
     include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
     exclude: args.exclude,
     testsFilter: args.testsFilter,
