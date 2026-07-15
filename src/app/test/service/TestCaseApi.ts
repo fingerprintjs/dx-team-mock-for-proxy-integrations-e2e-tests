@@ -212,7 +212,7 @@ export class TestCaseApi {
   }
 
   async sendRequestToCdn({ query, request, mockResponse }: RequestToCdnParams): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method: 'GET',
       path: this.cdnPath,
       query,
@@ -220,11 +220,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cdn,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   async sendRequestToCacheEndpoint({
@@ -233,7 +228,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToCacheEndpointParams): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method: 'GET',
       path: this.ingressPath + (pathname ? pathname : ''),
       query,
@@ -241,11 +236,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cache,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   async sendRequestToIngress({
@@ -253,7 +243,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToIngressParams = {}): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method: 'POST',
       path: this.ingressPath,
       query,
@@ -261,11 +251,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Ingress,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   async sendRequestToV4Cdn({
@@ -275,7 +260,7 @@ export class TestCaseApi {
     apiKey = getApiKey(),
     pathOverride,
   }: RequestToCdnParams = {}): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method: 'GET',
       path: pathOverride || `/web/v4/${apiKey}`,
       query,
@@ -283,11 +268,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cdn,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   async sendRequestToV4CacheEndpoint({
@@ -296,7 +276,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToCacheEndpointParams = {}): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method: 'GET',
       path: pathname ?? `/browser-cache/${getRandomString()}`,
       query,
@@ -304,11 +284,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Cache,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   async sendRequestToV4Ingress({
@@ -316,7 +291,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: RequestToIngressParams = {}): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method: 'POST',
       path: '/',
       query,
@@ -324,11 +299,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Ingress,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   async sendArbitraryRequestToV4Ingress({
@@ -338,7 +308,7 @@ export class TestCaseApi {
     query,
     mockResponse,
   }: ArbitraryV4RequestParams): Promise<SendRequestResult> {
-    const result = await this.sendRequest({
+    return await this.sendRequest({
       method,
       path,
       query,
@@ -346,11 +316,6 @@ export class TestCaseApi {
       listenerType: ProxyRequestType.Ingress,
       mockResponse,
     })
-
-    if (!result.requestFromProxy) {
-      throw new NoProxyRequestReceivedError(result.requestSentToProxy, result.responseFromProxy)
-    }
-    return result
   }
 
   private createTestHeaders(requestType: ProxyRequestType, requestId?: string) {
