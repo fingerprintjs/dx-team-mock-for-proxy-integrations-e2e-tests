@@ -1,5 +1,5 @@
 # Use ARG to define the node version
-ARG NODE_VERSION=22
+ARG NODE_VERSION=24
 ARG NODE_ENV=production
 
 # Use the Node.js version specified by NODE_VERSION
@@ -10,7 +10,7 @@ ARG BUILD_TIME
 
 RUN apk add --no-cache git
 
-RUN npm i -g pnpm@9
+RUN corepack enable pnpm
 
 # Set working directory
 WORKDIR /app

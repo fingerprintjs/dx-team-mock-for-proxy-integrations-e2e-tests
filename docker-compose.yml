@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   app:
-    image: node:22-alpine
+    image: node:${NODE_VERSION:-24}-alpine
     ports:
       - "${PORT:-3000}:3000"
     environment:
@@ -11,7 +9,7 @@ services:
       - .:/app
     working_dir: /app
     command: >
-      /bin/sh -c "npm i -g pnpm@9 && pnpm install && pnpm start:dev"
+      /bin/sh -c "corepack enable pnpm && pnpm install && pnpm start:dev"
 
   ngrok:
     image: ngrok/ngrok:latest
