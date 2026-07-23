@@ -33,7 +33,7 @@ const OptionsSchema = RunTestsRequestSchema.omit({ enableV4Tests: true }).extend
   trafficName: z.string(),
   integrationVersion: z.string(),
   attempts: z.number().default(3),
-  apiUrl: z.url().optional(),
+  apiUrl: z.url(),
   integrationUrl: z.url().optional(),
   ingressPath: z.string().optional(),
   cdnPath: z.string().optional(),
@@ -136,10 +136,6 @@ async function main() {
 
   if (args.verbose) {
     logger.level = LogLevels.verbose
-  }
-
-  if (!args.apiUrl) {
-    throw new Error('API URL is required. Use --api-url')
   }
 
   logger.box(`${versionInfo.name}@${versionInfo.version}`)
