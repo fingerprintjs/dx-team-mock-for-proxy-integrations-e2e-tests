@@ -2,12 +2,13 @@ import { RunTestsRequestSchema } from './request.types'
 import { createTestSession, finalizeTestSession, TestSession } from './service/session'
 import { runTests } from './service/testRunner'
 import { Routing, EndpointsFactory } from 'express-zod-api'
+import { TestResponseSchema } from './response.types'
 
 export const testRouting = (factory: EndpointsFactory): Routing => ({
   'run-tests': factory.build({
     method: 'post',
     input: RunTestsRequestSchema,
-    output: RunTestsRequestSchema.passthrough(),
+    output: TestResponseSchema,
     handler: async ({ input, logger }) => {
       let testSession: TestSession | undefined
       try {
@@ -27,7 +28,7 @@ export const testRouting = (factory: EndpointsFactory): Routing => ({
 
         const result = await runTests(testSession, { include, exclude })
 
-        return result.toTestResponse() as any
+        return result.toTestResponse()
       } catch (e) {
         if (testSession) {
           finalizeTestSession(testSession)
