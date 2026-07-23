@@ -30,8 +30,8 @@ function createBooleanUnion({ valueWhenNull, defaultValue }: BooleanUnionParams)
 }
 
 const OptionsSchema = RunTestsRequestSchema.omit({ enableV4Tests: true }).extend({
-  trafficName: z.string().optional(),
-  integrationVersion: z.string().optional(),
+  trafficName: z.string(),
+  integrationVersion: z.string(),
   attempts: z.number().default(3),
   apiUrl: z.url().optional(),
   integrationUrl: z.url().optional(),
@@ -175,8 +175,8 @@ async function main() {
     integrationUrl,
     ingressPath,
     cdnPath,
-    trafficName: args.trafficName ?? 'unknown',
-    integrationVersion: args.integrationVersion ?? 'unknown',
+    trafficName: args.trafficName,
+    integrationVersion: args.integrationVersion,
     include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
     exclude: args.exclude,
     testsFilter: args.testsFilter,
