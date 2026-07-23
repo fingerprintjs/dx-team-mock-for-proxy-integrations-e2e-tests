@@ -60,7 +60,7 @@ attachRouting(
     app,
     logger: console,
     cors: true,
-  }) as any,
+  }),
   {
     'api/test': testRouting(factory),
   }
