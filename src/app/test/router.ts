@@ -3,7 +3,7 @@ import { createTestSession, finalizeTestSession, TestSession } from './service/s
 import { runTests } from './service/testRunner'
 import { Routing, EndpointsFactory } from 'express-zod-api'
 
-export const testRouting = (factory: EndpointsFactory<any>): Routing => ({
+export const testRouting = (factory: EndpointsFactory): Routing => ({
   'run-tests': factory.build({
     method: 'post',
     input: RunTestsRequestSchema,
@@ -38,9 +38,3 @@ export const testRouting = (factory: EndpointsFactory<any>): Routing => ({
     },
   }),
 })
-
-export function testRouter() {
-  // This is no longer used but keeping it for backward compatibility if needed by other files
-  // In v28+, we should use attachRouting in index.ts
-  return {} as any
-}
