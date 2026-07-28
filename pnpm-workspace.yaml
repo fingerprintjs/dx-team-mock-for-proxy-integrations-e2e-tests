@@ -1,2 +1,4 @@
 packages:
   - 'test-runner'
+allowBuilds:
+  esbuild: true

@@ -76,13 +76,17 @@ const fetchWithIMDSToken = async (address: string): Promise<string> => {
     await ensureValidIMDSToken()
   }
 
+  if (!imdsAuthTokenCache) {
+    throw new Error('IMDS token not available')
+  }
+
   try {
-    return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache!.value })
+    return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache.value })
   } catch (error) {
     if ((error as any)?.response?.status === 401) {
       console.warn(`IMDS token rejected, refreshing and retrying...`)
       await ensureValidIMDSToken()
-      return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache!.value })
+      return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache.value })
     }
     throw error
   }

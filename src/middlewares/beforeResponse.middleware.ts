@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express'
 const beforeResponseMiddleware = (logger: ApplicationLogger) => (req: Request, res: Response, next: NextFunction) => {
   let requestResolve: (payload: RequestPayload) => void
   let responseResolve: (payload: ResponsePayload) => void
-  let requestReject, responseReject
+  let requestReject: (reason?: unknown) => void, responseReject: (reason?: unknown) => void
   const requestPromise = new Promise<RequestPayload>((reqResolve, reqReject) => {
     requestResolve = reqResolve
     requestReject = reqReject
@@ -20,7 +20,7 @@ const beforeResponseMiddleware = (logger: ApplicationLogger) => (req: Request, r
       headers: req.headers as unknown as { [key: string]: string },
       method: req.method,
       queryParams: req.query as unknown as { [key: string]: string },
-      urlHost: req.get('host'),
+      urlHost: req.get('host') || '',
     })
   })
   req.on('error', (err) => {
@@ -29,7 +29,7 @@ const beforeResponseMiddleware = (logger: ApplicationLogger) => (req: Request, r
 
   res.on('finish', () => {
     responseResolve({
-      contentType: res.getHeaders().host,
+      contentType: String(res.getHeader('content-type') || ''),
       statusCode: res.statusCode,
     })
   })

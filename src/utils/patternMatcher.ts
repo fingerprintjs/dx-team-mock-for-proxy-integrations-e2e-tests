@@ -24,7 +24,7 @@ const parseRegex = (p: string) => {
 
   try {
     return new RegExp(m[1], m[2])
-  } catch (e) {
+  } catch {
     console.warn(`${p} is not a valid RegEx pattern, ignoring.`)
     return null
   }

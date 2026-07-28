@@ -1,4 +1,4 @@
-import * as express from 'express'
+import express from 'express'
 import {
   ProxyRequestType,
   notifyProxyRequestListener,
@@ -26,6 +26,10 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
   const host = req.get(TEST_CASE_HOST_HEADER)
   const testName = req.get(TEST_CASE_NAME_HEADER)
   const requestId = req.get(TEST_CASE_REQUEST_ID)
+  if (!host || !testName) {
+    return next()
+  }
+
   const key = createProxyRequestHandlerKey(host, testName)
 
   if (!requestId) {
@@ -62,7 +66,7 @@ function handleProxyRequest(req: express.Request, res: express.Response, next: e
 export function proxyReceiverRouter() {
   const router = express.Router()
 
-  router.all('*', handleProxyRequest)
+  router.all('{*splat}', handleProxyRequest)
 
   return router
 }

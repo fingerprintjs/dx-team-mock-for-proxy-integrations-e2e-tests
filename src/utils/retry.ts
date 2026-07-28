@@ -51,4 +51,5 @@ export async function withRetry<T>(
       await wait(interval)
     }
   }
+  throw lastError || new Error('withRetry failed without an error')
 }
