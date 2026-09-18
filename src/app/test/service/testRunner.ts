@@ -137,7 +137,8 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
       passed: true,
     }
   } catch (error) {
-    api.logger.error(error)
+    // Not logged here: onAttemptError already logged and flushed this error when the attempt
+    // failed, and logging it again duplicates it in the console and in result.logs.
     result = {
       passed: false,
       reason: error instanceof Error ? error.message : String(error),

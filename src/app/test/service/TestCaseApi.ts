@@ -217,7 +217,7 @@ export class TestCaseApi {
       removeProxyRequestListener(listenerType, key)
     }
 
-if (timeoutMessage) {
+    if (timeoutMessage) {
       throw new ProxyRequestTimeoutError(requestSentToProxy, timeoutMessage)
     }
 
