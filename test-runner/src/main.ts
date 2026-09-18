@@ -4,7 +4,7 @@ import { argumentParser } from 'zodcli'
 import { RunTestsRequest, RunTestsRequestSchema } from '../../src/app/test/request.types'
 import { TestResponse } from '../../src/app/test/service/session'
 import { createConsola, LogLevels } from 'consola'
-import { DetailedTestResult } from '../../src/app/test/service/testRunner'
+import { DetailedTestResult, FailedAttempt } from '../../src/app/test/service/testRunner'
 import { z } from 'zod'
 import { FailedTestResult } from '../../src/app/test/types/testCase'
 import { httpClient } from '../../src/utils/httpClient'
@@ -196,9 +196,15 @@ async function main() {
   const hasFailedTests = response.data.results.some((result) => !result.passed)
 
   const results = response.data.results.map((result) => {
-    return result.passed
-      ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
-      : getFailedTestMessage(result as DetailedTestResult & FailedTestResult)
+    if (!result.passed) {
+      return getFailedTestMessage(result as DetailedTestResult & FailedTestResult)
+    }
+
+    const retried = result.attempts?.length
+      ? `\n${formatAttempts(result.attempts)}\n  ⚠️  recovered after ${result.attempts.length} failed attempt(s)`
+      : ''
+
+    return `✅ "${result.testName}" passed in ${result.requestDurationMs}MS${retried}`
   })
 
   results.unshift(`Test results (${results.length}):`)
@@ -215,6 +221,10 @@ async function main() {
     }
     throw new Error('Tests failed')
   }
+}
+
+function formatAttempts(attempts: FailedAttempt[]): string {
+  return attempts.map((a) => `  ↳ attempt ${a.attempt} failed at ${a.at}: ${a.name}: ${a.reason}`).join('\n')
 }
 
 function getFailedTestMessage(result: DetailedTestResult & FailedTestResult): string {
@@ -234,9 +244,13 @@ function getFailedTestMessage(result: DetailedTestResult & FailedTestResult): st
     proxyRequests.unshift('  Received proxy requests:')
   }
 
-  return [`❌ "${result.testName}" failed: "${result.reason}" in ${result.requestDurationMs}MS`, ...proxyRequests].join(
-    '\n'
-  )
+  const attempts = result.attempts?.length ? [formatAttempts(result.attempts)] : []
+
+  return [
+    `❌ "${result.testName}" failed: "${result.reason}" in ${result.requestDurationMs}MS`,
+    ...attempts,
+    ...proxyRequests,
+  ].join('\n')
 }
 
 main().catch((error) => {

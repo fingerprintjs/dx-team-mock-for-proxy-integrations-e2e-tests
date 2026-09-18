@@ -25,6 +25,16 @@ export class TestSessionAlreadyExistsError extends HttpError {
   }
 }
 
+export class ProxyRequestTimeoutError extends Error {
+  constructor(
+    public readonly requestSentToProxy: RequestSentToProxy,
+    public readonly timeoutMessage: string
+  ) {
+    super(`Request to proxy timed out: ${timeoutMessage}`)
+    this.name = 'ProxyRequestTimeoutError'
+  }
+}
+
 export class NoProxyRequestReceivedError extends Error {
   constructor(
     public readonly requestSentToProxy: RequestSentToProxy,
