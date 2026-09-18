@@ -217,13 +217,11 @@ export class TestCaseApi {
       removeProxyRequestListener(listenerType, key)
     }
 
-    if (!requestFromProxy) {
-      // A timed-out request never got an answer at all, which is a different failure from a
-      // proxy that answered without forwarding. Reporting both as the latter hides the timeout.
-      if (timeoutMessage) {
-        throw new ProxyRequestTimeoutError(requestSentToProxy, timeoutMessage)
-      }
+if (timeoutMessage) {
+      throw new ProxyRequestTimeoutError(requestSentToProxy, timeoutMessage)
+    }
 
+    if (!requestFromProxy) {
       throw new NoProxyRequestReceivedError(requestSentToProxy, responseFromProxy)
     }
 
