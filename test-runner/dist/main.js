@@ -4354,6 +4354,9 @@ const ZodURL = /*@__PURE__*/ $constructor("ZodURL", (inst, def) => {
     $ZodURL.init(inst, def);
     ZodStringFormat.init(inst, def);
 });
+function url$1(params) {
+    return _url(ZodURL, params);
+}
 const ZodEmoji = /*@__PURE__*/ $constructor("ZodEmoji", (inst, def) => {
     // ZodStringFormat.init(inst, def);
     $ZodEmoji.init(inst, def);
@@ -4997,7 +5000,7 @@ const argumentParser = ({ options, aliases, }) => {
 };
 
 const RunTestsRequestSchema = object({
-    integrationUrl: string().url(),
+    integrationUrl: url$1(),
     ingressPath: string().optional(),
     cdnPath: string().optional(),
     trafficName: string(),
@@ -28381,15 +28384,15 @@ function createBooleanUnion({ valueWhenNull, defaultValue }) {
         .default(defaultValue);
 }
 const OptionsSchema = RunTestsRequestSchema.omit({ enableV4Tests: true }).extend({
-    trafficName: string().optional(),
-    integrationVersion: string().optional(),
+    trafficName: string(),
+    integrationVersion: string(),
     attempts: number().default(3),
-    apiUrl: string().url().optional(),
-    integrationUrl: string().url().optional(),
+    apiUrl: url$1(),
+    integrationUrl: url$1().optional(),
     ingressPath: string().optional(),
     cdnPath: string().optional(),
-    cdnProxyUrl: string().url().optional(),
-    ingressProxyUrl: string().url().optional(),
+    cdnProxyUrl: url$1().optional(),
+    ingressProxyUrl: url$1().optional(),
     verbose: createBooleanUnion({ valueWhenNull: true, defaultValue: false }),
     // zodcli disallows numbers in properties, so we need to enableNewTests maps to enableV4Tests in the request body
     enableNewTests: createBooleanUnion({
@@ -28470,9 +28473,6 @@ async function main() {
     if (args.verbose) {
         logger.level = LogLevels.verbose;
     }
-    if (!args.apiUrl) {
-        throw new Error('API URL is required. Use --api-url');
-    }
     logger.box(`${versionInfo.name}@${versionInfo.version}`);
     const apiUrl = new URL(args.apiUrl);
     const apiInfo = await fetchApiBuildInfo(args.apiUrl);
@@ -28496,8 +28496,8 @@ async function main() {
         integrationUrl,
         ingressPath,
         cdnPath,
-        trafficName: args.trafficName ?? 'unknown',
-        integrationVersion: args.integrationVersion ?? 'unknown',
+        trafficName: args.trafficName,
+        integrationVersion: args.integrationVersion,
         include: args.include && args.include.length > 0 ? args.include : args.testsFilter,
         exclude: args.exclude,
         testsFilter: args.testsFilter,
@@ -28515,9 +28515,13 @@ async function main() {
     logger.debug(`Response`, response.data);
     const hasFailedTests = response.data.results.some((result) => !result.passed);
     const results = response.data.results.map((result) => {
-        return result.passed
-            ? `✅ "${result.testName}" passed in ${result.requestDurationMs}MS`
-            : getFailedTestMessage(result);
+        if (!result.passed) {
+            return getFailedTestMessage(result);
+        }
+        const retried = result.attempts?.length
+            ? `\n${formatAttempts(result.attempts)}\n  ⚠️  recovered after ${result.attempts.length} failed attempt(s)`
+            : '';
+        return `✅ "${result.testName}" passed in ${result.requestDurationMs}MS${retried}`;
     });
     results.unshift(`Test results (${results.length}):`);
     logger.box(results.join('\n'));
@@ -28533,6 +28537,9 @@ async function main() {
         throw new Error('Tests failed');
     }
 }
+function formatAttempts(attempts) {
+    return attempts.map((a) => `  ↳ attempt ${a.attempt} failed at ${a.at}: ${a.name}: ${a.reason}`).join('\n');
+}
 function getFailedTestMessage(result) {
     const proxyRequests = Object.entries(result.meta?.requestsFromProxy ?? {})
         .filter(([, requests]) => requests.length > 0)
@@ -28545,7 +28552,12 @@ function getFailedTestMessage(result) {
     if (proxyRequests.length > 0) {
         proxyRequests.unshift('  Received proxy requests:');
     }
-    return [`❌ "${result.testName}" failed: "${result.reason}" in ${result.requestDurationMs}MS`, ...proxyRequests].join('\n');
+    const attempts = result.attempts?.length ? [formatAttempts(result.attempts)] : [];
+    return [
+        `❌ "${result.testName}" failed: "${result.reason}" in ${result.requestDurationMs}MS`,
+        ...attempts,
+        ...proxyRequests,
+    ].join('\n');
 }
 main().catch((error) => {
     const status = error?.response?.status;

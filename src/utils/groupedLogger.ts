@@ -12,6 +12,8 @@ interface LogEntry {
 interface LogContext {
   label: string
   entries: LogEntry[]
+  /** Number of entries already written out, so repeated flushes never duplicate lines. */
+  flushed: number
 }
 
 const als = new AsyncLocalStorage<LogContext>()
@@ -69,12 +71,13 @@ export function runWithGroupedLog<T>(label: string, fn: () => Promise<T>): Promi
   let result: T
   let logs: string[] = []
 
-  const ctx: LogContext = { label, entries: [] }
+  const ctx: LogContext = { label, entries: [], flushed: 0 }
   return als.run(ctx, async () => {
     try {
       result = await fn()
     } finally {
-      logs = flush(ctx, mode)
+      flushPending(ctx)
+      logs = formatEntries(ctx.entries)
     }
 
     return {
@@ -84,25 +87,39 @@ export function runWithGroupedLog<T>(label: string, fn: () => Promise<T>): Promi
   })
 }
 
-function flush(ctx: LogContext, mode: LogMode): string[] {
-  if (ctx.entries.length === 0) {
-    return []
+/**
+ * Writes out whatever the current group has buffered so far, without ending the group.
+ *
+ * Grouped mode only prints when a group settles, so a test case that is retried - after a
+ * timeout, say - stays invisible for as long as the retries take, and is lost entirely if the
+ * process is killed first. Calling this on each failed attempt makes the failure observable
+ * at the moment it happens. No-op outside a group context.
+ */
+export function flushGroupedLog(): void {
+  const ctx = als.getStore()
+  if (ctx) {
+    flushPending(ctx)
   }
+}
 
-  const header = `\n──────── ${ctx.label} ────────`
-  const headerEnd = `\n──────── ${ctx.label} (end) ────────`
-  const body = ctx.entries.map((e) => {
+function formatEntries(entries: LogEntry[]): string[] {
+  return entries.map((e) => {
     const level = `[${e.level.toUpperCase()}]`
     return `${level} ${new Date(e.at).toISOString()} ${e.message}`
   })
+}
 
-  if (mode === 'grouped') {
-    real.log(header)
-    body.forEach((line) => {
-      real.log(`  ${line}`)
-    })
-    real.log(headerEnd)
+function flushPending(ctx: LogContext): void {
+  const pending = ctx.entries.slice(ctx.flushed)
+  ctx.flushed = ctx.entries.length
+
+  if (pending.length === 0 || mode !== 'grouped') {
+    return
   }
 
-  return body
+  real.log(`\n──────── ${ctx.label} ────────`)
+  formatEntries(pending).forEach((line) => {
+    real.log(`  ${line}`)
+  })
+  real.log(`\n──────── ${ctx.label} (end) ────────`)
 }

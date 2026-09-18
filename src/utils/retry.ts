@@ -8,11 +8,19 @@ import { wait } from './wait'
  *   the last thrown error (when the callback kept throwing). Defaults to `5`.
  * @property onRetry - Invoked before each retry (i.e. starting from the second attempt)
  *   with the current attempt index and the most recent error, if any.
+ * @property onAttemptError - Invoked the moment an attempt fails, before any wait or retry
+ *   decision, so the failure can be reported while it is happening rather than once the whole
+ *   retry cycle has played out.
+ * @property shouldRetry - Decides whether a given error is worth retrying. Defaults to retrying
+ *   everything. Deterministic failures (a failed assertion, say) produce the same result on every
+ *   attempt, so retrying them only delays the verdict.
  */
 export type RetryUntilParams = {
   interval: number
   maxAttempts?: number
   onRetry?: (context: RetryContext & { error?: Error }) => void
+  onAttemptError?: (context: RetryContext & { error: unknown }) => void
+  shouldRetry?: (error: unknown) => boolean
 }
 
 /**
@@ -29,7 +37,7 @@ export type RetryContext = {
  **/
 export async function withRetry<T>(
   callback: (context: RetryContext) => Promise<T>,
-  { interval, maxAttempts = 5, onRetry }: RetryUntilParams
+  { interval, maxAttempts = 5, onRetry, onAttemptError, shouldRetry }: RetryUntilParams
 ): Promise<T> {
   let attempts = 0
   let lastError: Error | undefined = undefined
@@ -42,8 +50,9 @@ export async function withRetry<T>(
     try {
       return await callback({ attempt: attempts })
     } catch (error) {
+      onAttemptError?.({ attempt: attempts, error })
       attempts++
-      if (attempts >= maxAttempts) {
+      if (attempts >= maxAttempts || (shouldRetry && !shouldRetry(error))) {
         throw error
       }
       lastError = error instanceof Error ? error : new Error(String(error))

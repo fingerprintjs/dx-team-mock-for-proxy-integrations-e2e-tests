@@ -13,12 +13,23 @@ import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
 import { withRetry } from '../../../utils/retry'
-import { runWithGroupedLog } from '../../../utils/groupedLogger'
+import { flushGroupedLog, runWithGroupedLog } from '../../../utils/groupedLogger'
+import { AssertionError } from 'node:assert'
+
+/** One failed attempt of a test case, recorded as it happens rather than after the retries settle. */
+export type FailedAttempt = {
+  attempt: number
+  name: string
+  reason: string
+  at: string
+}
 
 export type DetailedTestResult = TestResult & {
   testName: string
   requestDurationMs: number
   logs?: string[]
+  /** Every attempt that failed, including the ones a later attempt recovered from. */
+  attempts?: FailedAttempt[]
 }
 
 type TestFilterOptions = {
@@ -73,6 +84,10 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
   return finalizeTestSession(testSession)
 }
 
+function isDeterministicFailure(error: unknown): boolean {
+  return error instanceof AssertionError || (error as { name?: string } | null)?.name === 'AssertionError'
+}
+
 export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
   const startTime = Date.now()
 
@@ -91,14 +106,30 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   }
 
   let result: TestResult
+  const attempts: FailedAttempt[] = []
 
   try {
     await withRetry(async () => await testCase.test(api), {
       maxAttempts: 3,
       interval: 10_000,
-      onRetry: ({ attempt, error }) => {
-        api.logMetadata.attempt = attempt
+      // A failed assertion is deterministic: the proxy answered, the answer was wrong, and
+      // asking again changes nothing. Retrying it only pushes the verdict past the client's
+      // timeout, which turns a clear assertion failure into an opaque one.
+      shouldRetry: (error) => !isDeterministicFailure(error),
+      // Report the failure as it happens. onRetry only runs after the retry interval has
+      // elapsed, so hooking it would still hide a timeout for the length of the wait.
+      onAttemptError: ({ attempt, error }) => {
+        attempts.push({
+          attempt: attempt + 1,
+          name: error instanceof Error ? error.name : 'Error',
+          reason: error instanceof Error ? error.message : String(error),
+          at: new Date().toISOString(),
+        })
         api.logger.error(error)
+        flushGroupedLog()
+      },
+      onRetry: ({ attempt }) => {
+        api.logMetadata.attempt = attempt
       },
     })
 
@@ -106,6 +137,8 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
       passed: true,
     }
   } catch (error) {
+    // Not logged here: onAttemptError already logged and flushed this error when the attempt
+    // failed, and logging it again duplicates it in the console and in result.logs.
     result = {
       passed: false,
       reason: error instanceof Error ? error.message : String(error),
@@ -137,5 +170,6 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
     ...result,
     testName: testCase.name,
     requestDurationMs,
+    attempts,
   }
 }

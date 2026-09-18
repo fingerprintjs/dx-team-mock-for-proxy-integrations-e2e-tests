@@ -21,7 +21,7 @@ import { MockResponse, setMockResponse } from './mockResponseRegistry'
 import { generateRequestId } from '../../../utils/generateRequestId'
 import { getApiKey } from '../utils/getApiKey'
 import { getRandomString } from '../utils/getRandomString'
-import { NoProxyRequestReceivedError } from '../errors'
+import { NoProxyRequestReceivedError, ProxyRequestTimeoutError } from '../errors'
 import { createLogger, Logger } from '../../../utils/logger'
 
 interface SendRequestOptions {
@@ -60,6 +60,14 @@ interface ArbitraryV4RequestParams {
   request?: Partial<AxiosRequestConfig>
   query?: URLSearchParams
   mockResponse?: MockResponse
+}
+
+function isTimeoutError(error: { code?: string; message?: string }): boolean {
+  return (
+    error?.code === 'ECONNABORTED' ||
+    error?.code === 'ETIMEDOUT' ||
+    /timeout of \d+ms exceeded/.test(error?.message ?? '')
+  )
 }
 
 export class TestCaseApi {
@@ -136,6 +144,7 @@ export class TestCaseApi {
     }
 
     let responseFromProxy: ResponseFromProxy
+    let timeoutMessage: string | undefined
 
     const requestToSend = {
       ...requestConfig,
@@ -167,6 +176,10 @@ export class TestCaseApi {
         })
       }
     } catch (error: any) {
+      if (isTimeoutError(error)) {
+        timeoutMessage = error.message
+      }
+
       if (listenerType) {
         this.logger.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error.message)
       } else {
@@ -202,6 +215,10 @@ export class TestCaseApi {
 
     if (listenerType) {
       removeProxyRequestListener(listenerType, key)
+    }
+
+    if (timeoutMessage) {
+      throw new ProxyRequestTimeoutError(requestSentToProxy, timeoutMessage)
     }
 
     if (!requestFromProxy) {
