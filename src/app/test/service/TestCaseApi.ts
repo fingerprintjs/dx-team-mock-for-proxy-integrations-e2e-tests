@@ -31,7 +31,19 @@ interface SendRequestOptions {
   requestConfig?: Partial<AxiosRequestConfig>
   listenerType?: ProxyRequestType
   mockResponse?: MockResponse
+  /**
+   * Lets the edge cache answer the request. By default every request tells the proxy not to cache
+   * (`cache-control: no-cache, no-store`), so a cache hit could never be observed.
+   */
+  cacheable?: boolean
 }
+
+type SendRequestOutcome = Omit<SendRequestResult, 'requestFromProxy'> & {
+  /** `null` when the proxy answered without calling the mock server, e.g. on a cache hit. */
+  requestFromProxy: Request | null
+}
+
+export type SendCacheableRequestResult = SendRequestOutcome
 
 interface RequestToCdnParams {
   query?: URLSearchParams
@@ -94,14 +106,33 @@ export class TestCaseApi {
     this.logger = createLogger(this.logMetadata)
   }
 
-  async sendRequest({
+  async sendRequest(options: SendRequestOptions): Promise<SendRequestResult> {
+    const outcome = await this.performRequest(options)
+
+    if (!outcome.requestFromProxy) {
+      throw new NoProxyRequestReceivedError(outcome.requestSentToProxy, outcome.responseFromProxy)
+    }
+
+    return { ...outcome, requestFromProxy: outcome.requestFromProxy }
+  }
+
+  /**
+   * Like {@link sendRequest}, but a response that never reached the mock server is not an error.
+   * Used to observe the edge cache: `requestFromProxy` is `null` when the request was a cache hit.
+   */
+  async sendCacheableRequest(options: SendRequestOptions): Promise<SendCacheableRequestResult> {
+    return await this.performRequest({ ...options, cacheable: true })
+  }
+
+  private async performRequest({
     method,
     path,
     query,
     requestConfig,
     listenerType,
     mockResponse,
-  }: SendRequestOptions): Promise<SendRequestResult> {
+    cacheable,
+  }: SendRequestOptions): Promise<SendRequestOutcome> {
     const url = new URL(this.integrationUrl)
     const basePath = url.pathname.replace(/\/+$/, '')
     const requestPath = (path ?? '/').replace(/^\/+/, '')
@@ -151,7 +182,7 @@ export class TestCaseApi {
       method,
       headers: {
         ...requestConfig?.headers,
-        ...(listenerType ? this.createTestHeaders(listenerType, requestId) : {}),
+        ...(listenerType ? this.createTestHeaders(listenerType, requestId, cacheable) : {}),
       },
     }
 
@@ -221,10 +252,6 @@ export class TestCaseApi {
       throw new ProxyRequestTimeoutError(requestSentToProxy, timeoutMessage)
     }
 
-    if (!requestFromProxy) {
-      throw new NoProxyRequestReceivedError(requestSentToProxy, responseFromProxy)
-    }
-
     return { requestFromProxy, responseFromProxy, requestSentToProxy }
   }
 
@@ -232,6 +259,38 @@ export class TestCaseApi {
     return await this.sendRequest({
       method: 'GET',
       path: this.cdnPath,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Cdn,
+      mockResponse,
+    })
+  }
+
+  async sendCacheableRequestToCdn({
+    query,
+    request,
+    mockResponse,
+  }: RequestToCdnParams): Promise<SendCacheableRequestResult> {
+    return await this.sendCacheableRequest({
+      method: 'GET',
+      path: this.cdnPath,
+      query,
+      requestConfig: request,
+      listenerType: ProxyRequestType.Cdn,
+      mockResponse,
+    })
+  }
+
+  async sendCacheableRequestToV4Cdn({
+    query,
+    request,
+    mockResponse,
+    apiKey = getApiKey(),
+    pathOverride,
+  }: RequestToCdnParams = {}): Promise<SendCacheableRequestResult> {
+    return await this.sendCacheableRequest({
+      method: 'GET',
+      path: pathOverride || `/web/v4/${apiKey}`,
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Cdn,
@@ -335,12 +394,12 @@ export class TestCaseApi {
     })
   }
 
-  private createTestHeaders(requestType: ProxyRequestType, requestId?: string) {
+  private createTestHeaders(requestType: ProxyRequestType, requestId?: string, cacheable?: boolean) {
     return {
       [TEST_CASE_HOST_HEADER]: this.testSession.host,
       [TEST_CASE_PROXY_TYPE_HEADER]: requestType || '',
       [TEST_CASE_NAME_HEADER]: this.testName,
-      'cache-control': 'no-cache, no-store',
+      ...(cacheable ? {} : { 'cache-control': 'no-cache, no-store' }),
       [TEST_CASE_REQUEST_ID]: requestId,
     }
   }
