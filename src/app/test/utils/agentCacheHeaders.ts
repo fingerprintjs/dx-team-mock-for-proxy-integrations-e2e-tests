@@ -69,17 +69,30 @@ function getHeader(result: SendCacheableRequestResult, name: string) {
   return Array.isArray(value) ? value.join(', ') : value
 }
 
+/** The directives of `cache-control`, lowercased, so that `max-age=10` is not mistaken for `max-age=100`. */
+function getCacheControlDirectives(result: SendCacheableRequestResult) {
+  return `${getHeader(result, 'cache-control') ?? ''}`
+    .toLowerCase()
+    .split(',')
+    .map((directive) => directive.trim())
+    .filter(Boolean)
+}
+
 function assertNoSMaxAge(result: SendCacheableRequestResult) {
-  const cacheControl = `${getHeader(result, 'cache-control') ?? ''}`.toLowerCase()
-  assert(cacheControl.includes('s-maxage'), false, `Expected no s-maxage in cache-control, got: ${cacheControl}`)
+  const directives = getCacheControlDirectives(result)
+  assert(
+    directives.some((directive) => directive === 's-maxage' || directive.startsWith('s-maxage=')),
+    false,
+    `Expected no s-maxage in cache-control, got: ${directives.join(', ')}`
+  )
 }
 
 function assertMaxAgePreserved(result: SendCacheableRequestResult) {
-  const cacheControl = `${getHeader(result, 'cache-control') ?? ''}`.toLowerCase()
+  const directives = getCacheControlDirectives(result)
   assert(
-    cacheControl.includes(`max-age=${AGENT_MAX_AGE_SECONDS}`),
+    directives.includes(`max-age=${AGENT_MAX_AGE_SECONDS}`),
     true,
-    `Expected max-age=${AGENT_MAX_AGE_SECONDS} to be preserved in cache-control, got: ${cacheControl}`
+    `Expected max-age=${AGENT_MAX_AGE_SECONDS} to be preserved in cache-control, got: ${directives.join(', ')}`
   )
 }
 
@@ -89,6 +102,12 @@ function assertAgeIsZero(result: SendCacheableRequestResult, step: string) {
 
 function assertNoCacheTag(result: SendCacheableRequestResult, step: string) {
   assertToBeFalsy('cache-tag', getHeader(result, 'cache-tag'), `${step}: expected no cache-tag`)
+}
+
+/** A response that reached the origin is a miss, so `age` is gone. What it must not do is pass on the stale upstream one. */
+function assertNoStaleAge(result: SendCacheableRequestResult, step: string) {
+  const age = getHeader(result, 'age')
+  assert(age === undefined || age === '0', true, `${step}: expected no age or 'age: 0', got: ${age}`)
 }
 
 function assertAgentResponse(result: SendCacheableRequestResult, step: string) {
@@ -101,6 +120,11 @@ type FollowUp = SendParams & {
   step: string
   /** At least one response has to come from the edge. Not every request can be expected to (see `revalidation`). */
   requireEdge: boolean
+  /**
+   * Checks the responses that had to reach the origin. Without it they are skipped, as a hit-type case has nothing to
+   * say about them. It makes a case that is answered from the origin by design (see `revalidation`) check something.
+   */
+  checkOrigin?: (result: SendCacheableRequestResult) => void
 }
 
 /**
@@ -108,12 +132,12 @@ type FollowUp = SendParams & {
  *
  * A `cached` integration can answer on its own only when the request lands on an edge node that holds the agent. A
  * response that had to reach the origin is a cache miss by definition, `cache miss` covers those, so it is not
- * judged as a hit and a few extra requests are made instead. A `passthrough` integration is checked once.
+ * judged as a hit and a few extra requests are made instead, unless the case brings its own `checkOrigin`. A `passthrough` integration is checked once.
  */
 async function checkFollowUps(
   api: TestCaseApi,
   target: AgentCacheTarget,
-  { step, requireEdge, ...params }: FollowUp,
+  { step, requireEdge, checkOrigin, ...params }: FollowUp,
   check: (result: SendCacheableRequestResult) => void
 ) {
   if (target.mode === 'passthrough') {
@@ -131,6 +155,11 @@ async function checkFollowUps(
     const result = await target.send(api, params)
 
     if (result.requestFromProxy) {
+      if (checkOrigin) {
+        checkOrigin(result)
+        checked++
+      }
+
       continue
     }
 
@@ -191,8 +220,8 @@ export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarg
  *
  * Waiting for a real edge TTL to run out would take up to 60s (Fastly Compute ignores the origin's `max-age`), so the
  * request carries `cache-control: no-cache` instead, which asks the edge to validate its copy before using it.
- * Integrations that honor it go back to the origin, which makes the response a cache miss, so only the responses an
- * integration answers from its cache anyway are checked.
+ * Integrations that honor it go back to the origin, which makes the response a cache miss: it has no `age` of its own
+ * but must not pass on the stale one. The responses an integration answers from its cache anyway are checked as hits.
  */
 export async function testAgentRevalidation(api: TestCaseApi, target: AgentCacheTarget) {
   const { etag } = await primeAgentCache(api, target)
@@ -205,6 +234,10 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
       headers: { 'cache-control': 'no-cache' },
       step: 'revalidation',
       requireEdge: false,
+      checkOrigin: (result) => {
+        assertAgentResponse(result, 'revalidation')
+        assertNoStaleAge(result, 'revalidation')
+      },
     },
     (result) => {
       assertAgentResponse(result, 'revalidation')
