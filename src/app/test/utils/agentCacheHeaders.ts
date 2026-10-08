@@ -247,7 +247,7 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
   )
 }
 
-/** Step 4: a conditional request with the cached `etag` is answered with 304, `age: 0` and no `cache-tag`. */
+/** Step 4: a conditional request with the cached `etag` is answered with 304, the same `max-age`, `age: 0` and no `cache-tag`. */
 export async function testAgentConditionalRequest(api: TestCaseApi, target: AgentCacheTarget) {
   const { result: primeResult } = await primeAgentCache(api, target)
   const etag = getHeader(primeResult, 'etag') as string
@@ -269,6 +269,7 @@ export async function testAgentConditionalRequest(api: TestCaseApi, target: Agen
         `if-none-match: expected status 304, got: ${result.responseFromProxy.status}`
       )
       assertNoSMaxAge(result)
+      assertMaxAgePreserved(result)
       assertAgeIsZero(result, 'if-none-match')
       assertNoCacheTag(result, 'if-none-match')
     }
