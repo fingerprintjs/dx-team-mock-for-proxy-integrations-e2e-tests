@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { RUN_REGIONS } from './utils/region'
 
 export const RunTestsRequestSchema = z.object({
   integrationUrl: z.url(),
@@ -10,6 +11,7 @@ export const RunTestsRequestSchema = z.object({
   exclude: z.array(z.string()).optional(),
   testsFilter: z.array(z.string()).optional(),
   enableV4Tests: z.boolean().optional(),
+  region: z.enum(RUN_REGIONS).default('all'),
 })
 
-export type RunTestsRequest = z.infer<typeof RunTestsRequestSchema>
+export type RunTestsRequest = z.input<typeof RunTestsRequestSchema>
