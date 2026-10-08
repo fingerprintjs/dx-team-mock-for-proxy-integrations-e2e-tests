@@ -237,6 +237,7 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
       checkOrigin: (result) => {
         assertAgentResponse(result, 'revalidation')
         assertNoStaleAge(result, 'revalidation')
+        assertNoCacheTag(result, 'revalidation')
       },
     },
     (result) => {
