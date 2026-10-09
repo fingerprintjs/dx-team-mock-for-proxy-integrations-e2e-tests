@@ -4,7 +4,7 @@ import { SendCacheableRequestResult, TestCaseApi } from '../service/TestCaseApi'
 import { getApiKey } from './getApiKey'
 
 /** Real `procdn` serves ~1h. The value only has to be recognisable, nothing in the tests waits for it to pass. */
-const AGENT_MAX_AGE_SECONDS = 10
+const AGENT_MAX_AGE_SECONDS = 2
 
 /**
  * Edge caches are spread over many nodes, and an integration can misbehave only on some of them. Checking a few
@@ -17,6 +17,9 @@ const EDGE_RESPONSES_TO_CHECK = 4
 const EXTRA_EDGE_ATTEMPTS = 4
 
 const AGENT_BODY = '/* mock agent */'
+
+/** The purge tag `procdn` puts on its own cache misses. */
+const AGENT_CACHE_TAG = 'fpjs-agent'
 
 export type AgentCacheTarget = {
   /**
@@ -52,7 +55,7 @@ function createAgentMockResponse(etag: string, extraHeaders: Record<string, stri
 }
 
 function createOriginMissResponse(etag: string) {
-  return createAgentMockResponse(etag, { 'cache-tag': 'fpjs-agent' })
+  return createAgentMockResponse(etag, { 'cache-tag': AGENT_CACHE_TAG })
 }
 
 /**
@@ -104,10 +107,23 @@ function assertNoCacheTag(result: SendCacheableRequestResult, step: string) {
   assertToBeFalsy('cache-tag', getHeader(result, 'cache-tag'), `${step}: expected no cache-tag`)
 }
 
-/** A response that reached the origin is a miss, so `age` is gone. What it must not do is pass on the stale upstream one. */
-function assertNoStaleAge(result: SendCacheableRequestResult, step: string) {
+/**
+ * What a response that reached the origin (a miss) has to look like, in step 1 and in the origin-reaching part of step 3:
+ * - `age` is absent or `0`, the stale upstream one is not passed on. Browsers treat the two the same.
+ * - `cache-tag` is what the origin sent, or absent. An integration that stores the response and replays it on hits has
+ *   to drop `cache-tag` for the hits, so it can't keep it on the miss either. It must not hold on to a tag the origin
+ *   did not send (e.g. one of the primed response).
+ */
+function assertOriginResponse(result: SendCacheableRequestResult, step: string, originCacheTag?: string) {
   const age = getHeader(result, 'age')
   assert(age === undefined || age === '0', true, `${step}: expected no age or 'age: 0', got: ${age}`)
+
+  const cacheTag = getHeader(result, 'cache-tag')
+  assert(
+    cacheTag === undefined || cacheTag === originCacheTag,
+    true,
+    `${step}: expected ${originCacheTag ? `no cache-tag or '${originCacheTag}'` : 'no cache-tag'}, got: ${cacheTag}`
+  )
 }
 
 function assertAgentResponse(result: SendCacheableRequestResult, step: string) {
@@ -118,6 +134,8 @@ function assertAgentResponse(result: SendCacheableRequestResult, step: string) {
 
 type FollowUp = SendParams & {
   step: string
+  /** Pause before the first follow-up, for the scenarios that need `max-age` to pass. */
+  delayMs?: number
   /** At least one response has to come from the edge. Not every request can be expected to (see `revalidation`). */
   requireEdge: boolean
   /**
@@ -137,9 +155,15 @@ type FollowUp = SendParams & {
 async function checkFollowUps(
   api: TestCaseApi,
   target: AgentCacheTarget,
-  { step, requireEdge, checkOrigin, ...params }: FollowUp,
+  { step, requireEdge, checkOrigin, delayMs, ...params }: FollowUp,
   check: (result: SendCacheableRequestResult) => void
 ) {
+  if (delayMs) {
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, delayMs)
+    })
+  }
+
   if (target.mode === 'passthrough') {
     check(await target.send(api, params))
     return
@@ -189,14 +213,13 @@ async function primeAgentCache(api: TestCaseApi, target: AgentCacheTarget) {
   return { result, etag }
 }
 
-/** Step 1: the first request reaches the origin and keeps `cache-tag`, with no `age`. */
+/** Step 1: the first request reaches the origin, so it has no stale `age` (absent or `0`) and no altered `cache-tag`. */
 export async function testAgentCacheMiss(api: TestCaseApi, target: AgentCacheTarget) {
   const { result } = await primeAgentCache(api, target)
 
   assertAgentResponse(result, 'cache miss')
   assertToBeTruthy('etag', getHeader(result, 'etag'), 'cache miss: expected an etag')
-  assertToBeFalsy('age', getHeader(result, 'age'), `cache miss: expected no age, got: ${getHeader(result, 'age')}`)
-  assertToBeTruthy('cache-tag', getHeader(result, 'cache-tag'), 'cache miss: expected cache-tag to be kept')
+  assertOriginResponse(result, 'cache miss', AGENT_CACHE_TAG)
 }
 
 /** Step 2: the second request is served by the edge with `age: 0` and no `cache-tag`. */
@@ -231,13 +254,13 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
     target,
     {
       mockResponse: createOriginWarmResponse(etag, target),
-      headers: { 'cache-control': 'no-cache' },
+      delayMs: (AGENT_MAX_AGE_SECONDS + 1) * 1000,
       step: 'revalidation',
       requireEdge: false,
       checkOrigin: (result) => {
         assertAgentResponse(result, 'revalidation')
-        assertNoStaleAge(result, 'revalidation')
-        assertNoCacheTag(result, 'revalidation')
+        // The warm origin response has no `cache-tag`, so there must be none
+        assertOriginResponse(result, 'revalidation')
       },
     },
     (result) => {
