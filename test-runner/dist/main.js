@@ -28356,7 +28356,7 @@ const {
 // https.globalAgent.options.rejectUnauthorized = false
 const httpAgent = new http__namespace.Agent({});
 const httpsAgent = new https__namespace.Agent({ rejectUnauthorized: false });
-const defaultConfig = { withCredentials: true, httpsAgent, httpAgent, timeout: 10000 };
+const defaultConfig = { withCredentials: true, httpsAgent, httpAgent, timeout: 30000 };
 const createNewHttpClient = (config = defaultConfig) => {
     return axios.create(config);
 };
