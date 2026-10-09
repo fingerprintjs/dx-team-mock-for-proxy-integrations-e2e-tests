@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
+require('node:assert');
 var require$$1 = require('util');
 var stream = require('stream');
 var require$$1$1 = require('path');
@@ -4999,6 +5000,9 @@ const argumentParser = ({ options, aliases, }) => {
     });
 };
 
+/** Regions a test run can be limited to. `all` runs every region check. */
+const RUN_REGIONS = ['us', 'eu', 'ap', 'all'];
+
 const RunTestsRequestSchema = object({
     integrationUrl: url$1(),
     ingressPath: string().optional(),
@@ -5009,6 +5013,7 @@ const RunTestsRequestSchema = object({
     exclude: array(string()).optional(),
     testsFilter: array(string()).optional(),
     enableV4Tests: boolean().optional(),
+    region: _enum(RUN_REGIONS).default('all'),
 });
 
 const LogLevels = {
@@ -28502,6 +28507,7 @@ async function main() {
         exclude: args.exclude,
         testsFilter: args.testsFilter,
         enableV4Tests: args.enableNewTests,
+        region: args.region,
     };
     if (requestBody.enableV4Tests) {
         logger.info('V4 tests are enabled');
