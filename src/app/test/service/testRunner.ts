@@ -111,7 +111,7 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   try {
     await withRetry(async () => await testCase.test(api), {
       maxAttempts: 3,
-      interval: 10_000,
+      interval: 30_000,
       // A failed assertion is deterministic: the proxy answered, the answer was wrong, and
       // asking again changes nothing. Retrying it only pushes the verdict past the client's
       // timeout, which turns a clear assertion failure into an opaque one.
