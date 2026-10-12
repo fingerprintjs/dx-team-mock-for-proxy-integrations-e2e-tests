@@ -10,6 +10,7 @@ import { FailedTestResult } from '../../src/app/test/types/testCase'
 import { httpClient } from '../../src/utils/httpClient'
 import { versionInfo } from './version'
 import { BuildInfo } from '../../src/version'
+import { getRenamedTestFilterWarnings } from '../../src/app/test/utils/renamedTests'
 import * as fs from 'node:fs'
 
 const logger = createConsola()
@@ -159,6 +160,15 @@ async function main() {
   }
 
   const { integrationUrl, cdnPath, ingressPath } = parsePaths()
+
+  const renamedTestWarnings = getRenamedTestFilterWarnings([
+    ...(args.include ?? []),
+    ...(args.exclude ?? []),
+    ...(args.testsFilter ?? []),
+  ])
+  if (renamedTestWarnings.length > 0) {
+    logger.box(['[DEPRECATION] Region tests were merged.', ...renamedTestWarnings].join('\n'))
+  }
 
   logger.info(`Found integrationUrl: ${integrationUrl}`)
   logger.info(`Found cdnPath: ${cdnPath}`)

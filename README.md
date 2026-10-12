@@ -30,6 +30,8 @@ Refer to specific integration README for more details.
 If you navigate to the mock app URL, you will see a simple UI that allows you to run the tests.
 ![ui.png](assets/ui.png)
 
+Use the **Region** select to run the region tests for `us`, `eu`, `ap` or `all` regions (default). When you test an integration that targets a single region, pick that region so the other regions do not fail the run.
+
 
 ### REST API
 
@@ -53,7 +55,9 @@ To run tests, send a `POST` request to: `/api/test/run-tests` with the following
   // (Optional) filters
   "exclude": ["query params", "ipv6"],
   // (Optional) flag to run new tests suite for API V4
-  "enableV4Tests": false
+  "enableV4Tests": false,
+  // (Optional) region to check in region tests: "us", "eu", "ap" or "all" (default)
+  "region": "all"
 }
 ```
 
@@ -135,7 +139,9 @@ pnpm dlx "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integratio
 # (Optional) Exclude tests (same matching rules as include)
 --exclude="ipv6" \
 # (Optional) Runs new tests suite for API V4
---enable-new-tests=true
+--enable-new-tests=true \
+# (Optional) Region to check in region tests: us, eu, ap or all (default)
+--region="eu"
 ```
 
 ## Adding new tests
