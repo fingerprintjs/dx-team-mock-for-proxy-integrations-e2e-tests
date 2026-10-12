@@ -203,6 +203,26 @@
           </div>
         </div>
 
+        <!-- Region -->
+        <div>
+          <label for="region" class="block text-sm font-medium">Region</label>
+          <div
+            class="mt-1 flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3"
+          >
+            <i data-lucide="globe" class="w-4 h-4 text-gray-400 shrink-0"></i>
+            <select
+              id="region"
+              v-model="formData.region"
+              class="flex-1 bg-transparent border-0 outline-none focus:ring-0 py-2"
+            >
+              <option v-for="r in regionOptions" :key="r.value" :value="r.value">{{ r.label }}</option>
+            </select>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            Region tests only check the selected region. <b>All</b> also checks that an invalid region falls back to the default host.
+          </p>
+        </div>
+
         <!-- Tests filter: categories + tokens + search -->
         <div>
           <div class="flex items-center justify-between">
@@ -510,9 +530,17 @@
         cdnPath: '',
         trafficName: '',
         integrationVersion: '',
+        region: 'all',
         testsFilter: [],
         testsFilterSet: new Set(),
       },
+
+      regionOptions: [
+        { value: 'all', label: 'All' },
+        { value: 'us', label: 'US' },
+        { value: 'eu', label: 'EU' },
+        { value: 'ap', label: 'AP' },
+      ],
 
       formValueText: '',
       copying: false,
@@ -754,6 +782,7 @@
           cdnPath: this.formData.cdnPath,
           trafficName: this.formData.trafficName,
           integrationVersion: this.formData.integrationVersion,
+          region: this.formData.region,
           testsFilter: this.formData.testsFilter,
         });
         this.formValueText = this.b64encode(json);
@@ -775,6 +804,7 @@
         if (typeof obj.cdnPath === 'string') patch.cdnPath = obj.cdnPath;
         if (typeof obj.trafficName === 'string') patch.trafficName = obj.trafficName;
         if (typeof obj.integrationVersion === 'string') patch.integrationVersion = obj.integrationVersion;
+        if (this.regionOptions.some(r => r.value === obj.region)) patch.region = obj.region;
         if (Object.keys(patch).length) {
           this.formData = { ...this.formData, ...patch, testsFilter: this.formData.testsFilter, testsFilterSet: this.formData.testsFilterSet };
         }
@@ -911,6 +941,7 @@
             cdnPath: this.formData.cdnPath,
             trafficName: this.formData.trafficName,
             integrationVersion: this.formData.integrationVersion,
+            region: this.formData.region,
             include: this.formData.testsFilter,
           }),
         });
