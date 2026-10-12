@@ -182,7 +182,7 @@ It will be automatically picked up by the test runner.
     ```bash
     ngrok http 3000
     ```
-5. Use the URL provided by ngrok to run the tests. Refer to the [Preperation](#preperation) section for more details.
+5. Use the URL provided by ngrok to run the tests. Refer to the [Preparation](#preparation) section for more details.
 
 ## Using Docker Compose
 
