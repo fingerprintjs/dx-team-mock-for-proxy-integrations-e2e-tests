@@ -7,7 +7,7 @@ import * as https from 'https'
 const httpAgent = new http.Agent({})
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
-const defaultConfig: CreateAxiosDefaults = { withCredentials: true, httpsAgent, httpAgent, timeout: 10_000 }
+const defaultConfig: CreateAxiosDefaults = { withCredentials: true, httpsAgent, httpAgent, timeout: 30_000 }
 
 export const createNewHttpClient = (config: CreateAxiosDefaults = defaultConfig) => {
   return axios.create(config)
