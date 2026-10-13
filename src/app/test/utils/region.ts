@@ -25,15 +25,12 @@ function expectsRegionalHost(region: CheckedRegion): boolean {
   return region === 'eu' || region === 'ap'
 }
 
-/** Host prefixes of the non-default regions. */
-const REGIONAL_PREFIXES = ['eu.', 'ap.'] as const
-
 /**
  * Prefixes the host must not start with. `us` and `invalid` fall back to the default host, which has no
- * regional prefix, so any regional prefix is a routing error.
+ * regional prefix, so the prefix of any supported region (`us.`, `eu.`, `ap.`) is a routing error.
  */
 function forbiddenPrefixes(region: CheckedRegion): string[] {
-  return [...new Set([`${region}.`, ...REGIONAL_PREFIXES])]
+  return [...new Set([`${region}.`, 'us.', 'eu.', 'ap.'])]
 }
 
 /** The minimal API surface the helper needs, so it can be tested without a full `TestCaseApi`. */
