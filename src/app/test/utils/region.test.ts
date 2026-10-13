@@ -87,7 +87,30 @@ describe('assertRegionRouting', () => {
   it('fails when us falls into a regional host', async () => {
     const { promise } = runRouting('us', (region) => `${region}.${DEFAULT_HOST}`)
 
-    await assert.rejects(promise, /us: expected host to not start with us\., but got us\.api\.example\.com/)
+    await assert.rejects(
+      promise,
+      /us: expected host to not start with us\. or eu\. or ap\., but got us\.api\.example\.com/
+    )
+  })
+
+  it('fails when us is routed to another regional host', async () => {
+    for (const wrongRegion of ['eu', 'ap']) {
+      const { promise } = runRouting('us', () => `${wrongRegion}.${DEFAULT_HOST}`)
+
+      await assert.rejects(promise, new RegExp(`us: expected host to not start with .*but got ${wrongRegion}\\.api`))
+    }
+  })
+
+  it('fails when invalid is routed to a regional host', async () => {
+    const { promise } = runRouting('all', (region) => (region === 'invalid' ? `eu.${DEFAULT_HOST}` : hostFor(region)))
+
+    await assert.rejects(promise, /invalid: expected host to not start with invalid\. or eu\. or ap\., but got eu\./)
+  })
+
+  it('passes when us and invalid reach the default host', async () => {
+    const { promise } = runRouting('all', hostFor)
+
+    await promise
   })
 
   it('fails when an invalid region is treated as a regional host', async () => {
@@ -95,7 +118,7 @@ describe('assertRegionRouting', () => {
       region === 'invalid' ? `invalid.${DEFAULT_HOST}` : hostFor(region)
     )
 
-    await assert.rejects(promise, /invalid: expected host to not start with invalid\./)
+    await assert.rejects(promise, /invalid: expected host to not start with invalid\. or eu\. or ap\./)
   })
 
   it('checks every region and reports all failures in one AssertionError', async () => {

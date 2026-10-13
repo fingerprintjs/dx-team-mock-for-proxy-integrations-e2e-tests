@@ -25,6 +25,17 @@ function expectsRegionalHost(region: CheckedRegion): boolean {
   return region === 'eu' || region === 'ap'
 }
 
+/** Host prefixes of the non-default regions. */
+const REGIONAL_PREFIXES = ['eu.', 'ap.'] as const
+
+/**
+ * Prefixes the host must not start with. `us` and `invalid` fall back to the default host, which has no
+ * regional prefix, so any regional prefix is a routing error.
+ */
+function forbiddenPrefixes(region: CheckedRegion): string[] {
+  return [...new Set([`${region}.`, ...REGIONAL_PREFIXES])]
+}
+
 /** The minimal API surface the helper needs, so it can be tested without a full `TestCaseApi`. */
 type RegionRoutingApi = { testSession: Pick<TestSession, 'region'> }
 
@@ -49,12 +60,17 @@ export async function assertRegionRouting(
 
     const host = new URL(`https://${requestFromProxy.get('host')}${requestFromProxy.url}`).host
     const prefix = `${region}.`
-    const startsWithRegion = host.startsWith(prefix)
 
-    if (expectsRegionalHost(region) && !startsWithRegion) {
-      failures.push(`${region}: expected host to start with ${prefix}, but got ${host}`)
-    } else if (!expectsRegionalHost(region) && startsWithRegion) {
-      failures.push(`${region}: expected host to not start with ${prefix}, but got ${host}`)
+    if (expectsRegionalHost(region)) {
+      if (!host.startsWith(prefix)) {
+        failures.push(`${region}: expected host to start with ${prefix}, but got ${host}`)
+      }
+    } else {
+      const forbidden = forbiddenPrefixes(region)
+
+      if (forbidden.some((forbiddenPrefix) => host.startsWith(forbiddenPrefix))) {
+        failures.push(`${region}: expected host to not start with ${forbidden.join(' or ')}, but got ${host}`)
+      }
     }
   }
 
