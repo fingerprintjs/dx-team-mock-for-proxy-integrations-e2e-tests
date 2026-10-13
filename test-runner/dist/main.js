@@ -28419,13 +28419,19 @@ function makePatternMatcher(patterns) {
     });
     return (name) => {
         const hay = name.toLowerCase();
-        return compiled.some((c) => (typeof c === 'string' ? hay.includes(c) : c.test(name)));
+        return compiled.some((c) => {
+            if (typeof c === 'string') {
+                return hay.includes(c);
+            }
+            // Regexes with the `g` or `y` flag keep `lastIndex` between calls, which makes later names fail to match.
+            c.lastIndex = 0;
+            return c.test(name);
+        });
     };
 }
 
 /**
- * Region test cases that were merged into one case per endpoint, mapped to the case that replaced them.
- * Only the region checks selected with the `region` option run now.
+ * Region test cases that were merged into one case.
  */
 const RENAMED_REGION_TESTS = {
     'ingress request regions': 'ingress request region',
@@ -28442,8 +28448,7 @@ const RENAMED_REGION_TESTS = {
     'v4 browser cache request invalid region': 'v4 browser cache request region',
 };
 /**
- * Returns a warning for each include/exclude filter that matches a removed test name but not its replacement.
- * Broad filters (like `ingress` or `region`) still match the replacement and are not reported.
+ * Returns a warning for each include/exclude filter that matches a removed test name.
  */
 function getRenamedTestFilterWarnings(filters) {
     const warnings = [];
