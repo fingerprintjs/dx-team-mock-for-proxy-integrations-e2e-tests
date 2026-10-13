@@ -50,6 +50,10 @@ describe('getRenamedTestFilterWarnings', () => {
     assert.deepEqual(getRenamedTestFilterWarnings(['region', 'ingress', 'agent*', 'v4', 'request']), [])
   })
 
+  it('does not warn for broad regex filters with stateful flags', () => {
+    assert.deepEqual(getRenamedTestFilterWarnings(['/region/g', '/region/y', '/request/gi', '/^.*region$/gy']), [])
+  })
+
   it('does not warn for unrelated filters or an empty list', () => {
     assert.deepEqual(getRenamedTestFilterWarnings(['body integrity', 'ipv6']), [])
     assert.deepEqual(getRenamedTestFilterWarnings([]), [])
