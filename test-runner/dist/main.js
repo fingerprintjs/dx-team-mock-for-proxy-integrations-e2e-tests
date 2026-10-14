@@ -258,7 +258,7 @@ function shallowClone(o) {
     return o;
 }
 const propertyKeyTypes = /* @__PURE__*/ new Set(["string", "number", "symbol"]);
-function escapeRegex$2(str) {
+function escapeRegex$1(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 // zod-specific utils
@@ -1125,7 +1125,7 @@ const $ZodCheckUpperCase = /*@__PURE__*/ $constructor("$ZodCheckUpperCase", (ins
 });
 const $ZodCheckIncludes = /*@__PURE__*/ $constructor("$ZodCheckIncludes", (inst, def) => {
     $ZodCheck.init(inst, def);
-    const escapedRegex = escapeRegex$2(def.includes);
+    const escapedRegex = escapeRegex$1(def.includes);
     const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
     def.pattern = pattern;
     inst._zod.onattach.push((inst) => {
@@ -1149,7 +1149,7 @@ const $ZodCheckIncludes = /*@__PURE__*/ $constructor("$ZodCheckIncludes", (inst,
 });
 const $ZodCheckStartsWith = /*@__PURE__*/ $constructor("$ZodCheckStartsWith", (inst, def) => {
     $ZodCheck.init(inst, def);
-    const pattern = new RegExp(`^${escapeRegex$2(def.prefix)}.*`);
+    const pattern = new RegExp(`^${escapeRegex$1(def.prefix)}.*`);
     def.pattern ?? (def.pattern = pattern);
     inst._zod.onattach.push((inst) => {
         const bag = inst._zod.bag;
@@ -1172,7 +1172,7 @@ const $ZodCheckStartsWith = /*@__PURE__*/ $constructor("$ZodCheckStartsWith", (i
 });
 const $ZodCheckEndsWith = /*@__PURE__*/ $constructor("$ZodCheckEndsWith", (inst, def) => {
     $ZodCheck.init(inst, def);
-    const pattern = new RegExp(`.*${escapeRegex$2(def.suffix)}$`);
+    const pattern = new RegExp(`.*${escapeRegex$1(def.suffix)}$`);
     def.pattern ?? (def.pattern = pattern);
     inst._zod.onattach.push((inst) => {
         const bag = inst._zod.bag;
@@ -2291,7 +2291,7 @@ const $ZodEnum = /*@__PURE__*/ $constructor("$ZodEnum", (inst, def) => {
     inst._zod.values = valuesSet;
     inst._zod.pattern = new RegExp(`^(${values
         .filter((k) => propertyKeyTypes.has(typeof k))
-        .map((o) => (typeof o === "string" ? escapeRegex$2(o) : o.toString()))
+        .map((o) => (typeof o === "string" ? escapeRegex$1(o) : o.toString()))
         .join("|")})$`);
     inst._zod.parse = (payload, _ctx) => {
         const input = payload.value;
@@ -2315,7 +2315,7 @@ const $ZodLiteral = /*@__PURE__*/ $constructor("$ZodLiteral", (inst, def) => {
     const values = new Set(def.values);
     inst._zod.values = values;
     inst._zod.pattern = new RegExp(`^(${def.values
-        .map((o) => (typeof o === "string" ? escapeRegex$2(o) : o ? escapeRegex$2(o.toString()) : String(o)))
+        .map((o) => (typeof o === "string" ? escapeRegex$1(o) : o ? escapeRegex$1(o.toString()) : String(o)))
         .join("|")})$`);
     inst._zod.parse = (payload, _ctx) => {
         const input = payload.value;
@@ -23190,7 +23190,7 @@ function RedirectableRequest(options, responseCallback) {
 
   // Create filter for sensitive HTTP headers
   this._headerFilter = new RegExp("^(?:" +
-      sensitiveHeaders.concat(options.sensitiveHeaders).map(escapeRegex$1).join("|") +
+      sensitiveHeaders.concat(options.sensitiveHeaders).map(escapeRegex).join("|") +
     ")$", "i");
 
   // Perform the first request
@@ -23774,7 +23774,7 @@ function isURL(value) {
   return URL$1 && value instanceof URL$1;
 }
 
-function escapeRegex$1(regex) {
+function escapeRegex(regex) {
   return regex.replace(/[\]\\/()*+?.$]/g, "\\$&");
 }
 
@@ -28379,95 +28379,6 @@ const versionInfo = {
     version: packageJson.version,
 };
 
-const hasGlob = (p) => /[*?]/.test(p);
-const escapeRegex = (s) => s.replace(/[.*+?${}()|[\]\\]/g, '\\$&');
-const globToRegex = (p) => {
-    let constructed = '';
-    for (const char of p) {
-        if (char === '*') {
-            constructed += '.*';
-        }
-        else if (char === '?') {
-            constructed += '.';
-        }
-        else {
-            constructed += escapeRegex(char);
-        }
-    }
-    return new RegExp(`^${constructed}$`, 'i');
-};
-const parseRegex = (p) => {
-    const m = p.match(/^\/(.+)\/([a-z]*)$/i);
-    if (!m) {
-        return null;
-    }
-    try {
-        return new RegExp(m[1], m[2]);
-    }
-    catch {
-        console.warn(`${p} is not a valid RegEx pattern, ignoring.`);
-        return null;
-    }
-};
-function makePatternMatcher(patterns) {
-    const compiled = patterns.map((p) => {
-        const regex = parseRegex(p);
-        if (regex) {
-            return regex;
-        }
-        return hasGlob(p) ? globToRegex(p) : p.toLowerCase();
-    });
-    return (name) => {
-        const hay = name.toLowerCase();
-        return compiled.some((c) => {
-            if (typeof c === 'string') {
-                return hay.includes(c);
-            }
-            // Regexes with the `g` or `y` flag keep `lastIndex` between calls, which makes later names fail to match.
-            c.lastIndex = 0;
-            return c.test(name);
-        });
-    };
-}
-
-/**
- * Region test cases that were merged into one case.
- */
-const RENAMED_REGION_TESTS = {
-    'ingress request regions': 'ingress request region',
-    'ingress request us region': 'ingress request region',
-    'ingress request invalid region': 'ingress request region',
-    'v4 ingress request regions': 'v4 ingress request region',
-    'v4 ingress request us region': 'v4 ingress request region',
-    'v4 ingress request invalid region': 'v4 ingress request region',
-    'browser cache request regions': 'browser cache request region',
-    'browser cache request us region': 'browser cache request region',
-    'browser cache request invalid region': 'browser cache request region',
-    'v4 browser cache request regions': 'v4 browser cache request region',
-    'v4 browser cache request us region': 'v4 browser cache request region',
-    'v4 browser cache request invalid region': 'v4 browser cache request region',
-};
-/**
- * Returns a warning for each include/exclude filter that matches a removed test name.
- */
-function getRenamedTestFilterWarnings(filters) {
-    const warnings = [];
-    for (const filter of filters) {
-        const matches = makePatternMatcher([filter]);
-        const replacements = new Set();
-        for (const [removed, replacement] of Object.entries(RENAMED_REGION_TESTS)) {
-            if (matches(removed) && !matches(replacement)) {
-                replacements.add(replacement);
-            }
-        }
-        if (replacements.size > 0) {
-            warnings.push(`Filter "${filter}" matches region tests that were removed. ` +
-                `Use ${[...replacements].map((name) => `"${name}"`).join(', ')} and the \`region\` option instead.`);
-        }
-    }
-    return warnings;
-}
-
 const logger = createConsola();
 function createBooleanUnion({ valueWhenNull, defaultValue }) {
     return union([
@@ -28581,14 +28492,6 @@ async function main() {
         logger.box('[DEPRECATION] ingressProxyUrl and cdnProxyUrl will be removed in a future release. Use integration, ingress-path, and cdn-path parameters.');
     }
     const { integrationUrl, cdnPath, ingressPath } = parsePaths();
-    const renamedTestWarnings = getRenamedTestFilterWarnings([
-        ...(args.include ?? []),
-        ...(args.exclude ?? []),
-        ...(args.testsFilter ?? []),
-    ]);
-    if (renamedTestWarnings.length > 0) {
-        logger.box(['[DEPRECATION] Region tests were merged.', ...renamedTestWarnings].join('\n'));
-    }
     logger.info(`Found integrationUrl: ${integrationUrl}`);
     logger.info(`Found cdnPath: ${cdnPath}`);
     logger.info(`Found ingressPath: ${ingressPath}`);

@@ -3,7 +3,6 @@ import { createTestSession, finalizeTestSession, TestSession } from './service/s
 import { runTests } from './service/testRunner'
 import { Routing, EndpointsFactory } from 'express-zod-api'
 import { TestResponseSchema } from './response.types'
-import { getRenamedTestFilterWarnings } from './utils/renamedTests'
 
 export const testRouting = (factory: EndpointsFactory): Routing => ({
   'run-tests': factory.build({
@@ -25,10 +24,6 @@ export const testRouting = (factory: EndpointsFactory): Routing => ({
 
         if (input.testsFilter) {
           logger.warn('[DEPRECATION] `testsFilter` is deprecated. Use `include`/`exclude`.')
-        }
-
-        for (const warning of getRenamedTestFilterWarnings([...include, ...exclude])) {
-          logger.warn(`[DEPRECATION] ${warning}`)
         }
 
         const result = await runTests(testSession, { include, exclude })
