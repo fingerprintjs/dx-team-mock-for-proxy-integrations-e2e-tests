@@ -41,6 +41,14 @@ export function makePatternMatcher(patterns: string[]) {
   })
   return (name: string) => {
     const hay = name.toLowerCase()
-    return compiled.some((c) => (typeof c === 'string' ? hay.includes(c) : c.test(name)))
+    return compiled.some((c) => {
+      if (typeof c === 'string') {
+        return hay.includes(c)
+      }
+
+      // Regexes with the `g` or `y` flag keep `lastIndex` between calls, which makes later names fail to match.
+      c.lastIndex = 0
+      return c.test(name)
+    })
   }
 }

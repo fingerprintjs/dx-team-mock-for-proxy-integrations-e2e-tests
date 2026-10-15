@@ -177,6 +177,7 @@ async function main() {
     exclude: args.exclude,
     testsFilter: args.testsFilter,
     enableV4Tests: args.enableNewTests,
+    region: args.region,
   } satisfies RunTestsRequest
 
   if (requestBody.enableV4Tests) {

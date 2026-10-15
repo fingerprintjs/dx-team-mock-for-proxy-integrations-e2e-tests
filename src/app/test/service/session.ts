@@ -1,6 +1,7 @@
 import { RunTestsRequest } from '../request.types'
 import { DetailedTestResult } from './testRunner'
 import { TestSessionAlreadyExistsError } from '../errors'
+import { RunRegion } from '../utils/region'
 
 export enum TestSessionStatus {
   Created = 'created',
@@ -23,6 +24,7 @@ export class TestSession implements RunTestsRequest {
     public trafficName: string,
     public integrationVersion: string,
     public status: TestSessionStatus,
+    public region: RunRegion = 'all',
     public results: DetailedTestResult[] = []
   ) {}
 
@@ -71,7 +73,8 @@ export function createTestSession(request: RunTestsRequest) {
     request.cdnPath ?? '',
     request.trafficName,
     request.integrationVersion,
-    TestSessionStatus.Created
+    TestSessionStatus.Created,
+    request.region ?? 'all'
   )
 
   testSessions.set(host, session)
