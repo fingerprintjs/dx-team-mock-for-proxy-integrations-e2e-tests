@@ -1,4 +1,4 @@
-import pkg from '../package.json'
+import pkg from '../../package.json'
 
 interface PackageJson {
   name?: string
@@ -8,6 +8,6 @@ interface PackageJson {
 const packageJson = pkg as PackageJson
 
 export const versionInfo = {
-  name: packageJson.name ?? 'test-runner',
+  name: packageJson.name ?? 'mock-warden',
   version: packageJson.version ?? 'unknown',
 }

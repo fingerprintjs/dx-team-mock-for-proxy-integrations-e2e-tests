@@ -14,6 +14,8 @@ function makeConfig(entryFile, artifactName) {
     plugins: [
       typescript({
         tsconfig: './tsconfig.json',
+        include: ['**/*.ts'],
+        exclude: ['**/*.d.ts'],
       }),
       nodeResolve(),
       commonjs(),
