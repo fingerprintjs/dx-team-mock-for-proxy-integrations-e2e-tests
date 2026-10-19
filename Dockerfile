@@ -15,9 +15,11 @@ RUN corepack enable pnpm
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package.json, pnpm-lock.json and pnpm-workspace.yaml
 COPY package.json ./
 COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY test-runner/package.json ./test-runner/package.json
 COPY scripts ./scripts
 
 # Install dependencies
