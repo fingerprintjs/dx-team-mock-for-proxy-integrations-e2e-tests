@@ -102,13 +102,26 @@ function assertMaxAgePreserved(result: SendCacheableRequestResult) {
   )
 }
 
-/**
- * `age` is absent or `0`: a stale one, like the `120` an upstream can send, must not be passed on. Browsers treat a
- * missing `age` and `age: 0` the same, and some CDNs manage `age` themselves and may drop it.
- */
+/** A response that reached the origin carries no `age` of its own: it is absent or `0`, never a stale upstream one. */
 function assertAgeAbsentOrZero(result: SendCacheableRequestResult, step: string) {
   const age = getHeader(result, 'age')
   assert(age === undefined || age === '0', true, `${step}: expected no age or 'age: 0', got: ${age}`)
+}
+
+/**
+ * A response served from the edge cache is as old as the entry. Some CDNs report that real age (CloudFront counts it
+ * in whole seconds), some report `0`, some drop `age`. All of them are fine as long as the entry can have been stored
+ * that long ago, which is the time since the priming request (plus a second for rounding). A stale upstream `age`
+ * the integration should have reset, like the `120` of a `cached` mock, is always older than that.
+ */
+function assertAgeNotStale(result: SendCacheableRequestResult, step: string, primedAt: number) {
+  const age = getHeader(result, 'age')
+  const maxAge = Math.ceil((Date.now() - primedAt) / 1000) + 1
+  assert(
+    age === undefined || (/^\d+$/.test(age) && Number(age) <= maxAge),
+    true,
+    `${step}: expected no age or an age of at most ${maxAge}s (the time since the first request), got: ${age}`
+  )
 }
 
 function assertNoCacheTag(result: SendCacheableRequestResult, step: string) {
@@ -213,11 +226,12 @@ async function checkFollowUps(
  */
 async function primeAgentCache(api: TestCaseApi, target: AgentCacheTarget) {
   const etag = `"mock-warden-${getApiKey()}"`
+  const primedAt = Date.now()
   const result = await target.send(api, { mockResponse: createOriginMissResponse(etag) })
 
   assert(result.responseFromProxy.status, 200, `priming request: expected status 200`)
 
-  return { result, etag }
+  return { result, etag, primedAt }
 }
 
 /** Step 1: the first request reaches the origin, so it has no stale `age` (absent or `0`) and no altered `cache-tag`. */
@@ -229,9 +243,9 @@ export async function testAgentCacheMiss(api: TestCaseApi, target: AgentCacheTar
   assertOriginResponse(result, 'cache miss', AGENT_CACHE_TAG)
 }
 
-/** Step 2: the second request is served by the edge with no `age` or `age: 0`, and no `cache-tag`. */
+/** Step 2: the second request is served by the edge with a fresh `age` (see `assertAgeNotStale`) and no `cache-tag`. */
 export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarget) {
-  const { etag } = await primeAgentCache(api, target)
+  const { etag, primedAt } = await primeAgentCache(api, target)
 
   await checkFollowUps(
     api,
@@ -239,14 +253,14 @@ export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarg
     { mockResponse: createOriginWarmResponse(etag, target), step: 'cache hit', requireEdge: true },
     (result) => {
       assertAgentResponse(result, 'cache hit')
-      assertAgeAbsentOrZero(result, 'cache hit')
+      assertAgeNotStale(result, 'cache hit', primedAt)
       assertNoCacheTag(result, 'cache hit')
     }
   )
 }
 
 /**
- * Step 3: once `max-age` has passed, the agent is revalidated and still served with no `age` or `age: 0`.
+ * Step 3: once `max-age` has passed, the agent is revalidated and still served with a fresh `age`.
  *
  * Waiting for a real edge TTL to run out would take up to 60s (Fastly Compute ignores the origin's `max-age`), so the
  * request carries `cache-control: no-cache` instead, which asks the edge to validate its copy before using it.
@@ -254,7 +268,7 @@ export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarg
  * but must not pass on the stale one. The responses an integration answers from its cache anyway are checked as hits.
  */
 export async function testAgentRevalidation(api: TestCaseApi, target: AgentCacheTarget) {
-  const { etag } = await primeAgentCache(api, target)
+  const { etag, primedAt } = await primeAgentCache(api, target)
 
   await checkFollowUps(
     api,
@@ -272,15 +286,15 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
     },
     (result) => {
       assertAgentResponse(result, 'revalidation')
-      assertAgeAbsentOrZero(result, 'revalidation')
+      assertAgeNotStale(result, 'revalidation', primedAt)
       assertNoCacheTag(result, 'revalidation')
     }
   )
 }
 
-/** Step 4: a conditional request with the cached `etag` is answered with 304, the same `max-age`, no `age` or `age: 0`, and no `cache-tag`. */
+/** Step 4: a conditional request with the cached `etag` is answered with 304, the same `max-age`, a fresh `age` and no `cache-tag`. */
 export async function testAgentConditionalRequest(api: TestCaseApi, target: AgentCacheTarget) {
-  const { result: primeResult } = await primeAgentCache(api, target)
+  const { result: primeResult, primedAt } = await primeAgentCache(api, target)
   const etag = getHeader(primeResult, 'etag') as string
   assertToBeTruthy('etag', etag, 'if-none-match: expected the first response to have an etag')
 
@@ -301,7 +315,7 @@ export async function testAgentConditionalRequest(api: TestCaseApi, target: Agen
       )
       assertNoSMaxAge(result)
       assertMaxAgePreserved(result)
-      assertAgeAbsentOrZero(result, 'if-none-match')
+      assertAgeNotStale(result, 'if-none-match', primedAt)
       assertNoCacheTag(result, 'if-none-match')
     }
   )
@@ -311,7 +325,9 @@ export async function testAgentConditionalRequest(api: TestCaseApi, target: Agen
 export function createAgentCacheTargets(api: TestCaseApi) {
   const configuredMode = api.testSession.agentCacheMode
   const apiKey = getApiKey()
-  const query = new URLSearchParams({ apiKey })
+  // Some integrations (CloudFront) leave `apiKey` out of their cache key and only key on `version`/`loaderVersion`, so
+  // scenarios would share one cache entry. A unique `loaderVersion` keeps them apart.
+  const query = new URLSearchParams({ apiKey, loaderVersion: `mock-warden-${apiKey}` })
 
   const v3: AgentCacheTarget = {
     mode: configuredMode ?? 'cached',
