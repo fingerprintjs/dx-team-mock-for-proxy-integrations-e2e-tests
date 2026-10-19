@@ -4,7 +4,7 @@ import { testAgentCacheMiss, createAgentCacheTargets } from '../../utils/agentCa
 const testCase: TestCase = {
   name: 'agent response cache headers on cache miss',
   test: async (api) => {
-    await testAgentCacheMiss(api, createAgentCacheTargets().v3)
+    await testAgentCacheMiss(api, createAgentCacheTargets(api).v3)
   },
 }
 

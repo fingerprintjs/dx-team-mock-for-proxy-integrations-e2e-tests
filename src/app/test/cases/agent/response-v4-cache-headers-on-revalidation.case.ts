@@ -4,7 +4,7 @@ import { testAgentRevalidation, createAgentCacheTargets } from '../../utils/agen
 const testCase: TestCase = {
   name: 'v4 agent response cache headers on revalidation',
   test: async (api) => {
-    await testAgentRevalidation(api, createAgentCacheTargets().v4)
+    await testAgentRevalidation(api, createAgentCacheTargets(api).v4)
   },
 }
 

@@ -203,6 +203,26 @@
           </div>
         </div>
 
+        <!-- Agent cache mode -->
+        <div>
+          <label for="agentCacheMode" class="block text-sm font-medium">Agent caching</label>
+          <div
+            class="mt-1 flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3"
+          >
+            <i data-lucide="database" class="w-4 h-4 text-gray-400 shrink-0"></i>
+            <select
+              id="agentCacheMode"
+              v-model="formData.agentCacheMode"
+              class="flex-1 bg-transparent border-0 outline-none focus:ring-0 py-2"
+            >
+              <option v-for="m in agentCacheModeOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+            </select>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            Whether the integration caches the agent itself or leaves it to the upstream CDN. Used by the agent cache header tests.
+          </p>
+        </div>
+
         <!-- Region -->
         <div>
           <label for="region" class="block text-sm font-medium">Region</label>
@@ -531,6 +551,7 @@
         trafficName: '',
         integrationVersion: '',
         region: 'all',
+        agentCacheMode: '',
         testsFilter: [],
         testsFilterSet: new Set(),
       },
@@ -540,6 +561,12 @@
         { value: 'us', label: 'US' },
         { value: 'eu', label: 'EU' },
         { value: 'ap', label: 'AP' },
+      ],
+
+      agentCacheModeOptions: [
+        { value: '', label: 'Default (v3 cached, v4 passthrough)' },
+        { value: 'cached', label: 'Cached by the integration' },
+        { value: 'passthrough', label: 'Passed through to the upstream CDN' },
       ],
 
       formValueText: '',
@@ -783,6 +810,7 @@
           trafficName: this.formData.trafficName,
           integrationVersion: this.formData.integrationVersion,
           region: this.formData.region,
+          agentCacheMode: this.formData.agentCacheMode,
           testsFilter: this.formData.testsFilter,
         });
         this.formValueText = this.b64encode(json);
@@ -805,6 +833,7 @@
         if (typeof obj.trafficName === 'string') patch.trafficName = obj.trafficName;
         if (typeof obj.integrationVersion === 'string') patch.integrationVersion = obj.integrationVersion;
         if (this.regionOptions.some(r => r.value === obj.region)) patch.region = obj.region;
+        if (this.agentCacheModeOptions.some(m => m.value === obj.agentCacheMode)) patch.agentCacheMode = obj.agentCacheMode;
         if (Object.keys(patch).length) {
           this.formData = { ...this.formData, ...patch, testsFilter: this.formData.testsFilter, testsFilterSet: this.formData.testsFilterSet };
         }
@@ -866,6 +895,7 @@
           trafficName: '',
           integrationVersion: '',
           region: 'all',
+          agentCacheMode: '',
           testsFilter: [],
           testsFilterSet: new Set(),
         };
@@ -943,6 +973,7 @@
             trafficName: this.formData.trafficName,
             integrationVersion: this.formData.integrationVersion,
             region: this.formData.region,
+            agentCacheMode: this.formData.agentCacheMode || undefined,
             include: this.formData.testsFilter,
           }),
         });

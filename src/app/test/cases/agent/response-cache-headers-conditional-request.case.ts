@@ -4,7 +4,7 @@ import { testAgentConditionalRequest, createAgentCacheTargets } from '../../util
 const testCase: TestCase = {
   name: 'agent response cache headers on conditional request',
   test: async (api) => {
-    await testAgentConditionalRequest(api, createAgentCacheTargets().v3)
+    await testAgentConditionalRequest(api, createAgentCacheTargets(api).v3)
   },
 }
 

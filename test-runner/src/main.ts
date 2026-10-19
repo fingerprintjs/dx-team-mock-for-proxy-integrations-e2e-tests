@@ -178,6 +178,7 @@ async function main() {
     testsFilter: args.testsFilter,
     enableV4Tests: args.enableNewTests,
     region: args.region,
+    agentCacheMode: args.agentCacheMode,
   } satisfies RunTestsRequest
 
   if (requestBody.enableV4Tests) {

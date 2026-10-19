@@ -4,7 +4,7 @@ import { testAgentCacheHit, createAgentCacheTargets } from '../../utils/agentCac
 const testCase: TestCase = {
   name: 'agent response cache headers on cache hit',
   test: async (api) => {
-    await testAgentCacheHit(api, createAgentCacheTargets().v3)
+    await testAgentCacheHit(api, createAgentCacheTargets(api).v3)
   },
 }
 

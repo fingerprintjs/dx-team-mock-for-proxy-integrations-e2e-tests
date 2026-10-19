@@ -1,6 +1,7 @@
 import { assert, assertToBeFalsy, assertToBeTruthy } from '../service/assert'
 import { MockResponse } from '../service/mockResponseRegistry'
 import { SendCacheableRequestResult, TestCaseApi } from '../service/TestCaseApi'
+import { AgentCacheMode } from '../request.types'
 import { getApiKey } from './getApiKey'
 
 /** Real `procdn` serves ~1h. The value only has to be recognisable, nothing in the tests waits for it to pass. */
@@ -23,11 +24,13 @@ const AGENT_CACHE_TAG = 'fpjs-agent'
 
 export type AgentCacheTarget = {
   /**
-   * - `cached`: the integration caches the agent itself (API v3), so it must fix up the headers of cache hits.
-   * - `passthrough`: the integration leaves the agent to the upstream CDN (API v4), so the response has to match
+   * - `cached`: the integration caches the agent itself, so it must fix up the headers of cache hits.
+   * - `passthrough`: the integration leaves the agent to the upstream CDN, so the response has to match
    *   what the upstream sent. Whether the integration serves some of the requests from its own cache is not checked.
+   *
+   * Picked per integration with the `agentCacheMode` run option. Without it, API v3 is `cached` and API v4 `passthrough`.
    */
-  mode: 'cached' | 'passthrough'
+  mode: AgentCacheMode
   /** Sends a cacheable request to the agent endpoint. Every call from one scenario must hit the same URL. */
   send: (api: TestCaseApi, params: SendParams) => Promise<SendCacheableRequestResult>
 }
@@ -46,7 +49,7 @@ function createAgentMockResponse(etag: string, extraHeaders: Record<string, stri
     status: 200,
     headers: {
       'cache-control': `public, max-age=${AGENT_MAX_AGE_SECONDS}`,
-      'content-type': 'application/javascript',
+      'content-type': 'text/javascript; charset=utf-8',
       etag,
       ...extraHeaders,
     },
@@ -301,18 +304,19 @@ export async function testAgentConditionalRequest(api: TestCaseApi, target: Agen
 }
 
 /** A URL has to be stable across the requests of one scenario, and unique between scenarios. */
-export function createAgentCacheTargets() {
+export function createAgentCacheTargets(api: TestCaseApi) {
+  const configuredMode = api.testSession.agentCacheMode
   const apiKey = getApiKey()
   const query = new URLSearchParams({ apiKey })
 
   const v3: AgentCacheTarget = {
-    mode: 'cached',
+    mode: configuredMode ?? 'cached',
     send: (api, { mockResponse, headers }) =>
       api.sendCacheableRequestToCdn({ query, mockResponse, request: { headers } }),
   }
 
   const v4: AgentCacheTarget = {
-    mode: 'passthrough',
+    mode: configuredMode ?? 'passthrough',
     send: (api, { mockResponse, headers }) =>
       api.sendCacheableRequestToV4Cdn({ apiKey, mockResponse, request: { headers } }),
   }

@@ -5003,6 +5003,11 @@ const argumentParser = ({ options, aliases, }) => {
 /** Regions a test run can be limited to. `all` runs every region check. */
 const RUN_REGIONS = ['us', 'eu', 'ap', 'all'];
 
+/**
+ * Whether the integration caches the agent itself (`cached`) or leaves it to the upstream CDN (`passthrough`).
+ * It depends on the integration, not on the API version.
+ */
+const AGENT_CACHE_MODES = ['cached', 'passthrough'];
 const RunTestsRequestSchema = object({
     integrationUrl: url$1(),
     ingressPath: string().optional(),
@@ -5014,6 +5019,7 @@ const RunTestsRequestSchema = object({
     testsFilter: array(string()).optional(),
     enableV4Tests: boolean().optional(),
     region: _enum(RUN_REGIONS).default('all'),
+    agentCacheMode: _enum(AGENT_CACHE_MODES).optional(),
 });
 
 const LogLevels = {
@@ -28508,6 +28514,7 @@ async function main() {
         testsFilter: args.testsFilter,
         enableV4Tests: args.enableNewTests,
         region: args.region,
+        agentCacheMode: args.agentCacheMode,
     };
     if (requestBody.enableV4Tests) {
         logger.info('V4 tests are enabled');
