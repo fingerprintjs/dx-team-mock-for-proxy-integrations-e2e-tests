@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: 'Build project, run CI checks and publish new release'
