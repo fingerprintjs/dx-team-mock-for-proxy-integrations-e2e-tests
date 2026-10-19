@@ -1,10 +1,12 @@
+import { setTimeout } from 'node:timers/promises'
 import { assert, assertToBeFalsy, assertToBeTruthy } from '../service/assert'
 import { MockResponse } from '../service/mockResponseRegistry'
 import { SendCacheableRequestResult, TestCaseApi } from '../service/TestCaseApi'
 import { AgentCacheMode } from '../request.types'
+import { ProxyRequestType } from '../../proxy-receiver/service/proxyRequestHandler'
 import { getApiKey } from './getApiKey'
 
-/** Real `procdn` serves ~1h. The value only has to be recognisable, nothing in the tests waits for it to pass. */
+/** Real `procdn` serves ~1h. Kept short so the revalidation case can wait for an expiry. */
 const AGENT_MAX_AGE_SECONDS = 2
 
 /**
@@ -156,8 +158,6 @@ type FollowUp = SendParams & {
   step: string
   /** Pause before the first follow-up, for the scenarios that need `max-age` to pass. */
   delayMs?: number
-  /** At least one response has to come from the edge. Not every request can be expected to (see `revalidation`). */
-  requireEdge: boolean
   /**
    * Checks the responses that had to reach the origin. Without it they are skipped, as a hit-type case has nothing to
    * say about them. It makes a case that is answered from the origin by design (see `revalidation`) check something.
@@ -175,13 +175,11 @@ type FollowUp = SendParams & {
 async function checkFollowUps(
   api: TestCaseApi,
   target: AgentCacheTarget,
-  { step, requireEdge, checkOrigin, delayMs, ...params }: FollowUp,
+  { step, checkOrigin, delayMs, ...params }: FollowUp,
   check: (result: SendCacheableRequestResult) => void
 ) {
   if (delayMs) {
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, delayMs)
-    })
+    await setTimeout(delayMs)
   }
 
   if (target.mode === 'passthrough') {
@@ -211,7 +209,7 @@ async function checkFollowUps(
     checked++
   }
 
-  if (requireEdge) {
+  if (!checkOrigin) {
     assert(
       checked > 0,
       true,
@@ -250,7 +248,7 @@ export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarg
   await checkFollowUps(
     api,
     target,
-    { mockResponse: createOriginWarmResponse(etag, target), step: 'cache hit', requireEdge: true },
+    { mockResponse: createOriginWarmResponse(etag, target), step: 'cache hit' },
     (result) => {
       assertAgentResponse(result, 'cache hit')
       assertAgeNotStale(result, 'cache hit', primedAt)
@@ -260,12 +258,9 @@ export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarg
 }
 
 /**
- * Step 3: once `max-age` has passed, the agent is revalidated and still served with a fresh `age`.
+ * Step 3: once `max-age` has passed, the agent is still served with a fresh `age`.
  *
- * Waiting for a real edge TTL to run out would take up to 60s (Fastly Compute ignores the origin's `max-age`), so the
- * request carries `cache-control: no-cache` instead, which asks the edge to validate its copy before using it.
- * Integrations that honor it go back to the origin, which makes the response a cache miss: it has no `age` of its own
- * but must not pass on the stale one. The responses an integration answers from its cache anyway are checked as hits.
+ * Waits past `max-age`. Responses that reach the origin are checked as misses, responses from the edge as hits.
  */
 export async function testAgentRevalidation(api: TestCaseApi, target: AgentCacheTarget) {
   const { etag, primedAt } = await primeAgentCache(api, target)
@@ -277,7 +272,6 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
       mockResponse: createOriginWarmResponse(etag, target),
       delayMs: (AGENT_MAX_AGE_SECONDS + 1) * 1000,
       step: 'revalidation',
-      requireEdge: false,
       checkOrigin: (result) => {
         assertAgentResponse(result, 'revalidation')
         // The warm origin response has no `cache-tag`, so there must be none
@@ -305,7 +299,6 @@ export async function testAgentConditionalRequest(api: TestCaseApi, target: Agen
       mockResponse: createOriginWarmResponse(etag, target),
       headers: { 'if-none-match': etag },
       step: 'if-none-match',
-      requireEdge: true,
     },
     (result) => {
       assert(
@@ -333,13 +326,26 @@ export function createAgentCacheTargets(api: TestCaseApi) {
   const v3: AgentCacheTarget = {
     mode: configuredMode ?? 'cached',
     send: (api, { mockResponse, headers }) =>
-      api.sendCacheableRequestToCdn({ query, mockResponse, request: { headers } }),
+      api.sendCacheableRequest({
+        method: 'GET',
+        path: api.cdnPath,
+        query,
+        requestConfig: { headers },
+        listenerType: ProxyRequestType.Cdn,
+        mockResponse,
+      }),
   }
 
   const v4: AgentCacheTarget = {
     mode: configuredMode ?? 'passthrough',
     send: (api, { mockResponse, headers }) =>
-      api.sendCacheableRequestToV4Cdn({ apiKey, mockResponse, request: { headers } }),
+      api.sendCacheableRequest({
+        method: 'GET',
+        path: `/web/v4/${apiKey}`,
+        requestConfig: { headers },
+        listenerType: ProxyRequestType.Cdn,
+        mockResponse,
+      }),
   }
 
   return { v3, v4 }

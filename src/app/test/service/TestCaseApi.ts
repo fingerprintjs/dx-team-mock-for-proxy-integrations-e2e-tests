@@ -38,12 +38,12 @@ interface SendRequestOptions {
   cacheable?: boolean
 }
 
-type SendRequestOutcome = Omit<SendRequestResult, 'requestFromProxy'> & {
+export type SendCacheableRequestResult = Omit<SendRequestResult, 'requestFromProxy'> & {
   /** `null` when the proxy answered without calling the mock server, e.g. on a cache hit. */
   requestFromProxy: Request | null
 }
 
-export type SendCacheableRequestResult = SendRequestOutcome
+const CACHEABLE_REQUEST_TIMEOUT_MS = 30_000
 
 interface RequestToCdnParams {
   query?: URLSearchParams
@@ -99,7 +99,7 @@ export class TestCaseApi {
     private readonly testName: string,
     private readonly integrationUrl: URL,
     private readonly ingressPath: string,
-    private readonly cdnPath: string,
+    public readonly cdnPath: string,
     public readonly testSession: TestSession
   ) {
     this.httpClientInstance = createNewHttpClient()
@@ -132,7 +132,7 @@ export class TestCaseApi {
     listenerType,
     mockResponse,
     cacheable,
-  }: SendRequestOptions): Promise<SendRequestOutcome> {
+  }: SendRequestOptions): Promise<SendCacheableRequestResult> {
     const url = new URL(this.integrationUrl)
     const basePath = url.pathname.replace(/\/+$/, '')
     const requestPath = (path ?? '/').replace(/^\/+/, '')
@@ -178,6 +178,7 @@ export class TestCaseApi {
     let timeoutMessage: string | undefined
 
     const requestToSend = {
+      ...(cacheable ? { timeout: CACHEABLE_REQUEST_TIMEOUT_MS } : {}),
       ...requestConfig,
       method,
       headers: {
@@ -259,38 +260,6 @@ export class TestCaseApi {
     return await this.sendRequest({
       method: 'GET',
       path: this.cdnPath,
-      query,
-      requestConfig: request,
-      listenerType: ProxyRequestType.Cdn,
-      mockResponse,
-    })
-  }
-
-  async sendCacheableRequestToCdn({
-    query,
-    request,
-    mockResponse,
-  }: RequestToCdnParams): Promise<SendCacheableRequestResult> {
-    return await this.sendCacheableRequest({
-      method: 'GET',
-      path: this.cdnPath,
-      query,
-      requestConfig: request,
-      listenerType: ProxyRequestType.Cdn,
-      mockResponse,
-    })
-  }
-
-  async sendCacheableRequestToV4Cdn({
-    query,
-    request,
-    mockResponse,
-    apiKey = getApiKey(),
-    pathOverride,
-  }: RequestToCdnParams = {}): Promise<SendCacheableRequestResult> {
-    return await this.sendCacheableRequest({
-      method: 'GET',
-      path: pathOverride || `/web/v4/${apiKey}`,
       query,
       requestConfig: request,
       listenerType: ProxyRequestType.Cdn,
