@@ -326,8 +326,9 @@ export function createAgentCacheTargets(api: TestCaseApi) {
   const configuredMode = api.testSession.agentCacheMode
   const apiKey = getApiKey()
   // Some integrations (CloudFront) leave `apiKey` out of their cache key and only key on `version`/`loaderVersion`, so
-  // scenarios would share one cache entry. A unique `loaderVersion` keeps them apart.
-  const query = new URLSearchParams({ apiKey, loaderVersion: `mock-warden-${apiKey}` })
+  // scenarios would share one cache entry. A unique `version` keeps them apart. `loaderVersion` can't be used for that:
+  // integrations turn it into a `/loader_v<loaderVersion>.js` path, which CDNs treat as a static file.
+  const query = new URLSearchParams({ apiKey, version: `3-${apiKey}` })
 
   const v3: AgentCacheTarget = {
     mode: configuredMode ?? 'cached',
