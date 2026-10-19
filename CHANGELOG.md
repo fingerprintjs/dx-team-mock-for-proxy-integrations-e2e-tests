@@ -15,7 +15,7 @@
 ### Patch Changes
 
 - Fix the report mechanism of `withRetry`. ([#63](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/63))
-- Ecosystem maintenance: dependency and tooling updates. ([#62](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/62))
+- Ecosystem maintenance: stricter request and CLI schema validation (`apiUrl`, `trafficName` and `integrationVersion` are required), Node 24 Docker image. ([#62](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/62))
 - Fix broken Preparation anchor in README. ([#65](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/65))
 
 ## 0.5.1
@@ -35,6 +35,11 @@
 ### Patch Changes
 
 - Update tests for the latest V4 design choices. ([#55](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/55))
+
+## 0.4.2
+
+### Patch Changes
+
 - Update dependencies. ([#54](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/54))
 
 ## 0.4.1
@@ -47,6 +52,10 @@
 
 ### Minor Changes
 
-- Add V4 support. ([INTER-1818](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/commit/d973804))
+- Add V4 support. ([#50](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/50))
 
-For releases before 0.4.0, see the [GitHub releases](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/releases) and git history.
+### Patch Changes
+
+- Fix 7 dependency vulnerabilities reported by Snyk. ([#51](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/pull/51))
+
+For releases before 0.4.0, see the git history.
