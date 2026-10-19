@@ -102,8 +102,13 @@ function assertMaxAgePreserved(result: SendCacheableRequestResult) {
   )
 }
 
-function assertAgeIsZero(result: SendCacheableRequestResult, step: string) {
-  assert(getHeader(result, 'age'), '0', `${step}: expected 'age: 0', got: ${getHeader(result, 'age')}`)
+/**
+ * `age` is absent or `0`: a stale one, like the `120` an upstream can send, must not be passed on. Browsers treat a
+ * missing `age` and `age: 0` the same, and some CDNs manage `age` themselves and may drop it.
+ */
+function assertAgeAbsentOrZero(result: SendCacheableRequestResult, step: string) {
+  const age = getHeader(result, 'age')
+  assert(age === undefined || age === '0', true, `${step}: expected no age or 'age: 0', got: ${age}`)
 }
 
 function assertNoCacheTag(result: SendCacheableRequestResult, step: string) {
@@ -112,14 +117,13 @@ function assertNoCacheTag(result: SendCacheableRequestResult, step: string) {
 
 /**
  * What a response that reached the origin (a miss) has to look like, in step 1 and in the origin-reaching part of step 3:
- * - `age` is absent or `0`, the stale upstream one is not passed on. Browsers treat the two the same.
+ * - `age` is absent or `0`, the stale upstream one is not passed on.
  * - `cache-tag` is what the origin sent, or absent. An integration that stores the response and replays it on hits has
  *   to drop `cache-tag` for the hits, so it can't keep it on the miss either. It must not hold on to a tag the origin
  *   did not send (e.g. one of the primed response).
  */
 function assertOriginResponse(result: SendCacheableRequestResult, step: string, originCacheTag?: string) {
-  const age = getHeader(result, 'age')
-  assert(age === undefined || age === '0', true, `${step}: expected no age or 'age: 0', got: ${age}`)
+  assertAgeAbsentOrZero(result, step)
 
   const cacheTag = getHeader(result, 'cache-tag')
   assert(
@@ -225,7 +229,7 @@ export async function testAgentCacheMiss(api: TestCaseApi, target: AgentCacheTar
   assertOriginResponse(result, 'cache miss', AGENT_CACHE_TAG)
 }
 
-/** Step 2: the second request is served by the edge with `age: 0` and no `cache-tag`. */
+/** Step 2: the second request is served by the edge with no `age` or `age: 0`, and no `cache-tag`. */
 export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarget) {
   const { etag } = await primeAgentCache(api, target)
 
@@ -235,14 +239,14 @@ export async function testAgentCacheHit(api: TestCaseApi, target: AgentCacheTarg
     { mockResponse: createOriginWarmResponse(etag, target), step: 'cache hit', requireEdge: true },
     (result) => {
       assertAgentResponse(result, 'cache hit')
-      assertAgeIsZero(result, 'cache hit')
+      assertAgeAbsentOrZero(result, 'cache hit')
       assertNoCacheTag(result, 'cache hit')
     }
   )
 }
 
 /**
- * Step 3: once `max-age` has passed, the agent is revalidated and still served with `age: 0`.
+ * Step 3: once `max-age` has passed, the agent is revalidated and still served with no `age` or `age: 0`.
  *
  * Waiting for a real edge TTL to run out would take up to 60s (Fastly Compute ignores the origin's `max-age`), so the
  * request carries `cache-control: no-cache` instead, which asks the edge to validate its copy before using it.
@@ -268,13 +272,13 @@ export async function testAgentRevalidation(api: TestCaseApi, target: AgentCache
     },
     (result) => {
       assertAgentResponse(result, 'revalidation')
-      assertAgeIsZero(result, 'revalidation')
+      assertAgeAbsentOrZero(result, 'revalidation')
       assertNoCacheTag(result, 'revalidation')
     }
   )
 }
 
-/** Step 4: a conditional request with the cached `etag` is answered with 304, the same `max-age`, `age: 0` and no `cache-tag`. */
+/** Step 4: a conditional request with the cached `etag` is answered with 304, the same `max-age`, no `age` or `age: 0`, and no `cache-tag`. */
 export async function testAgentConditionalRequest(api: TestCaseApi, target: AgentCacheTarget) {
   const { result: primeResult } = await primeAgentCache(api, target)
   const etag = getHeader(primeResult, 'etag') as string
@@ -297,7 +301,7 @@ export async function testAgentConditionalRequest(api: TestCaseApi, target: Agen
       )
       assertNoSMaxAge(result)
       assertMaxAgePreserved(result)
-      assertAgeIsZero(result, 'if-none-match')
+      assertAgeAbsentOrZero(result, 'if-none-match')
       assertNoCacheTag(result, 'if-none-match')
     }
   )
