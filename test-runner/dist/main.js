@@ -28373,10 +28373,9 @@ var pkg = {
 	name: name,
 	version: version};
 
-const packageJson = pkg;
 const versionInfo = {
-    name: packageJson.name,
-    version: packageJson.version,
+    name: pkg.name,
+    version: pkg.version,
 };
 
 const logger = createConsola();
