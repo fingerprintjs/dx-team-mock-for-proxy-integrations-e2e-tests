@@ -1,14 +1,12 @@
 {
   "name": "mock-for-e2e",
   "version": "0.7.0",
+  "private": true,
   "description": "",
   "main": "index.js",
   "engines": {
     "node": ">=22.13.0"
   },
-  "workspaces": [
-    "test-runner"
-  ],
   "bin": {
     "mock-warden": "./test-runner/dist/main.js",
     "mock-for-e2e": "./test-runner/dist/main.js"
@@ -16,6 +14,10 @@
   "scripts": {
     "prebuild": "node scripts/build-version-info.mjs",
     "build": "tsc",
+    "build:test-runner": "cd test-runner && rollup -c rollup.config.mjs",
+    "dev:test-runner": "pnpm build:test-runner && node test-runner/dist/main.js",
+    "changeset:version": "changeset version && pnpm build:test-runner",
+    "changeset:publish": "changeset publish",
     "start:dev": "TEST_CASE_EXT=.ts nodemon",
     "start": "node dist/index.js",
     "lint": "eslint src",
@@ -26,16 +28,27 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
+    "@fingerprintjs/changesets-changelog-format": "^0.2.0",
     "@fingerprintjs/eslint-config-dx-team": "^2.0.0",
     "@fingerprintjs/prettier-config-dx-team": "^0.3.0",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/axios": "^0.14.4",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
+    "consola": "^3.2.3",
     "eslint": "^10.6.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.4",
+    "rollup": "4.59.0",
+    "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "tsx": "^4.7.1",
+    "typescript": "^6.0.3",
+    "zodcli": "^0.0.4"
   },
   "dependencies": {
     "axios": "1.18.1",

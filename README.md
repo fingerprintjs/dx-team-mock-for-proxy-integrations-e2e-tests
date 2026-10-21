@@ -231,3 +231,13 @@ To run this project using Docker Compose, follow these steps:
    - This command will rebuild the app service with your changes and restart it, without affecting the ngrok service
 
 
+
+## Releasing
+
+This project uses [changesets](https://github.com/changesets/changesets) to manage `CHANGELOG.md` and releases.
+
+1. In every PR with a user-facing change, add a changeset: `pnpm exec changeset`. Pick `patch`, `minor` or `major` and describe the change. Commit the generated `.changeset/*.md` file.
+2. On merge to `main`, the [Release workflow](.github/workflows/release.yml) opens/updates a `Release [changeset]` PR. It bumps the version, updates `CHANGELOG.md` and rebuilds the CLI bundle in `test-runner/dist`.
+3. Merging the release PR creates the `vX.Y.Z` git tag and the GitHub release.
+
+The CLI bundle (`test-runner/dist`) is committed because consumers run it straight from git. Rebuild it locally with `pnpm build:test-runner`.

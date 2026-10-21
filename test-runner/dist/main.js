@@ -28367,16 +28367,15 @@ const createNewHttpClient = (config = defaultConfig) => {
 };
 const httpClient = createNewHttpClient();
 
-var name = "test-runner";
-var version = "0.1.0";
+var name = "mock-for-e2e";
+var version = "0.7.0";
 var pkg = {
 	name: name,
 	version: version};
 
-const packageJson = pkg;
 const versionInfo = {
-    name: packageJson.name,
-    version: packageJson.version,
+    name: pkg.name,
+    version: pkg.version,
 };
 
 const logger = createConsola();
