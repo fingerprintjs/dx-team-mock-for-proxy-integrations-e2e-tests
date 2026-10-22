@@ -57,7 +57,10 @@ To run tests, send a `POST` request to: `/api/test/run-tests` with the following
   // (Optional) flag to run new tests suite for API V4
   "enableV4Tests": false,
   // (Optional) region to check in region tests: "us", "eu", "ap" or "all" (default)
-  "region": "all"
+  "region": "all",
+  // (Optional) whether your integration caches the agent itself ("cached") or leaves it to the upstream CDN ("passthrough").
+  // Used by the agent cache header tests. Defaults to "cached" for API v3 and "passthrough" for API v4
+  "agentCacheMode": "cached"
 }
 ```
 
@@ -141,7 +144,9 @@ pnpm dlx "git+https://github.com/fingerprintjs/dx-team-mock-for-proxy-integratio
 # (Optional) Runs new tests suite for API V4
 --enable-new-tests=true \
 # (Optional) Region to check in region tests: us, eu, ap or all (default)
---region="eu"
+--region="eu" \
+# (Optional) Whether your integration caches the agent itself (cached) or leaves it to the upstream CDN (passthrough)
+--agent-cache-mode="cached"
 ```
 
 ## Adding new tests

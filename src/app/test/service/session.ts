@@ -1,4 +1,4 @@
-import { RunTestsRequest } from '../request.types'
+import { AgentCacheMode, RunTestsRequest } from '../request.types'
 import { DetailedTestResult } from './testRunner'
 import { TestSessionAlreadyExistsError } from '../errors'
 import { RunRegion } from '../utils/region'
@@ -25,6 +25,7 @@ export class TestSession implements RunTestsRequest {
     public integrationVersion: string,
     public status: TestSessionStatus,
     public region: RunRegion = 'all',
+    public agentCacheMode?: AgentCacheMode,
     public results: DetailedTestResult[] = []
   ) {}
 
@@ -74,7 +75,8 @@ export function createTestSession(request: RunTestsRequest) {
     request.trafficName,
     request.integrationVersion,
     TestSessionStatus.Created,
-    request.region ?? 'all'
+    request.region ?? 'all',
+    request.agentCacheMode
   )
 
   testSessions.set(host, session)
