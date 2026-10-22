@@ -19,7 +19,6 @@ WORKDIR /app
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
-COPY test-runner/package.json ./test-runner/package.json
 COPY scripts ./scripts
 
 # Install dependencies
