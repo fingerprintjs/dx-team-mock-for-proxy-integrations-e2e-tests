@@ -54,8 +54,6 @@ const testSessions = new Map<string, TestSession>()
 function getHost(request: RunTestsRequest) {
   const integrationUrl = new URL(request.integrationUrl)
 
-  console.log(`Found integration hostname: ${integrationUrl.hostname}`)
-
   return integrationUrl.hostname
 }
 

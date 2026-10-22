@@ -22,7 +22,7 @@
     "start": "node dist/index.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "LOG_LEVEL=info LOG_FORMAT=json node --require ts-node/register --test \"src/**/*.test.ts\""
   },
   "keywords": [],
   "author": "",

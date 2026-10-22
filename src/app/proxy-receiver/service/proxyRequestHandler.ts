@@ -1,4 +1,5 @@
 import { Request } from 'express'
+import { logger } from '../../../logger'
 
 export enum ProxyRequestType {
   Ingress = 'Ingress',
@@ -43,11 +44,11 @@ export function notifyProxyRequestListener(type: ProxyRequestType, key: Key, req
   const listener = getStoreByType(type).get(key)
 
   if (listener) {
-    console.info('Notifying proxy request listener', { type, key })
+    logger.debug('Notifying proxy request listener', { type, key })
 
     listener(request)
   } else {
-    console.warn('No listener found for proxy request', { type, key })
+    logger.warn('No listener found for proxy request', { type, key })
   }
 
   removeProxyRequestListener(type, key)

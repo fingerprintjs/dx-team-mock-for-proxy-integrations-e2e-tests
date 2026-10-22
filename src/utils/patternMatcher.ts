@@ -1,3 +1,5 @@
+import { logger } from '../logger'
+
 export const hasGlob = (p: string) => /[*?]/.test(p)
 
 const escapeRegex = (s: string) => s.replace(/[.*+?${}()|[\]\\]/g, '\\$&')
@@ -25,7 +27,7 @@ const parseRegex = (p: string) => {
   try {
     return new RegExp(m[1], m[2])
   } catch {
-    console.warn(`${p} is not a valid RegEx pattern, ignoring.`)
+    logger.warn('Ignoring a filter that is not a valid RegEx pattern', { pattern: p })
     return null
   }
 }
