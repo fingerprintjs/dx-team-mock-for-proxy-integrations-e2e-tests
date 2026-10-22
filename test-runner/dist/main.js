@@ -28374,7 +28374,7 @@ const createNewHttpClient = (config = defaultConfig) => {
 const httpClient = createNewHttpClient();
 
 var name = "mock-for-e2e";
-var version = "0.7.0";
+var version = "0.8.0";
 var pkg = {
 	name: name,
 	version: version};
