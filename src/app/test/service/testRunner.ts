@@ -14,6 +14,7 @@ import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
 import { withRetry } from '../../../utils/retry'
 import { logger, runWithLogContext, setLogFields } from '../../../logger'
+import { getTestCaseLabels } from '../utils/testCaseLabels'
 import { AssertionError } from 'node:assert'
 
 /** One failed attempt of a test case, recorded as it happens rather than after the retries settle. */
@@ -93,6 +94,7 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
       logger.error('Test case crashed', {
         integrationHost: testSession.host,
         testName: testCases[index].name,
+        ...getTestCaseLabels(testCases[index].name),
         error: outcome.reason,
       })
     }
@@ -120,6 +122,7 @@ export function runTestInLogContext(testSession: TestSession, testCase: TestCase
     {
       integrationHost: testSession.host,
       testName: testCase.name,
+      ...getTestCaseLabels(testCase.name),
       attempt: 1,
     },
     async () => runTest(testSession, testCase)
