@@ -1,5 +1,15 @@
 # mock-for-e2e
 
+## 0.8.0
+
+### Minor Changes
+
+- Add test cases for the agent cache headers (`cache-control`, `age`, `cache-tag`, `etag`) on cache miss, hit and revalidation for API v3 and v4. Set whether the integration caches the agent itself with the new `agentCacheMode` run option (`--agent-cache-mode` in the CLI). ([2e4d246](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/commit/2e4d2465ed995fd0732c2854ed015f2a112ece8a))
+
+### Patch Changes
+
+- Manage releases and `CHANGELOG.md` with changesets. ([c4aa5ce](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/commit/c4aa5cedee3495b303bb0545f83472c0fab80387))
+
 ## 0.7.0
 
 ### Minor Changes
