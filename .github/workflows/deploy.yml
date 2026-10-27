@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to deploy'
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-stage
+  cancel-in-progress: false
+
+env:
+  ECR_REGISTRY: 708050157146.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: mock-warden
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  build-and-push:
+    name: Build and push image
+    runs-on: k8-arm64
+    outputs:
+      sha_short: ${{ steps.meta.outputs.sha_short }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Prepare metadata
+        id: meta
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "build_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/arm64
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.meta.outputs.build_time }}
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.TAG }}
+
+  deploy-stage:
+    name: Open fp-platform-stack PR
+    needs: build-and-push
+    runs-on: k8-arm64
+    steps:
+      - name: Open manifest PR
+        uses: fingerprintjs/fp-infra-github-actions/.github/actions/k8-deploy@v1.1.13
+        with:
+          app: mock-warden
+          env: stage
+          region: use1
+          target: main
+          tag: ${{ env.TAG }}
+          sha_short: ${{ needs.build-and-push.outputs.sha_short }}
+          files: mock-warden/mock-warden-stage-use1.yaml
+          auto_merge: 'false'
+          k8_gh_runners_app_id: ${{ secrets.K8_GH_RUNNERS_APP_ID }}
+          k8_gh_runners_app_secret: ${{ secrets.K8_GH_RUNNERS_APP_SECRET }}
