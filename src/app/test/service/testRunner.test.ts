@@ -82,6 +82,20 @@ describe('runTest logging', () => {
     assert.equal(finished[0].error.message, 'after failed')
   })
 
+  it('tags every line with the endpoint and API version of the test case', async () => {
+    await run({ name: 'v4 browser cache request region', test: async () => {} })
+    await run({ name: 'ingress request proxy secret', test: async () => {} })
+
+    const finished = capture.entries().filter((entry) => entry.event === 'test.finished')
+    assert.deepEqual(
+      finished.map(({ testName, endpoint, apiVersion }) => ({ testName, endpoint, apiVersion })),
+      [
+        { testName: 'v4 browser cache request region', endpoint: 'browser cache', apiVersion: 'v4' },
+        { testName: 'ingress request proxy secret', endpoint: 'ingress', apiVersion: 'v3' },
+      ]
+    )
+  })
+
   it('tags every line with the host, test name and attempt', async () => {
     await run({ name: 'tagged-case', test: async () => {} })
 
