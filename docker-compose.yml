@@ -5,6 +5,7 @@ services:
       - "${PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
+      - LOG_FORMAT=pretty
     volumes:
       - .:/app
     working_dir: /app

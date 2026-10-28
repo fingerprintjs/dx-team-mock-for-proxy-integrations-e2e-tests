@@ -12,6 +12,7 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/consistent-type-assertions': 'off',
       'no-template-curly-in-string': 'off',
+      'no-console': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
