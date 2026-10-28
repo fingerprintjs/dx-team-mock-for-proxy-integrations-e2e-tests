@@ -1,5 +1,11 @@
 # mock-for-e2e
 
+## 0.9.0
+
+### Minor Changes
+
+- Log structured JSON, one object per line with `level` and `message`, so Datadog can parse and filter the logs. `/health` requests are no longer logged, `LOG_LEVEL` and `LOG_FORMAT` configure the output, and `result.logs` in the `run-tests` response now holds JSON lines. ([e6994d2](https://github.com/fingerprintjs/dx-team-mock-for-proxy-integrations-e2e-tests/commit/e6994d2b342ed6239feaccb44833b479b5d07004))
+
 ## 0.8.0
 
 ### Minor Changes
