@@ -1,15 +1,26 @@
 import { AssertionError } from 'assert'
+import { isSensitiveKey } from '../../../logger/redact'
+
+// Empty and missing values stay readable: they are not secret
+function mask<T>(value: T): T {
+  if (value === undefined || value === null || value === '') {
+    return value
+  }
+
+  return String(value).slice(0, 3).padEnd(20, '*') as T
+}
+
+// Masked before the AssertionError is built: Node writes the values into its message and stack too
+function maskIfSensitive<T>(label: string | undefined, value: T): T {
+  return label !== undefined && isSensitiveKey(label) ? mask(value) : value
+}
 
 export function assert<T>(actual: T, expected: T, message?: string, sanitize: boolean = false) {
   if (actual !== expected) {
-    let sanitizedActual = actual
-    if (sanitize) {
-      sanitizedActual = actual?.toString()?.slice(0, 3).padEnd(20, '*') as T
-    }
     throw new AssertionError({
       operator: 'assert',
-      actual: sanitizedActual,
-      expected,
+      actual: sanitize ? mask(actual) : maskIfSensitive(message, actual),
+      expected: maskIfSensitive(message, expected),
       message,
     })
   }
@@ -41,7 +52,7 @@ export function assertRegExp(actual: string, regExp: RegExp, message?: string) {
   if (!regExp.test(actual)) {
     throw new AssertionError({
       operator: 'assertRegExp',
-      actual,
+      actual: maskIfSensitive(message, actual),
       expected: regExp.source,
       message,
     })
@@ -62,7 +73,7 @@ export function assertToBeTruthy(
 
   throw new AssertionError({
     operator: 'assertToBeTruthy',
-    actual,
+    actual: maskIfSensitive(field, actual),
     expected: field,
     message,
   })
@@ -81,7 +92,7 @@ export function assertToBeFalsy(field: string, actual: unknown, message?: string
 
   throw new AssertionError({
     operator: 'assertToBeFalsy',
-    actual,
+    actual: maskIfSensitive(field, actual),
     expected: field,
     message,
   })
