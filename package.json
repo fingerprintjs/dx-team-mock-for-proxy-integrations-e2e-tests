@@ -22,7 +22,7 @@
     "start": "node dist/index.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --require ts-node/register --test \"src/**/*.test.ts\""
   },
   "keywords": [],
   "author": "",
@@ -42,6 +42,7 @@
     "consola": "^3.2.3",
     "eslint": "^10.6.0",
     "nodemon": "^3.1.14",
+    "pino-pretty": "^13.2.0",
     "prettier": "^3.9.4",
     "rollup": "4.59.0",
     "rollup-plugin-typescript2": "^0.36.0",
@@ -56,6 +57,8 @@
     "express": "^5.2.1",
     "express-zod-api": "^28.7.5",
     "glob": "^13.0.6",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
     "zod": "^4.4.3"
   },
   "packageManager": "pnpm@11.10.0+sha512.0b7f8b98060031904c017e3a41eb187a16d40eeb829b95c4f8cb03681761fc4ab53dd219115b9b447f4dce1a05a214764461e7d3703392a9f32f9511ce8c86c8"

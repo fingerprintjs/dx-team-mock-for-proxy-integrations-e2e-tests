@@ -182,6 +182,7 @@ export default testCase
 ```
 
 To add a new test case, simply create a new file in [src/app/test/cases](src/app/test/cases) directory with `*.case.ts` file name and provide a default export with the `TestCase` object.
+Start the test name with its endpoint (`agent`, `ingress` or `browser cache`), preceded by `v4 ` for v4 tests, and put `-v4-` in the file name of those: they tag the test's logs, and a unit test checks it.
 It will be automatically picked up by the test runner.
 
 ## Running locally
@@ -194,6 +195,30 @@ It will be automatically picked up by the test runner.
     ngrok http 3000
     ```
 5. Use the URL provided by ngrok to run the tests. Refer to the [Preparation](#preparation) section for more details.
+
+## Logging
+
+Mock Warden logs one JSON object per line to stdout, with [pino](https://getpino.io):
+
+```json
+{"level":"info","timestamp":"2026-01-02T03:04:05.678Z","service":"mock-warden","version":"0.7.0","integrationHost":"example.com","testName":"agent request preserve header and query","endpoint":"agent","apiVersion":"v3","attempt":1,"event":"test.finished","passed":true,"duration_ms":412,"failed_attempts":0,"message":"Test finished"}
+```
+
+- Log with the logger from [src/logger](src/logger), not `console.*` (the `no-console` lint rule enforces it): `logger.info({ some: 'fields' }, 'Message')`.
+- Lines logged while a test case runs carry `integrationHost`, `testName`, `attempt`, `endpoint` and `apiVersion`.
+- Don't name a field `host`, `status`, `source` or `trace_id`: Datadog reserves them, and the tests check it.
+- Bodies and headers are logged at `debug` level only, and credential headers (`cookie`, `authorization`, `fpjs-proxy-secret`, ...) are redacted: add the path to `REDACT_PATHS` in [src/logger/redact.ts](src/logger/redact.ts) to redact another one.
+- Metrics can be built on the `http.request`, `session.started`, `session.finished` and `test.finished` events, which carry `duration_ms`.
+- `result.logs` in the `run-tests` response holds the same JSON lines.
+- `LOG_LEVEL` is `debug`, `info` (default), `warn` or `error`. `LOG_FORMAT` is `json` or `pretty` (with `pino-pretty`): by default `pretty` in a terminal outside production, `json` otherwise.
+
+## Unit tests
+
+```bash
+pnpm test
+```
+
+Tests live next to the code as `*.test.ts` and run with the built-in `node:test`.
 
 ## Using Docker Compose
 

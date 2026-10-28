@@ -13,7 +13,8 @@ import { sanitizeStringArray } from '../utils/sanitizeStringArray'
 import { NoMatchingTestsError } from '../errors'
 import { prependSlash } from '../../../utils/paths'
 import { withRetry } from '../../../utils/retry'
-import { flushGroupedLog, runWithGroupedLog } from '../../../utils/groupedLogger'
+import { logger, runWithLogContext, setLogFields } from '../../../logger'
+import { getTestCaseLabels } from '../utils/testCaseLabels'
 import { AssertionError } from 'node:assert'
 
 /** One failed attempt of a test case, recorded as it happens rather than after the retries settle. */
@@ -46,6 +47,7 @@ export async function loadTestCases() {
 
 export async function runTests(testSession: TestSession, filter?: TestFilterOptions) {
   testSession.start()
+  const sessionStartedAt = Date.now()
 
   let testCases = await loadTestCases()
 
@@ -66,19 +68,55 @@ export async function runTests(testSession: TestSession, filter?: TestFilterOpti
     throw new NoMatchingTestsError()
   }
 
-  await Promise.allSettled(
-    testCases.map(async (testCase) => {
-      const { logs, result } = await runWithGroupedLog(`${testSession.host} - ${testCase.name}`, async () => {
-        return runTest(testSession, testCase)
-      })
+  logger.info(
+    {
+      event: 'session.started',
+      integrationHost: testSession.host,
+      total: testCases.length,
+      region: testSession.region,
+      trafficName: testSession.trafficName,
+      integrationVersion: testSession.integrationVersion,
+    },
+    'Test session started'
+  )
 
-      if (result) {
-        testSession.addResult({
-          ...result,
-          logs,
-        })
-      }
+  const settled = await Promise.allSettled(
+    testCases.map(async (testCase) => {
+      const { logs, result } = await runTestInLogContext(testSession, testCase)
+
+      testSession.addResult({
+        ...result,
+        logs,
+      })
     })
+  )
+
+  // runTest only throws when a before/after hook does, which would otherwise go unnoticed
+  settled.forEach((outcome, index) => {
+    if (outcome.status === 'rejected') {
+      logger.error(
+        {
+          integrationHost: testSession.host,
+          testName: testCases[index].name,
+          ...getTestCaseLabels(testCases[index].name),
+          error: outcome.reason,
+        },
+        'Test case crashed'
+      )
+    }
+  })
+
+  const passed = testSession.results.filter((it) => it.passed).length
+  logger.info(
+    {
+      event: 'session.finished',
+      integrationHost: testSession.host,
+      total: testCases.length,
+      passed,
+      failed: testCases.length - passed,
+      duration_ms: Date.now() - sessionStartedAt,
+    },
+    'Test session finished'
   )
 
   return finalizeTestSession(testSession)
@@ -88,7 +126,54 @@ function isDeterministicFailure(error: unknown): boolean {
   return error instanceof AssertionError || (error as { name?: string } | null)?.name === 'AssertionError'
 }
 
+export function runTestInLogContext(testSession: TestSession, testCase: TestCase) {
+  return runWithLogContext(
+    {
+      integrationHost: testSession.host,
+      testName: testCase.name,
+      ...getTestCaseLabels(testCase.name),
+      attempt: 1,
+    },
+    async () => runTest(testSession, testCase)
+  )
+}
+
+// Logs exactly one `test.finished` event for the whole lifecycle, hooks included:
+// a hook that throws fails the test case and is rethrown
 export async function runTest(testSession: TestSession, testCase: TestCase): Promise<DetailedTestResult> {
+  const startedAt = Date.now()
+  const attempts: FailedAttempt[] = []
+
+  const logFinished = (passed: boolean, error?: unknown) => {
+    logger.info(
+      {
+        event: 'test.finished',
+        passed,
+        duration_ms: Date.now() - startedAt,
+        failed_attempts: attempts.length,
+        ...(error === undefined ? {} : { error }),
+      },
+      'Test finished'
+    )
+  }
+
+  try {
+    const result = await runTestLifecycle(testSession, testCase, attempts)
+    logFinished(result.passed)
+
+    return result
+  } catch (error) {
+    logFinished(false, error)
+
+    throw error
+  }
+}
+
+async function runTestLifecycle(
+  testSession: TestSession,
+  testCase: TestCase,
+  attempts: FailedAttempt[]
+): Promise<DetailedTestResult> {
   const startTime = Date.now()
 
   const integrationUrl = new URL(testSession.integrationUrl)
@@ -106,7 +191,6 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
   }
 
   let result: TestResult
-  const attempts: FailedAttempt[] = []
 
   try {
     await withRetry(async () => await testCase.test(api), {
@@ -125,11 +209,10 @@ export async function runTest(testSession: TestSession, testCase: TestCase): Pro
           reason: error instanceof Error ? error.message : String(error),
           at: new Date().toISOString(),
         })
-        api.logger.error(error)
-        flushGroupedLog()
+        api.logger.error({ error }, 'Test attempt failed')
       },
       onRetry: ({ attempt }) => {
-        api.logMetadata.attempt = attempt
+        setLogFields({ attempt: attempt + 1 })
       },
     })
 

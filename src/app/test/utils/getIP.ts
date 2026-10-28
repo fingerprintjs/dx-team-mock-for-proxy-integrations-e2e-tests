@@ -1,6 +1,7 @@
 import { Agent as HttpAgent } from 'node:http'
 import { Agent as HttpsAgent } from 'node:https'
 import { httpClient } from '../../../utils/httpClient'
+import { logger } from '../../../logger'
 
 const DEFAULT_IPV4_PROVIDER = 'http://169.254.169.254/latest/meta-data/public-ipv4'
 const DEFAULT_IPV6_PROVIDER = 'http://169.254.169.254/latest/meta-data/ipv6'
@@ -84,7 +85,7 @@ const fetchWithIMDSToken = async (address: string): Promise<string> => {
     return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache.value })
   } catch (error) {
     if ((error as any)?.response?.status === 401) {
-      console.warn(`IMDS token rejected, refreshing and retrying...`)
+      logger.warn('IMDS token rejected, refreshing and retrying')
       await ensureValidIMDSToken()
       return fetchData(address, { 'X-aws-ec2-metadata-token': imdsAuthTokenCache.value })
     }

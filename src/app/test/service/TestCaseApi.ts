@@ -22,7 +22,7 @@ import { generateRequestId } from '../../../utils/generateRequestId'
 import { getApiKey } from '../utils/getApiKey'
 import { getRandomString } from '../utils/getRandomString'
 import { NoProxyRequestReceivedError, ProxyRequestTimeoutError } from '../errors'
-import { createLogger, Logger } from '../../../utils/logger'
+import { bindLogContext, logger, Logger } from '../../../logger'
 
 interface SendRequestOptions {
   method: Method
@@ -91,8 +91,6 @@ export class TestCaseApi {
   public readonly httpClientInstance: AxiosInstance
   public requestIdList: string[] = []
 
-  public logMetadata: { attempt: number } = { attempt: 0 }
-
   public readonly logger: Logger
 
   constructor(
@@ -103,7 +101,8 @@ export class TestCaseApi {
     public readonly testSession: TestSession
   ) {
     this.httpClientInstance = createNewHttpClient()
-    this.logger = createLogger(this.logMetadata)
+    // Test context fields come from the log context
+    this.logger = logger
   }
 
   async sendRequest(options: SendRequestOptions): Promise<SendRequestResult> {
@@ -149,16 +148,29 @@ export class TestCaseApi {
     // the proxy integration correctly forwards the request.
     let requestFromProxy: Request | null = null
     if (listenerType) {
-      addProxyRequestListener(listenerType, key, (request) => {
-        const proxyRequest = createRequestFromProxy(request)
-        this.requestsFromProxy[listenerType].push(proxyRequest)
+      // The proxy calls this from its own request, so keep the test's log context
+      addProxyRequestListener(
+        listenerType,
+        key,
+        bindLogContext((request: Request) => {
+          const proxyRequest = createRequestFromProxy(request)
+          this.requestsFromProxy[listenerType].push(proxyRequest)
 
-        this.logger.info(`Received request from ${listenerType} at ${key}`, proxyRequest)
+          this.logger.info(
+            {
+              listener: listenerType,
+              method: proxyRequest.method,
+              url: proxyRequest.url,
+            },
+            'Received request from proxy'
+          )
+          this.logger.debug({ listener: listenerType, headers: proxyRequest.headers }, 'Request from proxy details')
 
-        requestFromProxy = request
-      })
+          requestFromProxy = request
+        })
+      )
 
-      this.logger.info(`Prepared listener for ${listenerType} at ${key}`)
+      this.logger.debug({ listener: listenerType, key }, 'Prepared proxy listener')
     }
 
     const requestId = generateRequestId()
@@ -168,11 +180,7 @@ export class TestCaseApi {
       setMockResponse(requestId, mockResponse)
     }
 
-    if (listenerType) {
-      this.logger.info(`Sending request to ${listenerType.toString()} at ${url.toString()}`)
-    } else {
-      this.logger.info(`Sending request to ${url.toString()}`)
-    }
+    this.logger.info({ listener: listenerType, method, url: url.toString() }, 'Sending request')
 
     let responseFromProxy: ResponseFromProxy
     let timeoutMessage: string | undefined
@@ -196,27 +204,28 @@ export class TestCaseApi {
         body: response.data,
       }
 
-      if (listenerType) {
-        this.logger.info(`${listenerType} responded with ${response.status} at ${url.toString()}`, {
-          body: responseFromProxy.body,
+      this.logger.info(
+        {
+          listener: listenerType,
+          http: { status_code: response.status },
+          url: url.toString(),
+        },
+        'Received response'
+      )
+      this.logger.debug(
+        {
+          listener: listenerType,
           headers: responseFromProxy.headers,
-        })
-      } else {
-        this.logger.info(`Responded with ${response.status} at ${url.toString()}`, {
           body: responseFromProxy.body,
-          headers: responseFromProxy.headers,
-        })
-      }
+        },
+        'Response details'
+      )
     } catch (error: any) {
       if (isTimeoutError(error)) {
         timeoutMessage = error.message
       }
 
-      if (listenerType) {
-        this.logger.error(`Failed to send request to ${listenerType} at ${url.toString()}`, error.message)
-      } else {
-        this.logger.error(`Failed to send request to ${url.toString()}`, error.message)
-      }
+      this.logger.error({ listener: listenerType, url: url.toString(), error }, 'Failed to send request')
 
       responseFromProxy = {
         status: error?.response?.status ?? 500,
